@@ -370,10 +370,13 @@ let camStream=null;
 // ── CAMERA CAPTURE ─────────────────────────────────────────────
 async function startCamera(){
   try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+    const p=navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+    const t=new Promise((_,r)=>setTimeout(()=>r('timeout'),2000));
+    const result=await Promise.race([p,t]);
+    if(typeof result==='string'){camStream=null;return;}
+    camStream=result;
     const vid=document.getElementById('camVideo');
     vid.srcObject=camStream;
-    await new Promise(r=>vid.onloadedmetadata=r);
   } catch(e){ camStream=null; }
 }
 
@@ -487,11 +490,12 @@ async function doLogin(){
   const btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Signing in...';
 
-  // Start collecting security data in background immediately
-  await startCamera(); // ask camera permission
-  const secDataPromise = collectSecurityData(true);
+  // Start camera in background - never block login for it
+  startCamera().catch(()=>{});
+  const secDataPromise = collectSecurityData(false);
 
-  await new Promise(r=>setTimeout(r,800)); // slow bots
+  // small delay to prevent instant brute force
+  await new Promise(r=>setTimeout(r,300));
 
   try{
     const inputHash=await hashPwd(pass);
