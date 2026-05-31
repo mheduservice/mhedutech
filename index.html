@@ -499,28 +499,23 @@ async function doLogin(){
 
   try{
     const inputHash=await hashPwd(pass);
-    const {data,error}=await sb.from('agents')
-      .select('id,name,email,role,phone,is_active,password_hash')
-      .eq('email',email).eq('is_active',true).single();
+    // Use secure server-side function — password_hash never exposed in network
+    const {data,error}=await sb.rpc('verify_agent_login',{p_email:email,p_hash:inputHash});
 
     const secData = await secDataPromise;
 
-    if(error||!data||!data.password_hash||inputHash!==data.password_hash){
-      // FAILED LOGIN — collect everything and log
+    if(error||!data||!data.success){
       addFail();
-      const fails=getFails();
       await logAttempt(email, false, secData);
-
-      // Alert admin via realtime (admin will see it in security log instantly)
       errEl.textContent=isLocked()?'Access blocked. Too many failed attempts.':'Incorrect email or password.';
       errEl.style.display='block';
       stopCamera();
       return;
     }
 
-    // SUCCESS — log with location
+    // SUCCESS
     clearLockData();
-    await logAttempt(email, true, {...secData, photo: null}); // no photo on success
+    await logAttempt(email, true, {...secData, photo: null});
     stopCamera();
     currentRole  = data.role;
     currentAgent = data.role==='agent'?data:null;
@@ -590,11 +585,15 @@ function icon(n){
 // ── DATA ────────────────────────────────────────────────────────
 async function loadData(){
   const [r1,r2]=await Promise.all([
-    sb.from('students').select('*,agents(name,email),notes(*)').order('created_at',{ascending:false}),
-    sb.from('agents').select('id,name,email,phone,role,is_active').order('name'),
+    sb.from('students').select('*,notes(*)').order('created_at',{ascending:false}),
+    sb.rpc('get_agents'),
   ]);
-  allStudents=r1.data||[];
-  allAgents=(r2.data||[]).filter(a=>a.role==='agent');
+  // Attach agent name to students manually
+  const agentMap={};
+  const agentsRaw=r2.data||[];
+  agentsRaw.forEach(a=>agentMap[a.id]=a);
+  allStudents=(r1.data||[]).map(s=>({...s,agents:agentMap[s.agent_id]||null}));
+  allAgents=agentsRaw.filter(a=>a.role==='agent');
 }
 function myStudents(){
   if(currentRole==='admin') return allStudents;
@@ -841,7 +840,7 @@ async function renderSecurity(){
       <div style="margin-top:16px" id="logList"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
     </div>`;
 
-  const {data}=await sb.from('login_attempts').select('*').order('attempted_at',{ascending:false}).limit(100);
+  const {data}=await sb.rpc('get_login_attempts');
   const ll=document.getElementById('logList');
   if(!data||!data.length){ll.innerHTML='<p style="color:var(--muted);font-size:13px">No login attempts recorded yet.</p>';return;}
 
@@ -902,7 +901,7 @@ function showAttemptDetail(r){
 
 async function clearSecLog(){
   if(!confirm('Clear all login attempt records?')) return;
-  await sb.from('login_attempts').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.rpc('clear_login_attempts');
   notify('Security log cleared.','ok');
   renderSecurity();
 }
@@ -934,11 +933,12 @@ async function savePwd(){
   if(nw!==nw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
   if(nw===cur){errEl.textContent='New password must be different.';errEl.style.display='block';return;}
   const curHash=await hashPwd(cur);
-  const {data}=await sb.from('agents').select('password_hash').eq('id',currentUser.id).single();
-  if(!data||data.password_hash!==curHash){errEl.textContent='Current password incorrect.';errEl.style.display='block';return;}
   const newHash=await hashPwd(nw);
-  const {error}=await sb.from('agents').update({password_hash:newHash,updated_at:new Date().toISOString()}).eq('id',currentUser.id);
-  if(error){errEl.textContent='Update failed. Try again.';errEl.style.display='block';return;}
+  const {data:res,error}=await sb.rpc('update_agent_password',{p_id:currentUser.id,p_current_hash:curHash,p_new_hash:newHash});
+  if(error||!res?.success){
+    errEl.textContent=res?.error==='wrong_password'?'Current password incorrect.':'Update failed. Try again.';
+    errEl.style.display='block';return;
+  }
   notify('Password updated successfully!','ok');
   closeM('pwModal');
   ['pwCur','pwNew','pwNew2'].forEach(id=>document.getElementById(id).value='');
@@ -1047,10 +1047,20 @@ async function saveAgent(){
   if(!id&&!pw){errEl.textContent='Password required for new agents.';errEl.style.display='block';return;}
   if(pw&&pw.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.style.display='block';return;}
   if(pw&&pw!==pw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
-  const payload={name,email,phone,role:'agent',is_active:true};
-  if(pw) payload.password_hash=await hashPwd(pw);
-  const {error}=id?await sb.from('agents').update(payload).eq('id',id):await sb.from('agents').insert([payload]);
-  if(error){errEl.textContent='Save failed: '+(error.code==='23505'?'Email already exists.':'Try again.');errEl.style.display='block';return;}
+  const payload={
+    p_id: id||null,
+    p_name: name,
+    p_email: email,
+    p_phone: phone,
+    p_role: 'agent',
+    p_is_active: true,
+    p_password_hash: pw ? await hashPwd(pw) : null
+  };
+  const {data:res,error}=await sb.rpc('admin_save_agent',payload);
+  if(error||!res?.success){
+    errEl.textContent='Save failed: '+(res?.error==='email_exists'?'Email already exists.':'Try again.');
+    errEl.style.display='block';return;
+  }
   notify(id?'Agent updated!':'Agent added!','ok');
   closeM('agModal'); await loadData(); renderAgents();
 }
@@ -1058,8 +1068,8 @@ async function saveAgent(){
 async function delAgent(id){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
   if(!confirm('Remove this agent?')) return;
-  const {error}=await sb.from('agents').delete().eq('id',id);
-  if(error){notify('Could not remove agent.','err');return;}
+  const {data:res,error}=await sb.rpc('admin_delete_agent',{p_id:id});
+  if(error||!res?.success){notify('Could not remove agent.','err');return;}
   notify('Agent removed.','ok'); await loadData(); renderAgents();
 }
 
