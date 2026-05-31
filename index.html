@@ -1077,6 +1077,26 @@ function notify(msg,type){
 }
 document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
 
+// Expose functions globally for onclick handlers
+window.doLogin      = doLogin;
+window.doLogout     = doLogout;
+window.showSec      = showSec;
+window.openM        = openM;
+window.closeM       = closeM;
+window.openStuModal = openStuModal;
+window.saveStu      = saveStu;
+window.delStu       = delStu;
+window.addNote      = addNote;
+window.delNote      = delNote;
+window.openAgModal  = openAgModal;
+window.saveAgent    = saveAgent;
+window.delAgent     = delAgent;
+window.savePwd      = savePwd;
+window.filterStu    = filterStu;
+window.renderSecurity    = renderSecurity;
+window.clearSecLog       = clearSecLog;
+window.showAttemptDetail = showAttemptDetail;
+
 })();
 </script>
 </body>
