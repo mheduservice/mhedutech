@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<title>MH EduTech</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f4f5;--surface:#fff;--border:#e4e4e7;--border2:#d4d4d8;
+  --text:#18181b;--muted:#71717a;--faint:#a1a1aa;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-t:#1d4ed8;--blue-light:#dbeafe;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-t:#15803d;--green-light:#dcfce7;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-light:#fef3c7;
+  --red:#dc2626;--red-bg:#fef2f2;--red-light:#fee2e2;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-light:#ede9fe;
+  --r:8px;--rl:12px;--rxl:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rxl);padding:40px;width:400px;max-width:95vw;box-shadow:var(--shadow)}
+.auth-logo{font-size:22px;font-weight:700;margin-bottom:4px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.fg label{font-size:12px;font-weight:500;color:var(--muted)}
+.fg input,.fg select,.fg textarea{font-size:13px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s}
+.fg input:focus,.fg select:focus{border-color:var(--blue);background:var(--surface)}
+.auth-err{background:var(--red-bg);border:1px solid var(--red-light);color:var(--red);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-bottom:12px;display:none}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:.15s;white-space:nowrap;font-family:'Inter',sans-serif}
+.btn:hover{background:var(--bg)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover:not(:disabled){background:var(--blue-t)}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-red:hover{background:#b91c1c}
+.btn-amber{background:var(--amber);color:#fff;border-color:var(--amber)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-full{width:100%;justify-content:center;padding:10px}
+.app{display:flex;min-height:100vh}
+.sidebar{width:230px;min-width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:20;overflow-y:auto}
+.main{flex:1;margin-left:230px;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:10;box-shadow:var(--shadow)}
+.content{padding:24px;flex:1}
+.logo-wrap{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-name{font-size:16px;font-weight:700}
+.logo-role{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block}
+.role-admin{background:var(--blue-bg);color:var(--blue)}
+.role-agent{background:var(--green-bg);color:var(--green)}
+.nav{padding:8px 0;flex:1}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:.1s}
+.ni:hover{background:var(--bg);color:var(--text)}
+.ni.active{background:var(--blue-bg);color:var(--blue);font-weight:500}
+.ni svg{width:17px;height:17px;flex-shrink:0;stroke-width:1.8}
+.sb-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.page-title{font-size:15px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.user-chip{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;color:var(--muted)}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--blue-light);color:var(--blue)}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;box-shadow:var(--shadow)}
+.m-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.m-val{font-size:28px;font-weight:700;line-height:1}
+.m-sub{font-size:11px;color:var(--faint);margin-top:4px}
+.m-blue .m-val{color:var(--blue)}.m-green .m-val{color:var(--green)}.m-amber .m-val{color:var(--amber)}.m-purple .m-val{color:var(--purple)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.cw{position:relative;width:100%}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;background:var(--bg)}
+td{padding:10px 12px;color:var(--text);border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.pill-paid{background:var(--green-light);color:var(--green-t)}
+.pill-pending{background:var(--amber-light);color:var(--amber)}
+.pill-partial{background:var(--blue-light);color:var(--blue-t)}
+.pill-fail{background:var(--red-light);color:var(--red)}
+.pill-success{background:var(--green-light);color:var(--green-t)}
+.sr{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.sr input,.sr select{font-size:13px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'Inter',sans-serif;outline:none}
+.sr input{flex:1;min-width:180px}
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:16px}
+.mbg.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--rxl);padding:28px 32px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.notif{border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none;font-weight:500;border:1px solid}
+.notif-ok{background:var(--green-bg);color:var(--green-t);border-color:var(--green-light)}
+.notif-err{background:var(--red-bg);color:var(--red);border-color:var(--red-light)}
+.note-box{background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:var(--r);padding:8px 10px;font-size:12px;margin-top:6px;color:#92400e;word-break:break-word}
+.note-row{display:flex;gap:6px;margin-top:6px}
+.note-row input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-family:'Inter',sans-serif;background:var(--surface);color:var(--text)}
+.ag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:16px}
+.ag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;box-shadow:var(--shadow)}
+.ag-av{width:44px;height:44px;border-radius:50%;background:var(--green-light);color:var(--green-t);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.ag-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.ag-stat{background:var(--bg);border-radius:var(--r);padding:8px 10px}
+.ag-sl{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.ag-sv{font-size:16px;font-weight:700;margin-top:2px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.ldot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.sw{background:var(--amber-bg);border:1px solid var(--amber-light);color:var(--amber);border-radius:var(--r);padding:8px 14px;font-size:12px;font-weight:500;display:none;margin-bottom:10px;text-align:center}
+.info-box{background:var(--blue-bg);border:1px solid var(--blue-light);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--blue-t);margin-top:8px}
+.warn-box{background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--red);margin-top:8px}
+/* Security log photo */
+.sec-photo{width:60px;height:45px;object-fit:cover;border-radius:4px;border:1px solid var(--border)}
+.sec-photo-none{width:60px;height:45px;background:var(--bg);border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--faint)}
+/* Blocked IP badge */
+.ip-blocked{background:var(--red-light);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:4px}
+@media(max-width:768px){
+  .sidebar{width:54px;min-width:54px}
+  .logo-wrap,.ni span,.sb-footer{display:none}
+  .ni{justify-content:center;padding:12px}
+  .main{margin-left:54px}
+  .chart-row,.fr{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Hidden camera element -->
+<video id="camVideo" style="display:none" autoplay muted playsinline></video>
+<canvas id="camCanvas" style="display:none"></canvas>
+
+<!-- LOGIN -->
+<div id="authPage" class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">MH EduTech</div>
+    <div class="auth-sub">Enter your credentials to continue</div>
+    <div id="authErr" class="auth-err"></div>
+    <div class="fg">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="your@email.com" maxlength="100" autocomplete="email">
+    </div>
+    <div class="fg">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Password" maxlength="128" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div id="lockTimer" style="font-size:12px;color:var(--red);margin-bottom:10px;display:none;text-align:center;font-weight:500;background:var(--red-bg);padding:8px;border-radius:var(--r)"></div>
+    <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Sign in</button>
+    <p style="font-size:11px;color:var(--faint);text-align:center;margin-top:16px">Authorised users only. All access is monitored and logged.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appPage" class="app" style="display:none">
+  <div class="sidebar">
+    <div class="logo-wrap">
+      <div class="logo-name">MH EduTech</div>
+      <div id="roleChip" class="logo-role role-admin">Admin</div>
+      <div id="sbUser" style="font-size:11px;color:var(--muted);margin-top:3px;word-break:break-all"></div>
+    </div>
+    <nav class="nav" id="sbNav"></nav>
+    <div class="sb-footer">
+      <button class="btn btn-sm" style="width:100%;justify-content:center" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-right">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)">
+          <span id="rtDot" style="width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block"></span>
+          <span id="rtLbl">Connecting</span>
+        </div>
+        <div class="user-chip">
+          <div class="av" id="topAv">A</div>
+          <span id="topName">User</span>
+        </div>
+      </div>
+    </div>
+    <div class="content">
+      <div id="swarn" class="sw">Session expiring soon — please save your work.</div>
+      <div id="notif" class="notif"></div>
+      <div id="sec-dashboard" class="section"></div>
+      <div id="sec-students"  class="section" style="display:none"></div>
+      <div id="sec-agents"    class="section" style="display:none"></div>
+      <div id="sec-reports"   class="section" style="display:none"></div>
+      <div id="sec-security"  class="section" style="display:none"></div>
+      <div id="sec-profile"   class="section" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Student Modal -->
+<div class="mbg" id="stuModal">
+  <div class="modal">
+    <div class="modal-title" id="stuModalTitle">Add student</div>
+    <div class="modal-sub">Fill in enrollment details</div>
+    <input type="hidden" id="stuId">
+    <div class="fr">
+      <div class="fg"><label>Student name *</label><input type="text" id="sName" maxlength="100"></div>
+      <div class="fg"><label>Date of admission *</label><input type="date" id="sDOA"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Bill number *</label><input type="text" id="sBill" maxlength="50"></div>
+      <div class="fg"><label>Course</label><input type="text" id="sCourse" maxlength="50"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Total fee (₹)</label><input type="number" id="sFee" min="0" max="9999999"></div>
+      <div class="fg"><label>Advance paid (₹)</label><input type="number" id="sAdv" min="0" max="9999999"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Fee status</label>
+        <select id="sStat"><option value="pending">Pending</option><option value="partial">Partial</option><option value="paid">Paid</option></select>
+      </div>
+      <div class="fg"><label>Assign to agent</label><select id="sAgent"><option value="">-- Select --</option></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Referral amount (₹)</label><input type="number" id="sRef" min="0" max="999999"></div>
+      <div class="fg"><label>Referral paid?</label><select id="sRefPaid"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('stuModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStu()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Agent Modal -->
+<div class="mbg" id="agModal">
+  <div class="modal">
+    <div class="modal-title" id="agModalTitle">Add agent</div>
+    <div class="modal-sub">Create a login account for the agent</div>
+    <input type="hidden" id="agId">
+    <div class="fr">
+      <div class="fg"><label>Name *</label><input type="text" id="agName" maxlength="60"></div>
+      <div class="fg"><label>Phone</label><input type="text" id="agPhone" maxlength="15"></div>
+    </div>
+    <div class="fg"><label>Email * (login email)</label><input type="email" id="agEmail" maxlength="100"></div>
+    <div class="fr">
+      <div class="fg"><label id="agPwLabel">Password * (min 8 chars)</label><input type="password" id="agPw" maxlength="64"></div>
+      <div class="fg"><label>Confirm password *</label><input type="password" id="agPw2" maxlength="64"></div>
+    </div>
+    <div id="agErr" class="auth-err" style="margin-top:8px"></div>
+    <div class="info-box">Agent logs in using this email + password. Share credentials privately.</div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('agModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAgent()">Save agent</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="mbg" id="pwModal">
+  <div class="modal">
+    <div class="modal-title">Change your password</div>
+    <div class="modal-sub">Enter current password and choose a new strong one</div>
+    <div class="fg"><label>Current password *</label><input type="password" id="pwCur" maxlength="64"></div>
+    <div class="fg"><label>New password * (min 8 chars)</label><input type="password" id="pwNew" maxlength="64"></div>
+    <div class="fg"><label>Confirm new password *</label><input type="password" id="pwNew2" maxlength="64"></div>
+    <div id="pwErr" class="auth-err" style="margin-top:4px"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('pwModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePwd()">Update password</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alert Detail Modal -->
+<div class="mbg" id="alertModal">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--red)">⚠ Login Attempt Detail</div>
+    <div class="modal-sub">Full details of this access attempt</div>
+    <div id="alertDetail"></div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="closeM('alertModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ── CONFIG ──────────────────────────────────────────────────────
+// ⚠️  PASTE YOUR SUPABASE VALUES BELOW
+// Go to: https://supabase.com → Your Project → Settings → API
+// Copy "Project URL" and the "anon / public" key (starts with eyJ...)
+const SB_URL = 'https://wwxobmubeyqifyisxnhe.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3eG9ibXViZXlxaWZ5aXN4bmhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMjQ1NDksImV4cCI6MjA5NTgwMDU0OX0.XEpNJkUzFy_NypVYLrjaejm3tXKb7kpd7xC9PnH74hM';
+const sb     = supabase.createClient(SB_URL, SB_KEY);
+
+// ── CONFIG CHECK (shows friendly error if key not set) ──────────
+if(!SB_KEY || SB_KEY === 'PASTE_YOUR_ANON_KEY_HERE' || !SB_KEY.startsWith('eyJ')) {
+  document.getElementById('authErr').textContent =
+    'System configuration error. Please contact administrator.';
+  document.getElementById('authErr').style.display = 'block';
+  document.getElementById('loginBtn').disabled = true;
+} else {
+  const sg = document.getElementById('setupGuide');
+  if(sg) sg.style.display = 'none';
+}
+const SALT   = 'mhEdu$alt!2026_';
+const BLOCK_AFTER = 3; // block IP after this many fails
+const LOCK_MS     = 15 * 60 * 1000; // 15 min lockout
+
+// ── SECURITY HELPERS ───────────────────────────────────────────
+function esc(v){
+  if(v==null) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+function clean(v,n){
+  let s=String(v||'').replace(/<[^>]*>/g,'').replace(/[<>"`;]/g,'').trim();
+  return n?s.slice(0,n):s;
+}
+function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+async function hashPwd(p){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(SALT+p));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── BRUTE FORCE: tracked in sessionStorage (survives refresh, not new tab) ──
+function getFails()  {return parseInt(sessionStorage.getItem('_lf')||'0');}
+function getLock()   {return parseInt(sessionStorage.getItem('_ll')||'0');}
+function setFails(n) {sessionStorage.setItem('_lf',n);}
+function setLock(t)  {sessionStorage.setItem('_ll',t);}
+function clearLockData(){sessionStorage.removeItem('_lf');sessionStorage.removeItem('_ll');}
+function isLocked(){
+  const l=getLock();
+  if(l&&Date.now()<l) return true;
+  if(l&&Date.now()>=l){clearLockData();}
+  return false;
+}
+function addFail(){
+  const f=getFails()+1; setFails(f);
+  if(f>=BLOCK_AFTER){setLock(Date.now()+LOCK_MS);startLockUI();}
+}
+let lockInterval=null;
+function startLockUI(){
+  if(lockInterval) clearInterval(lockInterval);
+  lockInterval=setInterval(()=>{
+    const left=getLock()-Date.now();
+    const el=document.getElementById('lockTimer');
+    if(left<=0){clearInterval(lockInterval);el.style.display='none';return;}
+    el.style.display='block';
+    el.textContent=`🔒 Access blocked. Try again in ${Math.ceil(left/60000)}m ${Math.ceil((left%60000)/1000)}s`;
+  },1000);
+}
+
+// ── SESSION TIMEOUT 30 min ──────────────────────────────────────
+let sTimer=null,sWarn=null;
+function startSession(){
+  clearTimeout(sTimer);clearTimeout(sWarn);
+  document.getElementById('swarn').style.display='none';
+  sWarn =setTimeout(()=>document.getElementById('swarn').style.display='block',25*60*1000);
+  sTimer=setTimeout(()=>{notify('Session expired. Please sign in again.','err');setTimeout(doLogout,2000);},30*60*1000);
+  ['click','keydown'].forEach(e=>document.addEventListener(e,()=>{if(currentUser)startSession();},{once:true}));
+}
+
+// ── STATE ───────────────────────────────────────────────────────
+let currentUser=null,currentRole=null,currentAgent=null;
+let allStudents=[],allAgents=[];
+let charts={},loginBusy=false;
+let camStream=null;
+
+// ── CAMERA CAPTURE ─────────────────────────────────────────────
+async function startCamera(){
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+    const vid=document.getElementById('camVideo');
+    vid.srcObject=camStream;
+    await new Promise(r=>vid.onloadedmetadata=r);
+  } catch(e){ camStream=null; }
+}
+
+function capturePhoto(){
+  if(!camStream) return null;
+  try{
+    const vid=document.getElementById('camVideo');
+    const can=document.getElementById('camCanvas');
+    can.width=320; can.height=240;
+    can.getContext('2d').drawImage(vid,0,0,320,240);
+    return can.toDataURL('image/jpeg',0.7);
+  } catch(e){ return null; }
+}
+
+function stopCamera(){
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+}
+
+// ── DEVICE FINGERPRINT ─────────────────────────────────────────
+function getDeviceInfo(){
+  return {
+    browser: navigator.userAgent.slice(0,120),
+    os:      navigator.platform||'unknown',
+    screen:  `${screen.width}x${screen.height}`,
+    lang:    navigator.language||'unknown',
+    tz:      Intl.DateTimeFormat().resolvedOptions().timeZone||'unknown',
+    finger:  btoa([navigator.userAgent,screen.width,screen.height,navigator.language,navigator.platform].join('|')).slice(0,40),
+  };
+}
+
+// ── GEO LOCATION from IP (no permission needed) ─────────────────
+async function getGeoFromIP(){
+  try{
+    const r=await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(4000)});
+    const d=await r.json();
+    return {
+      ip:      d.ip||'unknown',
+      city:    d.city||'unknown',
+      region:  d.region||'unknown',
+      country: d.country_name||'unknown',
+      lat:     String(d.latitude||''),
+      lon:     String(d.longitude||''),
+      org:     d.org||'',
+    };
+  } catch(e){
+    return {ip:'unknown',city:'unknown',region:'unknown',country:'unknown',lat:'',lon:'',org:''};
+  }
+}
+
+// ── GPS LOCATION (browser permission) ─────────────────────────
+function getGPS(){
+  return new Promise(resolve=>{
+    if(!navigator.geolocation){resolve(null);return;}
+    navigator.geolocation.getCurrentPosition(
+      p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy}),
+      ()=>resolve(null),
+      {timeout:5000,maximumAge:0}
+    );
+  });
+}
+
+// ── LOG ATTEMPT TO SUPABASE ────────────────────────────────────
+async function logAttempt(email, success, extras={}){
+  try{
+    await sb.from('login_attempts').insert([{
+      email, success,
+      ip_address:     extras.ip||'unknown',
+      city:           extras.city||'',
+      region:         extras.region||'',
+      country:        extras.country||'',
+      latitude:       extras.lat||extras.gpsLat||'',
+      longitude:      extras.lon||extras.gpsLon||'',
+      device_browser: extras.browser||'',
+      device_os:      extras.os||'',
+      device_screen:  extras.screen||'',
+      device_finger:  extras.finger||'',
+      photo_url:      extras.photo||null,
+    }]);
+  } catch(e){}
+}
+
+// ── COLLECT ALL SECURITY DATA ───────────────────────────────────
+async function collectSecurityData(capturePhoto_=true){
+  const dev  = getDeviceInfo();
+  const geo  = await getGeoFromIP();
+  const gps  = await getGPS();
+  let photo  = null;
+  if(capturePhoto_ && camStream) photo = capturePhoto();
+  return {
+    ...dev, ...geo,
+    gpsLat: gps?.lat ? String(gps.lat) : '',
+    gpsLon: gps?.lon ? String(gps.lon) : '',
+    photo,
+  };
+}
+
+// ── MAIN LOGIN ─────────────────────────────────────────────────
+async function doLogin(){
+  if(loginBusy||isLocked()){if(isLocked())startLockUI();return;}
+  const errEl=document.getElementById('authErr');
+  errEl.style.display='none';
+
+  const email=clean(document.getElementById('loginEmail').value,100).toLowerCase();
+  const pass =document.getElementById('loginPassword').value;
+
+  if(!email||!pass){errEl.textContent='Please enter email and password.';errEl.style.display='block';return;}
+  if(!validEmail(email)){errEl.textContent='Enter a valid email.';errEl.style.display='block';return;}
+  if(pass.length>128){errEl.textContent='Invalid input.';errEl.style.display='block';return;}
+
+  loginBusy=true;
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true; btn.textContent='Signing in...';
+
+  // Start collecting security data in background immediately
+  await startCamera(); // ask camera permission
+  const secDataPromise = collectSecurityData(true);
+
+  await new Promise(r=>setTimeout(r,800)); // slow bots
+
+  try{
+    const inputHash=await hashPwd(pass);
+    const {data,error}=await sb.from('agents')
+      .select('id,name,email,role,phone,is_active,password_hash')
+      .eq('email',email).eq('is_active',true).single();
+
+    const secData = await secDataPromise;
+
+    if(error||!data||!data.password_hash||inputHash!==data.password_hash){
+      // FAILED LOGIN — collect everything and log
+      addFail();
+      const fails=getFails();
+      await logAttempt(email, false, secData);
+
+      // Alert admin via realtime (admin will see it in security log instantly)
+      errEl.textContent=isLocked()?'Access blocked. Too many failed attempts.':'Incorrect email or password.';
+      errEl.style.display='block';
+      stopCamera();
+      return;
+    }
+
+    // SUCCESS — log with location
+    clearLockData();
+    await logAttempt(email, true, {...secData, photo: null}); // no photo on success
+    stopCamera();
+    currentRole  = data.role;
+    currentAgent = data.role==='agent'?data:null;
+    currentUser  = {name:data.name,email:data.email,id:data.id};
+    startApp();
+
+  } finally{
+    loginBusy=false; btn.disabled=false; btn.textContent='Sign in';
+  }
+}
+
+function doLogout(){
+  currentUser=null;currentRole=null;currentAgent=null;
+  clearTimeout(sTimer);clearTimeout(sWarn);
+  if(lockInterval) clearInterval(lockInterval);
+  stopCamera();
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  charts={};
+  document.getElementById('appPage').style.display='none';
+  document.getElementById('authPage').style.display='flex';
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginPassword').value='';
+  document.getElementById('authErr').style.display='none';
+}
+
+// ── APP START ───────────────────────────────────────────────────
+async function startApp(){
+  document.getElementById('authPage').style.display='none';
+  document.getElementById('appPage').style.display='flex';
+  document.getElementById('topName').textContent =esc(currentUser.name);
+  document.getElementById('topAv').textContent   =esc(currentUser.name[0].toUpperCase());
+  document.getElementById('sbUser').textContent  =esc(currentUser.email);
+  const chip=document.getElementById('roleChip');
+  chip.textContent=currentRole==='admin'?'Admin':'Agent';
+  chip.className='logo-role '+(currentRole==='admin'?'role-admin':'role-agent');
+  buildSidebar();
+  await loadData();
+  subscribeRT();
+  startSession();
+  showSec('dashboard');
+}
+
+function buildSidebar(){
+  const items=currentRole==='admin'
+    ?[{id:'dashboard',ic:'grid',lb:'Dashboard'},{id:'students',ic:'users',lb:'All Students'},
+      {id:'agents',ic:'brief',lb:'Agents'},{id:'reports',ic:'bar',lb:'Reports'},
+      {id:'security',ic:'shield',lb:'Security Log'},{id:'profile',ic:'key',lb:'My Profile'}]
+    :[{id:'dashboard',ic:'grid',lb:'My Dashboard'},{id:'students',ic:'users',lb:'My Students'},
+      {id:'reports',ic:'bar',lb:'My Reports'},{id:'profile',ic:'key',lb:'My Profile'}];
+  document.getElementById('sbNav').innerHTML=items.map(it=>`
+    <button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}')">
+      ${icon(it.ic)}<span>${it.lb}</span>
+    </button>`).join('');
+}
+
+function icon(n){
+  return {
+    grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    brief:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+    bar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6M15.5 7.5L19 4M18 5l2 2"/></svg>',
+  }[n]||'';
+}
+
+// ── DATA ────────────────────────────────────────────────────────
+async function loadData(){
+  const [r1,r2]=await Promise.all([
+    sb.from('students').select('*,agents(name,email),notes(*)').order('created_at',{ascending:false}),
+    sb.from('agents').select('id,name,email,phone,role,is_active').order('name'),
+  ]);
+  allStudents=r1.data||[];
+  allAgents=(r2.data||[]).filter(a=>a.role==='agent');
+}
+function myStudents(){
+  if(currentRole==='admin') return allStudents;
+  return allStudents.filter(s=>s.agent_id===currentAgent?.id);
+}
+
+// ── REALTIME ────────────────────────────────────────────────────
+function subscribeRT(){
+  sb.channel('rt')
+    .on('postgres_changes',{event:'*',schema:'public',table:'students'},async()=>{await loadData();refreshSec();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'notes'},async()=>{await loadData();refreshSec();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'agents'},async()=>{await loadData();refreshSec();})
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'login_attempts'},async(payload)=>{
+      // Real-time alert to admin when failed login happens
+      if(currentRole==='admin' && payload.new && !payload.new.success){
+        showSecAlert(payload.new);
+      }
+      if(curSec==='security') refreshSec();
+    })
+    .subscribe(s=>{
+      const ok=s==='SUBSCRIBED';
+      document.getElementById('rtDot').style.background=ok?'var(--green)':'var(--amber)';
+      document.getElementById('rtLbl').textContent=ok?'Live':'Connecting';
+    });
+}
+
+// Real-time popup alert for admin when attack detected
+function showSecAlert(attempt){
+  const loc=`${attempt.city||'?'}, ${attempt.country||'?'}`;
+  const msg=`🚨 Failed login attempt!\nEmail tried: ${attempt.email||'unknown'}\nLocation: ${loc}\nDevice: ${(attempt.device_browser||'').slice(0,60)}`;
+  notify(msg,'err');
+}
+
+let curSec='dashboard';
+function refreshSec(){showSec(curSec);}
+
+// ── SECTION GUARD ───────────────────────────────────────────────
+const ADMIN_SEC=['dashboard','students','agents','reports','security','profile'];
+const AGENT_SEC=['dashboard','students','reports','profile'];
+
+function showSec(id){
+  const allowed=currentRole==='admin'?ADMIN_SEC:AGENT_SEC;
+  if(!allowed.includes(id)){notify('Access denied.','err');return;}
+  curSec=id;
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const sec=document.getElementById('sec-'+id);
+  if(sec) sec.style.display='block';
+  const nav=document.getElementById('nav-'+id);
+  if(nav) nav.classList.add('active');
+  const titles={dashboard:currentRole==='admin'?'Dashboard':'My Dashboard',students:currentRole==='admin'?'All Students':'My Students',agents:'Agents',reports:'Reports',security:'Security Log',profile:'My Profile'};
+  document.getElementById('pageTitle').textContent=titles[id]||id;
+  if(id==='dashboard') renderDash();
+  if(id==='students')  renderStudents();
+  if(id==='agents'&&currentRole==='admin') renderAgents();
+  if(id==='reports')   renderReports();
+  if(id==='security'&&currentRole==='admin') renderSecurity();
+  if(id==='profile')   renderProfile();
+}
+
+// ── DASHBOARD ───────────────────────────────────────────────────
+function renderDash(){
+  const sts=myStudents();
+  const paid=sts.filter(s=>s.fee_status==='paid').length;
+  const pend=sts.filter(s=>s.fee_status==='pending').length;
+  const part=sts.filter(s=>s.fee_status==='partial').length;
+  const adv =sts.reduce((a,s)=>a+(s.advance_paid||0),0);
+  const tot =sts.reduce((a,s)=>a+(s.total_fee||0),0);
+  const ref =sts.reduce((a,s)=>a+(s.referral_amount||0),0);
+  const refP=sts.filter(s=>s.referral_paid).reduce((a,s)=>a+(s.referral_amount||0),0);
+  const isA=currentRole==='admin';
+  document.getElementById('sec-dashboard').innerHTML=`
+    <div class="metrics">
+      <div class="metric m-blue"><div class="m-label">Total students</div><div class="m-val">${sts.length}</div><div class="m-sub">enrolled</div></div>
+      <div class="metric m-green"><div class="m-label">Fees paid</div><div class="m-val">${paid}</div><div class="m-sub">${pend} pending · ${part} partial</div></div>
+      <div class="metric m-amber"><div class="m-label">Advance collected</div><div class="m-val">₹${adv.toLocaleString('en-IN')}</div><div class="m-sub">of ₹${tot.toLocaleString('en-IN')}</div></div>
+      <div class="metric m-purple"><div class="m-label">${isA?'Referral due':'My referral'}</div><div class="m-val">₹${ref.toLocaleString('en-IN')}</div><div class="m-sub">₹${refP.toLocaleString('en-IN')} paid</div></div>
+      ${isA?`<div class="metric"><div class="m-label">Agents</div><div class="m-val">${allAgents.length}</div><div class="m-sub">active</div></div>`:''}
+    </div>
+    <div class="chart-row">
+      <div class="card"><div class="card-title">Fee status</div>
+        <div class="legend"><span><span class="ldot" style="background:#16a34a"></span>Paid</span><span><span class="ldot" style="background:#2563eb"></span>Partial</span><span><span class="ldot" style="background:#d97706"></span>Pending</span></div>
+        <div class="cw" style="height:200px"><canvas id="c1" role="img" aria-label="Fee status">Fee</canvas></div></div>
+      <div class="card"><div class="card-title">Monthly enrollments</div>
+        <div class="legend"><span><span class="ldot" style="background:#2563eb"></span>Students</span></div>
+        <div class="cw" style="height:200px"><canvas id="c2" role="img" aria-label="Monthly">Monthly</canvas></div></div>
+    </div>
+    ${isA?`<div class="card"><div class="card-hdr"><div class="card-title">Agent performance</div></div><div class="ag-grid" id="agPerf"></div></div>`:''}
+    <div class="card"><div class="card-hdr"><div class="card-title">Recent students</div><button class="btn btn-sm btn-primary" onclick="showSec('students')">View all</button></div><div id="recentTbl"></div></div>`;
+
+  const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  mkChart('c1','doughnut',ml,[{data:[paid,part,pend],backgroundColor:['#16a34a','#2563eb','#d97706'],borderWidth:0}],{plugins:{legend:{display:false}},cutout:'65%'});
+  mkChart('c2','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#2563eb',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
+
+  if(isA){
+    const ap=document.getElementById('agPerf');
+    if(!allAgents.length){ap.innerHTML='<p style="color:var(--muted);font-size:13px">No agents yet.</p>';return;}
+    ap.innerHTML=allAgents.map(ag=>{
+      const as=allStudents.filter(s=>s.agent_id===ag.id);
+      const aa=as.reduce((a,s)=>a+(s.advance_paid||0),0);
+      const ar=as.reduce((a,s)=>a+(s.referral_amount||0),0);
+      return `<div class="ag-card">
+        <div class="ag-av">${esc(ag.name[0].toUpperCase())}</div>
+        <div style="font-size:14px;font-weight:600">${esc(ag.name)}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${esc(ag.email)}</div>
+        <div class="ag-stats">
+          <div class="ag-stat"><div class="ag-sl">Students</div><div class="ag-sv">${as.length}</div></div>
+          <div class="ag-stat"><div class="ag-sl">Advance</div><div class="ag-sv">₹${aa.toLocaleString('en-IN')}</div></div>
+          <div class="ag-stat"><div class="ag-sl">Referral</div><div class="ag-sv">₹${ar.toLocaleString('en-IN')}</div></div>
+          <div class="ag-stat"><div class="ag-sl">Paid</div><div class="ag-sv">${as.filter(s=>s.fee_status==='paid').length}</div></div>
+        </div></div>`;
+    }).join('');
+  }
+  const rt=document.getElementById('recentTbl');
+  const rec=myStudents().slice(0,5);
+  if(!rec.length){rt.innerHTML='<p style="color:var(--muted);font-size:13px;padding:10px 0">No students yet.</p>';return;}
+  rt.innerHTML=`<table><thead><tr><th>Name</th><th>Agent</th><th>Advance</th><th>Status</th></tr></thead><tbody>
+    ${rec.map(s=>`<tr><td>${esc(s.student_name)}</td><td>${esc(s.agents?.name||'—')}</td><td>₹${(s.advance_paid||0).toLocaleString('en-IN')}</td><td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+// ── STUDENTS ────────────────────────────────────────────────────
+function renderStudents(){
+  const isA=currentRole==='admin';
+  document.getElementById('sec-students').innerHTML=`
+    <div class="card" style="margin-bottom:14px"><div class="sr">
+      <input type="text" id="q" placeholder="Search name or bill number..." oninput="filterStu()" maxlength="80">
+      <select id="sf" onchange="filterStu()"><option value="">All status</option><option value="paid">Paid</option><option value="partial">Partial</option><option value="pending">Pending</option></select>
+      ${isA?`<select id="af" onchange="filterStu()"><option value="">All agents</option>${allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>`:''}
+      ${isA?'<button class="btn btn-primary" onclick="openStuModal()">+ Add student</button>':''}
+    </div></div>
+    <div class="card"><div class="tscroll">
+      <table><thead><tr>
+        <th>#</th><th>Name</th><th>DOA</th><th>Bill no</th>
+        ${isA?'<th>Agent</th>':''}
+        <th>Total fee</th><th>Advance</th><th>Balance</th><th>Status</th><th>Referral</th><th>Notes</th>
+        ${isA?'<th>Actions</th>':''}
+      </tr></thead><tbody id="stuBody"></tbody></table>
+    </div></div>`;
+  filterStu();
+}
+
+function filterStu(){
+  const q =clean(document.getElementById('q')?.value||'',80).toLowerCase();
+  const sf=document.getElementById('sf')?.value||'';
+  const af=document.getElementById('af')?.value||'';
+  const isA=currentRole==='admin';
+  const list=myStudents().filter(s=>
+    (!q||s.student_name.toLowerCase().includes(q)||(s.bill_number||'').toLowerCase().includes(q))&&
+    (!sf||s.fee_status===sf)&&(!af||s.agent_id===af)
+  );
+  const tb=document.getElementById('stuBody'); if(!tb) return;
+  if(!list.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:28px">No students found</td></tr>';return;}
+  tb.innerHTML=list.map((s,i)=>{
+    const notes=(s.notes||[]).map(n=>`
+      <div class="note-box">${esc(n.note_text)}
+        ${isA?`<button class="btn btn-red btn-sm" style="padding:2px 6px;margin-left:6px" onclick="delNote('${esc(n.id)}')">×</button>`:''}
+      </div>`).join('');
+    const ni=`<div class="note-row"><input type="text" id="ni-${esc(s.id)}" placeholder="Add note..." maxlength="300"><button class="btn btn-sm btn-amber" onclick="addNote('${esc(s.id)}','ni-${esc(s.id)}')">Add</button></div>`;
+    return `<tr>
+      <td>${i+1}</td>
+      <td><b>${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
+      <td>${esc(s.doa||'')}</td>
+      <td style="font-size:11px;color:var(--muted)">${esc(s.bill_number||'')}</td>
+      ${isA?`<td>${esc(s.agents?.name||'—')}</td>`:''}
+      <td>₹${(s.total_fee||0).toLocaleString('en-IN')}</td>
+      <td>₹${(s.advance_paid||0).toLocaleString('en-IN')}</td>
+      <td>₹${(s.balance||0).toLocaleString('en-IN')}</td>
+      <td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td>
+      <td>₹${(s.referral_amount||0).toLocaleString('en-IN')}<br><span style="font-size:11px;color:${s.referral_paid?'var(--green)':'var(--amber)'}">${s.referral_paid?'Paid':'Unpaid'}</span></td>
+      <td style="min-width:180px">${notes}${ni}</td>
+      ${isA?`<td><div style="display:flex;gap:4px">
+        <button class="btn btn-sm btn-amber" onclick="openStuModal('${esc(s.id)}')">Edit</button>
+        <button class="btn btn-sm btn-red" onclick="delStu('${esc(s.id)}')">Del</button>
+      </div></td>`:''}
+    </tr>`;
+  }).join('');
+}
+
+// ── AGENTS ──────────────────────────────────────────────────────
+function renderAgents(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  document.getElementById('sec-agents').innerHTML=`
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+      <button class="btn btn-primary" onclick="openAgModal()">+ Add agent</button>
+    </div>
+    <div class="ag-grid" id="agList"></div>`;
+  const al=document.getElementById('agList');
+  if(!allAgents.length){al.innerHTML='<p style="color:var(--muted);font-size:13px">No agents yet.</p>';return;}
+  al.innerHTML=allAgents.map(ag=>{
+    const as=allStudents.filter(s=>s.agent_id===ag.id);
+    const aa=as.reduce((a,s)=>a+(s.advance_paid||0),0);
+    const ar=as.reduce((a,s)=>a+(s.referral_amount||0),0);
+    const rp=as.filter(s=>s.referral_paid).reduce((a,s)=>a+(s.referral_amount||0),0);
+    return `<div class="ag-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="ag-av">${esc(ag.name[0].toUpperCase())}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm btn-amber" onclick="openAgModal('${esc(ag.id)}')">Edit</button>
+          <button class="btn btn-sm btn-red" onclick="delAgent('${esc(ag.id)}')">Remove</button>
+        </div>
+      </div>
+      <div style="font-size:14px;font-weight:600">${esc(ag.name)}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${esc(ag.email)}${ag.phone?' · '+esc(ag.phone):''}</div>
+      <div class="ag-stats">
+        <div class="ag-stat"><div class="ag-sl">Students</div><div class="ag-sv">${as.length}</div></div>
+        <div class="ag-stat"><div class="ag-sl">Advance</div><div class="ag-sv">₹${aa.toLocaleString('en-IN')}</div></div>
+        <div class="ag-stat"><div class="ag-sl">Ref due</div><div class="ag-sv">₹${ar.toLocaleString('en-IN')}</div></div>
+        <div class="ag-stat"><div class="ag-sl">Ref paid</div><div class="ag-sv">₹${rp.toLocaleString('en-IN')}</div></div>
+      </div></div>`;
+  }).join('');
+}
+
+// ── REPORTS ─────────────────────────────────────────────────────
+function renderReports(){
+  const sts=myStudents();
+  const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  document.getElementById('sec-reports').innerHTML=`
+    <div class="card"><div class="card-title">Monthly enrollments</div>
+      <div class="legend"><span><span class="ldot" style="background:#2563eb"></span>Students</span></div>
+      <div class="cw" style="height:240px"><canvas id="rc1" role="img" aria-label="Monthly">Monthly</canvas></div></div>
+    <div class="card"><div class="card-title">Monthly advance collection (₹)</div>
+      <div class="legend"><span><span class="ldot" style="background:#d97706"></span>Advance ₹</span></div>
+      <div class="cw" style="height:240px"><canvas id="rc2" role="img" aria-label="Advance">Advance</canvas></div></div>`;
+  mkChart('rc1','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#2563eb',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
+  mkChart('rc2','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).reduce((a,s)=>a+(s.advance_paid||0),0)),backgroundColor:'#d97706',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
+}
+
+// ── SECURITY LOG ────────────────────────────────────────────────
+async function renderSecurity(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  document.getElementById('sec-security').innerHTML=`
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Login attempts — last 100</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" onclick="renderSecurity()">Refresh</button>
+          <button class="btn btn-sm btn-red" onclick="clearSecLog()">Clear log</button>
+        </div>
+      </div>
+      <div class="warn-box">🚨 Failed logins trigger a real-time alert. Camera photo (if allowed), IP address, GPS location, and device info are captured on every failed attempt.</div>
+      <div style="margin-top:16px" id="logList"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
+    </div>`;
+
+  const {data}=await sb.from('login_attempts').select('*').order('attempted_at',{ascending:false}).limit(100);
+  const ll=document.getElementById('logList');
+  if(!data||!data.length){ll.innerHTML='<p style="color:var(--muted);font-size:13px">No login attempts recorded yet.</p>';return;}
+
+  const failed=data.filter(r=>!r.success).length;
+  ll.innerHTML=`
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--r);padding:10px 16px;font-size:13px">
+        <span style="font-weight:600;color:var(--red)">${failed}</span> <span style="color:var(--muted)">failed attempts</span>
+      </div>
+      <div style="background:var(--green-bg);border:1px solid var(--green-light);border-radius:var(--r);padding:10px 16px;font-size:13px">
+        <span style="font-weight:600;color:var(--green)">${data.length-failed}</span> <span style="color:var(--muted)">successful logins</span>
+      </div>
+    </div>
+    <div class="tscroll">
+    <table><thead><tr>
+      <th>Photo</th><th>Time</th><th>Email</th><th>Result</th>
+      <th>IP Address</th><th>Location</th><th>GPS</th><th>Device</th><th>Detail</th>
+    </tr></thead><tbody>
+      ${data.map(r=>{
+        const loc=`${r.city||'?'}, ${r.region||'?'}, ${r.country||'?'}`;
+        const gps=r.latitude&&r.longitude?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--blue);font-size:11px">📍 View map</a>`:'<span style="color:var(--faint);font-size:11px">No GPS</span>';
+        const photo=r.photo_url?`<img src="${esc(r.photo_url)}" class="sec-photo" alt="capture">`:'<div class="sec-photo-none">No photo</div>';
+        return `<tr style="${!r.success?'background:#fff8f8':''}">
+          <td>${photo}</td>
+          <td style="font-size:11px;white-space:nowrap">${new Date(r.attempted_at).toLocaleString('en-IN')}</td>
+          <td style="font-size:12px">${esc(r.email||'—')}</td>
+          <td><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'✓ Success':'✗ Failed'}</span></td>
+          <td style="font-size:12px;font-family:monospace">${esc(r.ip_address||'unknown')}</td>
+          <td style="font-size:11px">${esc(loc)}</td>
+          <td>${gps}</td>
+          <td style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${esc((r.device_browser||'').slice(0,40))}</td>
+          <td><button class="btn btn-sm" onclick='showAttemptDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>View</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody></table></div>`;
+}
+
+function showAttemptDetail(r){
+  const gpsLink=r.latitude&&r.longitude?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--blue)">📍 Open in Google Maps</a>`:'Not available';
+  document.getElementById('alertDetail').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      ${r.photo_url?`<div style="grid-column:1/-1"><img src="${esc(r.photo_url)}" style="width:100%;max-width:320px;border-radius:var(--r);border:1px solid var(--border)" alt="Captured photo"></div>`:'<div style="grid-column:1/-1;background:var(--bg);border-radius:var(--r);padding:20px;text-align:center;color:var(--muted);font-size:13px">No camera photo captured</div>'}
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">TIME</div><div style="font-size:13px">${new Date(r.attempted_at).toLocaleString('en-IN')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">EMAIL TRIED</div><div style="font-size:13px">${esc(r.email||'—')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">RESULT</div><div><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'Success':'Failed'}</span></div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">IP ADDRESS</div><div style="font-size:13px;font-family:monospace">${esc(r.ip_address||'unknown')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">CITY</div><div style="font-size:13px">${esc(r.city||'?')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">REGION</div><div style="font-size:13px">${esc(r.region||'?')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">COUNTRY</div><div style="font-size:13px">${esc(r.country||'?')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">GPS</div><div style="font-size:13px">${gpsLink}</div></div>
+      <div style="grid-column:1/-1"><div style="font-size:11px;color:var(--muted);font-weight:600">BROWSER / DEVICE</div><div style="font-size:12px;word-break:break-all">${esc(r.device_browser||'unknown')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">OS</div><div style="font-size:13px">${esc(r.device_os||'unknown')}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);font-weight:600">SCREEN</div><div style="font-size:13px">${esc(r.device_screen||'unknown')}</div></div>
+      <div style="grid-column:1/-1"><div style="font-size:11px;color:var(--muted);font-weight:600">DEVICE FINGERPRINT</div><div style="font-size:12px;font-family:monospace">${esc(r.device_finger||'—')}</div></div>
+    </div>`;
+  openM('alertModal');
+}
+
+async function clearSecLog(){
+  if(!confirm('Clear all login attempt records?')) return;
+  await sb.from('login_attempts').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  notify('Security log cleared.','ok');
+  renderSecurity();
+}
+
+// ── PROFILE ─────────────────────────────────────────────────────
+function renderProfile(){
+  document.getElementById('sec-profile').innerHTML=`
+    <div class="card">
+      <div class="card-title">My account</div>
+      <table style="font-size:13px;width:auto;margin-top:8px">
+        <tr><td style="color:var(--muted);padding:6px 20px 6px 0">Name</td><td><b>${esc(currentUser.name)}</b></td></tr>
+        <tr><td style="color:var(--muted);padding:6px 20px 6px 0">Email</td><td>${esc(currentUser.email)}</td></tr>
+        <tr><td style="color:var(--muted);padding:6px 20px 6px 0">Role</td><td><span class="pill ${currentRole==='admin'?'pill-paid':'pill-partial'}">${esc(currentRole)}</span></td></tr>
+      </table>
+      <div style="margin-top:20px">
+        <button class="btn btn-primary" onclick="openM('pwModal')">Change my password</button>
+      </div>
+    </div>`;
+}
+
+async function savePwd(){
+  const cur=document.getElementById('pwCur').value;
+  const nw =document.getElementById('pwNew').value;
+  const nw2=document.getElementById('pwNew2').value;
+  const errEl=document.getElementById('pwErr');
+  errEl.style.display='none';
+  if(!cur||!nw||!nw2){errEl.textContent='All fields required.';errEl.style.display='block';return;}
+  if(nw.length<8){errEl.textContent='New password must be at least 8 characters.';errEl.style.display='block';return;}
+  if(nw!==nw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
+  if(nw===cur){errEl.textContent='New password must be different.';errEl.style.display='block';return;}
+  const curHash=await hashPwd(cur);
+  const {data}=await sb.from('agents').select('password_hash').eq('id',currentUser.id).single();
+  if(!data||data.password_hash!==curHash){errEl.textContent='Current password incorrect.';errEl.style.display='block';return;}
+  const newHash=await hashPwd(nw);
+  const {error}=await sb.from('agents').update({password_hash:newHash,updated_at:new Date().toISOString()}).eq('id',currentUser.id);
+  if(error){errEl.textContent='Update failed. Try again.';errEl.style.display='block';return;}
+  notify('Password updated successfully!','ok');
+  closeM('pwModal');
+  ['pwCur','pwNew','pwNew2'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ── STUDENT CRUD ─────────────────────────────────────────────────
+function openStuModal(id){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  document.getElementById('stuModalTitle').textContent=id?'Edit student':'Add student';
+  document.getElementById('stuId').value=id||'';
+  document.getElementById('sAgent').innerHTML='<option value="">-- Select --</option>'+
+    allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+  if(id){
+    const s=allStudents.find(x=>x.id===id); if(!s) return;
+    document.getElementById('sName').value  =s.student_name||'';
+    document.getElementById('sDOA').value   =s.doa||'';
+    document.getElementById('sBill').value  =s.bill_number||'';
+    document.getElementById('sCourse').value=s.course||'';
+    document.getElementById('sFee').value   =s.total_fee||'';
+    document.getElementById('sAdv').value   =s.advance_paid||'';
+    document.getElementById('sStat').value  =s.fee_status||'pending';
+    document.getElementById('sAgent').value =s.agent_id||'';
+    document.getElementById('sRef').value   =s.referral_amount||'';
+    document.getElementById('sRefPaid').value=s.referral_paid?'true':'false';
+  } else {
+    ['sName','sDOA','sBill','sCourse','sFee','sAdv','sRef'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('sStat').value='pending'; document.getElementById('sRefPaid').value='false';
+  }
+  openM('stuModal');
+}
+
+async function saveStu(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  const id    =document.getElementById('stuId').value;
+  const name  =clean(document.getElementById('sName').value,100);
+  const doa   =clean(document.getElementById('sDOA').value,20);
+  const bill  =clean(document.getElementById('sBill').value,50);
+  const course=clean(document.getElementById('sCourse').value,50);
+  const fee   =Math.max(0,parseFloat(document.getElementById('sFee').value)||0);
+  const adv   =Math.max(0,parseFloat(document.getElementById('sAdv').value)||0);
+  const stat  =['paid','pending','partial'].includes(document.getElementById('sStat').value)?document.getElementById('sStat').value:'pending';
+  const agId  =document.getElementById('sAgent').value||null;
+  const ref   =Math.max(0,parseFloat(document.getElementById('sRef').value)||0);
+  const refP  =document.getElementById('sRefPaid').value==='true';
+  if(!name||!doa||!bill){notify('Name, date and bill number required.','err');return;}
+  if(adv>fee){notify('Advance cannot exceed total fee.','err');return;}
+  const p={student_name:name,doa,bill_number:bill,course,total_fee:fee,advance_paid:adv,fee_status:stat,agent_id:agId,referral_amount:ref,referral_paid:refP,updated_at:new Date().toISOString()};
+  const {error}=id?await sb.from('students').update(p).eq('id',id):await sb.from('students').insert([p]);
+  if(error){notify('Save failed. '+(error.code==='23505'?'Bill number already exists.':'Try again.'),'err');return;}
+  notify(id?'Student updated!':'Student added!','ok');
+  closeM('stuModal'); await loadData(); filterStu();
+}
+
+async function delStu(id){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  if(!confirm('Delete this student? This cannot be undone.')) return;
+  const {error}=await sb.from('students').delete().eq('id',id);
+  if(error){notify('Delete failed.','err');return;}
+  notify('Student deleted.','ok'); await loadData(); filterStu();
+}
+
+async function addNote(stuId,inputId){
+  const inp=document.getElementById(inputId);
+  const text=clean(inp.value,300); if(!text) return;
+  const {error}=await sb.from('notes').insert([{student_id:stuId,agent_id:currentAgent?.id||null,note_text:text}]);
+  if(error){notify('Could not save note.','err');return;}
+  inp.value=''; await loadData(); filterStu();
+}
+
+async function delNote(id){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  await sb.from('notes').delete().eq('id',id);
+  await loadData(); filterStu();
+}
+
+// ── AGENT CRUD ───────────────────────────────────────────────────
+function openAgModal(id){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  document.getElementById('agModalTitle').textContent=id?'Edit agent':'Add agent';
+  document.getElementById('agId').value=id||'';
+  document.getElementById('agErr').style.display='none';
+  document.getElementById('agPwLabel').textContent=id?'New password (blank = keep current)':'Password * (min 8 chars)';
+  if(id){
+    const ag=allAgents.find(a=>a.id===id); if(!ag) return;
+    document.getElementById('agName').value =ag.name||'';
+    document.getElementById('agEmail').value=ag.email||'';
+    document.getElementById('agPhone').value=ag.phone||'';
+    document.getElementById('agPw').value=''; document.getElementById('agPw2').value='';
+  } else {
+    ['agName','agEmail','agPhone','agPw','agPw2'].forEach(i=>document.getElementById(i).value='');
+  }
+  openM('agModal');
+}
+
+async function saveAgent(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  const id   =document.getElementById('agId').value;
+  const name =clean(document.getElementById('agName').value,60);
+  const email=clean(document.getElementById('agEmail').value,100).toLowerCase();
+  const phone=clean(document.getElementById('agPhone').value,15);
+  const pw   =document.getElementById('agPw').value;
+  const pw2  =document.getElementById('agPw2').value;
+  const errEl=document.getElementById('agErr'); errEl.style.display='none';
+  if(!name||!email){errEl.textContent='Name and email required.';errEl.style.display='block';return;}
+  if(!validEmail(email)){errEl.textContent='Enter a valid email.';errEl.style.display='block';return;}
+  if(!id&&!pw){errEl.textContent='Password required for new agents.';errEl.style.display='block';return;}
+  if(pw&&pw.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.style.display='block';return;}
+  if(pw&&pw!==pw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
+  const payload={name,email,phone,role:'agent',is_active:true};
+  if(pw) payload.password_hash=await hashPwd(pw);
+  const {error}=id?await sb.from('agents').update(payload).eq('id',id):await sb.from('agents').insert([payload]);
+  if(error){errEl.textContent='Save failed: '+(error.code==='23505'?'Email already exists.':'Try again.');errEl.style.display='block';return;}
+  notify(id?'Agent updated!':'Agent added!','ok');
+  closeM('agModal'); await loadData(); renderAgents();
+}
+
+async function delAgent(id){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  if(!confirm('Remove this agent?')) return;
+  const {error}=await sb.from('agents').delete().eq('id',id);
+  if(error){notify('Could not remove agent.','err');return;}
+  notify('Agent removed.','ok'); await loadData(); renderAgents();
+}
+
+// ── CHART HELPER ─────────────────────────────────────────────────
+function mkChart(id,type,labels,datasets,opts){
+  if(charts[id]){charts[id].destroy();delete charts[id];}
+  const c=document.getElementById(id); if(!c) return;
+  charts[id]=new Chart(c,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,...opts}});
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+function notify(msg,type){
+  const n=document.getElementById('notif');
+  n.className='notif '+(type==='err'?'notif-err':'notif-ok');
+  n.textContent=msg; n.style.display='block';
+  setTimeout(()=>n.style.display='none',type==='err'?5000:3000);
+}
+document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+
+})();
+</script>
+</body>
+</html>
