@@ -106,6 +106,25 @@ tr:hover td{background:#fafafa}
 .ag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;box-shadow:var(--shadow)}
 .ag-av{width:44px;height:44px;border-radius:50%;background:var(--green-light);color:var(--green-t);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
 .ag-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+/* Cash Ledger */
+.ledger-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.ledger-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;box-shadow:var(--shadow)}
+.ledger-stat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ledger-stat-value{font-size:22px;font-weight:700;color:var(--text)}
+.ledger-stat-value.green{color:var(--green)}
+.ledger-row{display:grid;grid-template-columns:90px 1fr 100px 90px 1fr auto;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.ledger-row:last-child{border-bottom:none}
+.ledger-row:hover{background:var(--bg)}
+.ledger-head{background:var(--bg);border-radius:var(--r) var(--r) 0 0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.ledger-body{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow)}
+.mode-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.mode-cash{background:#dcfce7;color:#166534}.mode-upi{background:#dbeafe;color:#1e40af}
+.mode-bank{background:#f3e8ff;color:#6b21a8}.mode-cheque{background:#fef9c3;color:#854d0e}
+.mode-other{background:#f1f5f9;color:#475569}
+.ledger-note{color:var(--muted);font-size:12px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.ledger-agent-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.ledger-agent-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;font-weight:500;transition:.15s}
+.ledger-agent-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 .ag-stat{background:var(--bg);border-radius:var(--r);padding:8px 10px}
 .ag-sl{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
 .ag-sv{font-size:16px;font-weight:700;margin-top:2px}
@@ -187,6 +206,7 @@ tr:hover td{background:#fafafa}
       <div id="sec-agents"    class="section" style="display:none"></div>
       <div id="sec-reports"   class="section" style="display:none"></div>
       <div id="sec-security"  class="section" style="display:none"></div>
+      <div id="sec-ledger"    class="section" style="display:none"></div>
       <div id="sec-profile"   class="section" style="display:none"></div>
     </div>
   </div>
@@ -327,6 +347,37 @@ tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<!-- Cash Ledger Modal -->
+<div class="mbg" id="ledgerModal">
+  <div class="modal" style="width:560px">
+    <div class="modal-title" id="ledgerModalTitle">Add Cash Entry</div>
+    <div class="modal-sub">Record a payment received from agent</div>
+    <input type="hidden" id="ledgerId">
+    <div class="fr">
+      <div class="fg"><label>Date *</label><input type="date" id="lDate"></div>
+      <div class="fg"><label>Agent *</label><select id="lAgent"></select></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Amount (₹) *</label><input type="number" id="lAmount" min="1" max="9999999" placeholder="0"></div>
+      <div class="fg"><label>Payment mode</label>
+        <select id="lMode">
+          <option value="cash">Cash</option>
+          <option value="upi">UPI</option>
+          <option value="bank">Bank Transfer</option>
+          <option value="cheque">Cheque</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Note / Remarks</label><textarea id="lNote" maxlength="300" rows="3" placeholder="Add any notes or remarks here..."></textarea></div>
+    <div id="ledgerErr" class="auth-err"></div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeM('ledgerModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLedger()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -396,14 +447,31 @@ function startLockUI(){
   },1000);
 }
 
-// ── SESSION TIMEOUT 30 min ──────────────────────────────────────
+// ── SESSION TIMEOUT 8 hours ─────────────────────────────────────
 let sTimer=null,sWarn=null;
 function startSession(){
   clearTimeout(sTimer);clearTimeout(sWarn);
   document.getElementById('swarn').style.display='none';
-  sWarn =setTimeout(()=>document.getElementById('swarn').style.display='block',25*60*1000);
-  sTimer=setTimeout(()=>{notify('Session expired. Please sign in again.','err');setTimeout(doLogout,2000);},30*60*1000);
+  sWarn =setTimeout(()=>document.getElementById('swarn').style.display='block',7*60*60*1000);
+  sTimer=setTimeout(()=>{notify('Session expired. Please sign in again.','err');setTimeout(doLogout,2000);},8*60*60*1000);
   ['click','keydown'].forEach(e=>document.addEventListener(e,()=>{if(currentUser)startSession();},{once:true}));
+}
+
+// ── SESSION PERSISTENCE (survive page refresh) ──────────────────
+function saveSession(){
+  if(!currentUser) return;
+  sessionStorage.setItem('_sess', JSON.stringify({user:currentUser,role:currentRole,agent:currentAgent,ts:Date.now()}));
+}
+function loadSession(){
+  try{
+    const raw=sessionStorage.getItem('_sess');
+    if(!raw) return false;
+    const s=JSON.parse(raw);
+    if(!s||!s.user||!s.ts) return false;
+    if(Date.now()-s.ts > 8*60*60*1000){sessionStorage.removeItem('_sess');return false;}
+    currentUser=s.user; currentRole=s.role; currentAgent=s.agent;
+    return true;
+  } catch(e){ return false; }
 }
 
 // ── STATE ───────────────────────────────────────────────────────
@@ -529,6 +597,7 @@ async function doLogin(){
     currentRole  = data.role;
     currentAgent = data.role==='agent'?data:null;
     currentUser  = {name:data.name,email:data.email,id:data.id};
+    saveSession();
     startApp();
 
   } finally{
@@ -538,6 +607,7 @@ async function doLogin(){
 
 function doLogout(){
   currentUser=null;currentRole=null;currentAgent=null;
+  sessionStorage.removeItem('_sess');
   clearTimeout(sTimer);clearTimeout(sWarn);
   if(lockInterval) clearInterval(lockInterval);
   Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
@@ -570,9 +640,12 @@ function buildSidebar(){
   const items=currentRole==='admin'
     ?[{id:'dashboard',ic:'grid',lb:'Dashboard'},{id:'students',ic:'users',lb:'All Students'},
       {id:'agents',ic:'brief',lb:'Agents'},{id:'reports',ic:'bar',lb:'Reports'},
+      {id:'ledger',ic:'wallet',lb:'Cash Ledger'},
       {id:'security',ic:'shield',lb:'Security Log'},{id:'profile',ic:'key',lb:'My Profile'}]
     :[{id:'dashboard',ic:'grid',lb:'My Dashboard'},{id:'students',ic:'users',lb:'My Students'},
-      {id:'reports',ic:'bar',lb:'My Reports'},{id:'profile',ic:'key',lb:'My Profile'}];
+      {id:'reports',ic:'bar',lb:'My Reports'},
+      {id:'ledger',ic:'wallet',lb:'Cash Ledger'},
+      {id:'profile',ic:'key',lb:'My Profile'}];
   document.getElementById('sbNav').innerHTML=items.map(it=>`
     <button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}')">
       ${icon(it.ic)}<span>${it.lb}</span>
@@ -587,6 +660,7 @@ function icon(n){
     bar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
     shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
     key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6M15.5 7.5L19 4M18 5l2 2"/></svg>',
+    wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 13a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/><path d="M22 9H2"/></svg>',
   }[n]||'';
 }
 
@@ -614,6 +688,7 @@ function subscribeRT(){
     .on('postgres_changes',{event:'*',schema:'public',table:'students'},async()=>{await loadData();refreshSec();})
     .on('postgres_changes',{event:'*',schema:'public',table:'notes'},async()=>{await loadData();refreshSec();})
     .on('postgres_changes',{event:'*',schema:'public',table:'agents'},async()=>{await loadData();refreshSec();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'cash_ledger'},async()=>{if(curSec==='ledger')renderLedger();})
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'login_attempts'},async(payload)=>{
       // Real-time alert to admin when failed login happens
       if(currentRole==='admin' && payload.new && !payload.new.success){
@@ -639,8 +714,8 @@ let curSec='dashboard';
 function refreshSec(){showSec(curSec);}
 
 // ── SECTION GUARD ───────────────────────────────────────────────
-const ADMIN_SEC=['dashboard','students','agents','reports','security','profile'];
-const AGENT_SEC=['dashboard','students','reports','profile'];
+const ADMIN_SEC=['dashboard','students','agents','reports','security','ledger','profile'];
+const AGENT_SEC=['dashboard','students','reports','ledger','profile'];
 
 function showSec(id){
   const allowed=currentRole==='admin'?ADMIN_SEC:AGENT_SEC;
@@ -652,13 +727,14 @@ function showSec(id){
   if(sec) sec.style.display='block';
   const nav=document.getElementById('nav-'+id);
   if(nav) nav.classList.add('active');
-  const titles={dashboard:currentRole==='admin'?'Dashboard':'My Dashboard',students:currentRole==='admin'?'All Students':'My Students',agents:'Agents',reports:'Reports',security:'Security Log',profile:'My Profile'};
+  const titles={dashboard:currentRole==='admin'?'Dashboard':'My Dashboard',students:currentRole==='admin'?'All Students':'My Students',agents:'Agents',reports:'Reports',security:'Security Log',ledger:'Cash Ledger',profile:'My Profile'};
   document.getElementById('pageTitle').textContent=titles[id]||id;
   if(id==='dashboard') renderDash();
   if(id==='students')  renderStudents();
   if(id==='agents'&&currentRole==='admin') renderAgents();
   if(id==='reports')   renderReports();
   if(id==='security'&&currentRole==='admin') renderSecurity();
+  if(id==='ledger')    renderLedger();
   if(id==='profile')   renderProfile();
 }
 
@@ -1319,7 +1395,165 @@ window.handleFileSelect  = handleFileSelect;
 window.startBulkUpload   = startBulkUpload;
 window.closeBulkModal    = closeBulkModal;
 
-// Expose functions globally for onclick handlers
+// ── CASH LEDGER ─────────────────────────────────────────────────
+let ledgerFilter='all';
+
+async function renderLedger(){
+  const isA=currentRole==='admin';
+  const el=document.getElementById('sec-ledger');
+  el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)">Loading ledger...</div>`;
+
+  const {data,error}=await sb.from('cash_ledger')
+    .select('*').order('entry_date',{ascending:false}).order('created_at',{ascending:false});
+
+  if(error){el.innerHTML=`<div class="card" style="color:var(--red)">Error loading ledger. Make sure you ran the latest SQL file.</div>`;return;}
+
+  const entries=data||[];
+  // Filter by agent for agent role
+  const myEntries=isA ? entries : entries.filter(e=>e.agent_id===currentUser.id);
+
+  // Agent filter buttons (admin only)
+  const agentTotals={};
+  myEntries.forEach(e=>{
+    if(!agentTotals[e.agent_id]) agentTotals[e.agent_id]={name:e.agent_name||'Unknown',total:0,count:0};
+    agentTotals[e.agent_id].total+=(e.amount||0);
+    agentTotals[e.agent_id].count++;
+  });
+
+  const filtered=ledgerFilter==='all'?myEntries:myEntries.filter(e=>e.agent_id===ledgerFilter);
+  const totalAmt=filtered.reduce((a,e)=>a+(e.amount||0),0);
+  const cashAmt=filtered.filter(e=>e.mode==='cash').reduce((a,e)=>a+(e.amount||0),0);
+  const upiAmt=filtered.filter(e=>e.mode==='upi').reduce((a,e)=>a+(e.amount||0),0);
+
+  el.innerHTML=`
+    ${isA?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div></div>
+      <button class="btn btn-primary" onclick="openLedgerModal(null)" style="background:var(--green);border-color:var(--green)">+ Add Cash Entry</button>
+    </div>`:''}
+
+    <div class="ledger-summary">
+      <div class="ledger-stat">
+        <div class="ledger-stat-label">Total Collected</div>
+        <div class="ledger-stat-value green">₹${totalAmt.toLocaleString('en-IN')}</div>
+      </div>
+      <div class="ledger-stat">
+        <div class="ledger-stat-label">Cash</div>
+        <div class="ledger-stat-value">₹${cashAmt.toLocaleString('en-IN')}</div>
+      </div>
+      <div class="ledger-stat">
+        <div class="ledger-stat-label">UPI / Bank</div>
+        <div class="ledger-stat-value">₹${upiAmt.toLocaleString('en-IN')}</div>
+      </div>
+      <div class="ledger-stat">
+        <div class="ledger-stat-label">Entries</div>
+        <div class="ledger-stat-value">${filtered.length}</div>
+      </div>
+    </div>
+
+    ${isA?`<div class="ledger-agent-filter">
+      <button class="ledger-agent-btn${ledgerFilter==='all'?' active':''}" onclick="setLedgerFilter('all')">All Agents</button>
+      ${Object.entries(agentTotals).map(([id,a])=>`<button class="ledger-agent-btn${ledgerFilter===id?' active':''}" onclick="setLedgerFilter('${id}')">${esc(a.name)} (₹${a.total.toLocaleString('en-IN')})</button>`).join('')}
+    </div>`:''}
+
+    <div class="ledger-body">
+      <div class="ledger-row ledger-head">
+        <span>Date</span>
+        ${isA?'<span>Agent</span>':'<span>Ref/Student</span>'}
+        <span>Amount</span>
+        <span>Mode</span>
+        <span>Note</span>
+        ${isA?'<span>Actions</span>':'<span></span>'}
+      </div>
+      ${filtered.length===0?`<div style="padding:40px;text-align:center;color:var(--muted)">No entries yet.</div>`:''}
+      ${filtered.map(e=>`
+        <div class="ledger-row">
+          <span style="font-weight:500">${new Date(e.entry_date+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span>
+          <span style="font-weight:600">${esc(isA?(e.agent_name||'—'):(e.note||'—'))}</span>
+          <span style="font-weight:700;color:var(--green)">₹${(e.amount||0).toLocaleString('en-IN')}</span>
+          <span><span class="mode-badge mode-${e.mode||'other'}">${(e.mode||'other').toUpperCase()}</span></span>
+          <span class="ledger-note" title="${esc(e.note||'')}">
+            ${e.note?`<span style="color:var(--muted)">${esc(e.note.slice(0,50))}${e.note.length>50?'…':''}</span>`:'<span style="color:var(--faint)">—</span>'}
+          </span>
+          <span style="display:flex;gap:4px">
+            ${isA?`<button class="btn btn-sm btn-amber" onclick="editLedger(${JSON.stringify(e).replace(/'/g,'&#39;')})">Edit</button>
+            <button class="btn btn-sm btn-red" onclick="delLedger('${esc(e.id)}')">Del</button>`
+            :''}
+          </span>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function setLedgerFilter(id){
+  ledgerFilter=id;
+  renderLedger();
+}
+window.setLedgerFilter=setLedgerFilter;
+
+function openLedgerModal(entry){
+  document.getElementById('ledgerId').value=entry?entry.id:'';
+  document.getElementById('ledgerModalTitle').textContent=entry?'Edit Cash Entry':'Add Cash Entry';
+  document.getElementById('lDate').value=entry?entry.entry_date:new Date().toISOString().slice(0,10);
+  document.getElementById('lAmount').value=entry?entry.amount:'';
+  document.getElementById('lMode').value=entry?entry.mode:'cash';
+  document.getElementById('lNote').value=entry?entry.note||'':'';
+  document.getElementById('ledgerErr').style.display='none';
+  // Populate agent dropdown
+  const sel=document.getElementById('lAgent');
+  sel.innerHTML=allAgents.map(a=>`<option value="${esc(a.id)}" data-name="${esc(a.name)}">${esc(a.name)}</option>`).join('');
+  if(entry) sel.value=entry.agent_id;
+  openM('ledgerModal');
+}
+
+async function saveLedger(){
+  const id=document.getElementById('ledgerId').value;
+  const agSel=document.getElementById('lAgent');
+  const agent_id=agSel.value;
+  const agent_name=agSel.options[agSel.selectedIndex]?.text||'';
+  const entry_date=document.getElementById('lDate').value;
+  const amount=parseFloat(document.getElementById('lAmount').value)||0;
+  const mode=document.getElementById('lMode').value;
+  const note=document.getElementById('lNote').value.trim();
+  const errEl=document.getElementById('ledgerErr');
+  errEl.style.display='none';
+
+  if(!entry_date){errEl.textContent='Date is required.';errEl.style.display='block';return;}
+  if(!amount||amount<=0){errEl.textContent='Enter a valid amount.';errEl.style.display='block';return;}
+  if(!agent_id){errEl.textContent='Select an agent.';errEl.style.display='block';return;}
+
+  const payload={agent_id,agent_name,entry_date,amount,mode,note,
+    recorded_by:currentUser.id, recorded_by_name:currentUser.name};
+
+  let error;
+  if(id){
+    ({error}=await sb.from('cash_ledger').update(payload).eq('id',id));
+  } else {
+    ({error}=await sb.from('cash_ledger').insert([payload]));
+  }
+  if(error){errEl.textContent='Save failed. Try again.';errEl.style.display='block';return;}
+  closeM('ledgerModal');
+  notify(id?'Entry updated.':'Entry added.','ok');
+  renderLedger();
+}
+
+async function delLedger(id){
+  if(!confirm('Delete this cash entry?')) return;
+  const {error}=await sb.from('cash_ledger').delete().eq('id',id);
+  if(error){notify('Delete failed.','err');return;}
+  notify('Entry deleted.','ok');
+  renderLedger();
+}
+
+function editLedger(entry){
+  openLedgerModal(entry);
+}
+
+window.openLedgerModal = openLedgerModal;
+window.saveLedger      = saveLedger;
+window.delLedger       = delLedger;
+window.editLedger      = editLedger;
+
+// ── WINDOW ASSIGNMENTS ──────────────────────────────────────────
 window.doLogin      = doLogin;
 window.doLogout     = doLogout;
 window.showSec      = showSec;
@@ -1338,6 +1572,13 @@ window.filterStu    = filterStu;
 window.renderSecurity    = renderSecurity;
 window.clearSecLog       = clearSecLog;
 window.showAttemptDetail = showAttemptDetail;
+window.openLedgerModal   = openLedgerModal;
+window.saveLedger        = saveLedger;
+window.delLedger         = delLedger;
+window.editLedger        = editLedger;
+
+// ── AUTO RESTORE SESSION ON REFRESH ─────────────────────────────
+if(loadSession()){ startApp(); }
 
 })();
 </script>
