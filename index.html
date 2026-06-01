@@ -115,9 +115,7 @@ tr:hover td{background:#fafafa}
 .sw{background:var(--amber-bg);border:1px solid var(--amber-light);color:var(--amber);border-radius:var(--r);padding:8px 14px;font-size:12px;font-weight:500;display:none;margin-bottom:10px;text-align:center}
 .info-box{background:var(--blue-bg);border:1px solid var(--blue-light);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--blue-t);margin-top:8px}
 .warn-box{background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--red);margin-top:8px}
-/* Security log photo */
-.sec-photo{width:60px;height:45px;object-fit:cover;border-radius:4px;border:1px solid var(--border)}
-.sec-photo-none{width:60px;height:45px;background:var(--bg);border-radius:4px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--faint)}
+
 /* Blocked IP badge */
 .ip-blocked{background:var(--red-light);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:4px}
 @media(max-width:768px){
@@ -131,8 +129,7 @@ tr:hover td{background:#fafafa}
 </head>
 <body>
 
-<!-- Hidden camera element -->
-<video id="camVideo" style="display:none" autoplay muted playsinline></video>
+
 <canvas id="camCanvas" style="display:none"></canvas>
 
 <!-- LOGIN -->
@@ -282,6 +279,54 @@ tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<!-- Bulk Upload Modal -->
+<div class="mbg" id="bulkModal">
+  <div class="modal" style="width:680px">
+    <div class="modal-title">⬆ Bulk Upload Students</div>
+    <div class="modal-sub">Upload CSV or Excel file to add multiple students at once</div>
+
+    <!-- Download template -->
+    <div style="background:var(--blue-bg);border:1px solid var(--blue-light);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue-t);margin-bottom:14px">
+      📋 <b>Required columns:</b> date_of_admission, bill_number, student_name, course, total_fee, advance_paid, fee_status, referral_amount, referral_paid, agent_email
+      <br><span style="color:var(--muted);margin-top:4px;display:block">fee_status: paid / pending / partial &nbsp;|&nbsp; referral_paid: true / false &nbsp;|&nbsp; agent_email: lakshman@mhedutech.com</span>
+    </div>
+
+    <button class="btn btn-sm" onclick="downloadTemplate()" style="margin-bottom:14px">⬇ Download Template CSV</button>
+
+    <!-- Drop zone -->
+    <div id="dropZone" style="border:2px dashed var(--border2);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px"
+      ondragover="event.preventDefault();this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'"
+      ondragleave="this.style.borderColor='var(--border2)';this.style.background=''"
+      ondrop="handleDrop(event)">
+      <div style="font-size:28px;margin-bottom:8px">📂</div>
+      <div style="font-size:13px;font-weight:600;color:var(--text)">Drag & drop CSV or Excel file here</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">or click to browse</div>
+      <input type="file" id="bulkFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(this)">
+    </div>
+
+    <!-- Preview table -->
+    <div id="bulkPreview" style="display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px" id="bulkPreviewLabel"></div>
+      <div class="tscroll" style="max-height:220px;overflow-y:auto">
+        <table id="bulkPreviewTable" style="font-size:12px"></table>
+      </div>
+      <div id="bulkErrors" style="display:none;background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--r);padding:10px;font-size:12px;color:var(--red);margin-top:10px;max-height:100px;overflow-y:auto"></div>
+    </div>
+
+    <div id="bulkProgress" style="display:none;margin-top:12px">
+      <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
+        <div id="bulkBar" style="background:var(--green);height:100%;width:0%;transition:.3s;border-radius:20px"></div>
+      </div>
+      <div id="bulkProgressText" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center"></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn" onclick="closeBulkModal()">Cancel</button>
+      <button class="btn btn-primary" id="bulkUploadBtn" onclick="startBulkUpload()" disabled style="background:var(--green);border-color:var(--green)">Upload Students</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -365,36 +410,9 @@ function startSession(){
 let currentUser=null,currentRole=null,currentAgent=null;
 let allStudents=[],allAgents=[];
 let charts={},loginBusy=false;
-let camStream=null;
+
 
 // ── CAMERA CAPTURE ─────────────────────────────────────────────
-async function startCamera(){
-  try{
-    const p=navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
-    const t=new Promise((_,r)=>setTimeout(()=>r('timeout'),2000));
-    const result=await Promise.race([p,t]);
-    if(typeof result==='string'){camStream=null;return;}
-    camStream=result;
-    const vid=document.getElementById('camVideo');
-    vid.srcObject=camStream;
-  } catch(e){ camStream=null; }
-}
-
-function capturePhoto(){
-  if(!camStream) return null;
-  try{
-    const vid=document.getElementById('camVideo');
-    const can=document.getElementById('camCanvas');
-    can.width=320; can.height=240;
-    can.getContext('2d').drawImage(vid,0,0,320,240);
-    return can.toDataURL('image/jpeg',0.7);
-  } catch(e){ return null; }
-}
-
-function stopCamera(){
-  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
-}
-
 // ── DEVICE FINGERPRINT ─────────────────────────────────────────
 function getDeviceInfo(){
   return {
@@ -453,23 +471,19 @@ async function logAttempt(email, success, extras={}){
       device_os:      extras.os||'',
       device_screen:  extras.screen||'',
       device_finger:  extras.finger||'',
-      photo_url:      extras.photo||null,
     }]);
   } catch(e){}
 }
 
 // ── COLLECT ALL SECURITY DATA ───────────────────────────────────
-async function collectSecurityData(capturePhoto_=true){
-  const dev  = getDeviceInfo();
-  const geo  = await getGeoFromIP();
-  const gps  = await getGPS();
-  let photo  = null;
-  if(capturePhoto_ && camStream) photo = capturePhoto();
+async function collectSecurityData(){
+  const dev = getDeviceInfo();
+  const geo = await getGeoFromIP();
+  const gps = await getGPS();
   return {
     ...dev, ...geo,
     gpsLat: gps?.lat ? String(gps.lat) : '',
     gpsLon: gps?.lon ? String(gps.lon) : '',
-    photo,
   };
 }
 
@@ -490,16 +504,13 @@ async function doLogin(){
   const btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Signing in...';
 
-  // Start camera in background - never block login for it
-  startCamera().catch(()=>{});
-  const secDataPromise = collectSecurityData(false);
+  const secDataPromise = collectSecurityData();
 
   // small delay to prevent instant brute force
   await new Promise(r=>setTimeout(r,300));
 
   try{
     const inputHash=await hashPwd(pass);
-    // Use secure server-side function — password_hash never exposed in network
     const {data,error}=await sb.rpc('verify_agent_login',{p_email:email,p_hash:inputHash});
 
     const secData = await secDataPromise;
@@ -509,14 +520,12 @@ async function doLogin(){
       await logAttempt(email, false, secData);
       errEl.textContent=isLocked()?'Access blocked. Too many failed attempts.':'Incorrect email or password.';
       errEl.style.display='block';
-      stopCamera();
       return;
     }
 
     // SUCCESS
     clearLockData();
-    await logAttempt(email, true, {...secData, photo: null});
-    stopCamera();
+    await logAttempt(email, true, secData);
     currentRole  = data.role;
     currentAgent = data.role==='agent'?data:null;
     currentUser  = {name:data.name,email:data.email,id:data.id};
@@ -531,7 +540,6 @@ function doLogout(){
   currentUser=null;currentRole=null;currentAgent=null;
   clearTimeout(sTimer);clearTimeout(sWarn);
   if(lockInterval) clearInterval(lockInterval);
-  stopCamera();
   Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
   charts={};
   document.getElementById('appPage').style.display='none';
@@ -725,6 +733,7 @@ function renderStudents(){
       <select id="sf" onchange="filterStu()"><option value="">All status</option><option value="paid">Paid</option><option value="partial">Partial</option><option value="pending">Pending</option></select>
       ${isA?`<select id="af" onchange="filterStu()"><option value="">All agents</option>${allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>`:''}
       ${isA?'<button class="btn btn-primary" onclick="openStuModal()">+ Add student</button>':''}
+      ${isA?'<button class="btn btn-primary" onclick="openBulkModal()" style="background:var(--green);border-color:var(--green)">&#11014; Bulk Upload</button>':''}
     </div></div>
     <div class="card"><div class="tscroll">
       <table><thead><tr>
@@ -836,7 +845,7 @@ async function renderSecurity(){
           <button class="btn btn-sm btn-red" onclick="clearSecLog()">Clear log</button>
         </div>
       </div>
-      <div class="warn-box">🚨 Failed logins trigger a real-time alert. Camera photo (if allowed), IP address, GPS location, and device info are captured on every failed attempt.</div>
+      <div class="warn-box">🚨 Failed logins trigger a real-time alert. IP address, GPS location, and device info are captured on every failed attempt.</div>
       <div style="margin-top:16px" id="logList"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
     </div>`;
 
@@ -856,15 +865,13 @@ async function renderSecurity(){
     </div>
     <div class="tscroll">
     <table><thead><tr>
-      <th>Photo</th><th>Time</th><th>Email</th><th>Result</th>
+      <th>Time</th><th>Email</th><th>Result</th>
       <th>IP Address</th><th>Location</th><th>GPS</th><th>Device</th><th>Detail</th>
     </tr></thead><tbody>
       ${data.map(r=>{
         const loc=`${r.city||'?'}, ${r.region||'?'}, ${r.country||'?'}`;
         const gps=r.latitude&&r.longitude?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--blue);font-size:11px">📍 View map</a>`:'<span style="color:var(--faint);font-size:11px">No GPS</span>';
-        const photo=r.photo_url?`<img src="${esc(r.photo_url)}" class="sec-photo" alt="capture">`:'<div class="sec-photo-none">No photo</div>';
         return `<tr style="${!r.success?'background:#fff8f8':''}">
-          <td>${photo}</td>
           <td style="font-size:11px;white-space:nowrap">${new Date(r.attempted_at).toLocaleString('en-IN')}</td>
           <td style="font-size:12px">${esc(r.email||'—')}</td>
           <td><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'✓ Success':'✗ Failed'}</span></td>
@@ -882,7 +889,6 @@ function showAttemptDetail(r){
   const gpsLink=r.latitude&&r.longitude?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--blue)">📍 Open in Google Maps</a>`:'Not available';
   document.getElementById('alertDetail').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      ${r.photo_url?`<div style="grid-column:1/-1"><img src="${esc(r.photo_url)}" style="width:100%;max-width:320px;border-radius:var(--r);border:1px solid var(--border)" alt="Captured photo"></div>`:'<div style="grid-column:1/-1;background:var(--bg);border-radius:var(--r);padding:20px;text-align:center;color:var(--muted);font-size:13px">No camera photo captured</div>'}
       <div><div style="font-size:11px;color:var(--muted);font-weight:600">TIME</div><div style="font-size:13px">${new Date(r.attempted_at).toLocaleString('en-IN')}</div></div>
       <div><div style="font-size:11px;color:var(--muted);font-weight:600">EMAIL TRIED</div><div style="font-size:13px">${esc(r.email||'—')}</div></div>
       <div><div style="font-size:11px;color:var(--muted);font-weight:600">RESULT</div><div><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'Success':'Failed'}</span></div></div>
@@ -1089,7 +1095,229 @@ function notify(msg,type){
   n.textContent=msg; n.style.display='block';
   setTimeout(()=>n.style.display='none',type==='err'?5000:3000);
 }
-document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+// ── BULK UPLOAD ───────────────────────────────────────────────────
+let bulkRows = [];
+
+function downloadTemplate(){
+  const csv = [
+    'date_of_admission,bill_number,student_name,course,total_fee,advance_paid,fee_status,referral_amount,referral_paid,agent_email',
+    '2026-01-26,VTUEEE2026B06737,Sample Student Name,B.Tech CSE,50000,10000,pending,2000,false,lakshman@mhedutech.com',
+    '2026-02-10,VTUEEE2026B06800,Another Student,MBA,40000,5000,partial,1500,false,ravi@mhedutech.com',
+  ].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='students_template.csv';
+  a.click();
+}
+
+document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('bulkFile').click());
+
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor='var(--border2)';
+  document.getElementById('dropZone').style.background='';
+  const file=e.dataTransfer.files[0];
+  if(file) processFile(file);
+}
+
+function handleFileSelect(input){
+  if(input.files[0]) processFile(input.files[0]);
+}
+
+async function processFile(file){
+  const name=file.name.toLowerCase();
+  if(!name.endsWith('.csv')&&!name.endsWith('.xlsx')&&!name.endsWith('.xls')){
+    alert('Please upload a CSV or Excel (.xlsx/.xls) file only.');return;
+  }
+  document.getElementById('dropZone').innerHTML=`<div style="font-size:28px">✅</div><div style="font-size:13px;font-weight:600">${esc(file.name)}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">File loaded — preview below</div>`;
+
+  let rows=[];
+  if(name.endsWith('.csv')){
+    const text=await file.text();
+    rows=parseCSV(text);
+  } else {
+    rows=await parseExcel(file);
+  }
+  previewBulk(rows);
+}
+
+function parseCSV(text){
+  const lines=text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+  if(!lines.length) return [];
+  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/\s+/g,'_').replace(/['"]/g,''));
+  return lines.slice(1).map(line=>{
+    const vals=line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g)||[];
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim());
+    return obj;
+  });
+}
+
+async function parseExcel(file){
+  // Load SheetJS from CDN dynamically
+  if(!window.XLSX){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+      s.onload=res; s.onerror=rej;
+      document.head.appendChild(s);
+    });
+  }
+  const buf=await file.arrayBuffer();
+  const wb=XLSX.read(buf,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+  // Normalize headers
+  return data.map(row=>{
+    const obj={};
+    Object.keys(row).forEach(k=>{
+      obj[k.trim().toLowerCase().replace(/\s+/g,'_')]=String(row[k]).trim();
+    });
+    return obj;
+  });
+}
+
+function previewBulk(rows){
+  bulkRows=[];
+  const errors=[];
+  const agentEmails=allAgents.map(a=>a.email.toLowerCase());
+  const adminEmail='mheduservice@gmail.com';
+
+  const validRows=rows.map((r,i)=>{
+    const rowNum=i+2;
+    const name=(r.student_name||r.name||'').trim();
+    const bill=(r.bill_number||r.bill||'').trim().toUpperCase();
+    const doa =(r.date_of_admission||r.doa||r.date||'').trim();
+    const course=(r.course||'').trim();
+    const fee=parseFloat(r.total_fee||0)||0;
+    const adv=parseFloat(r.advance_paid||0)||0;
+    const stat=['paid','pending','partial'].includes((r.fee_status||'pending').toLowerCase())?(r.fee_status||'pending').toLowerCase():'pending';
+    const ref=parseFloat(r.referral_amount||0)||0;
+    const refP=(r.referral_paid||'false').toLowerCase()==='true';
+    const agentEmail=(r.agent_email||'').trim().toLowerCase();
+
+    if(!name){errors.push(`Row ${rowNum}: student_name is required`);return null;}
+    if(!bill){errors.push(`Row ${rowNum}: bill_number is required`);return null;}
+    if(!doa){errors.push(`Row ${rowNum}: date_of_admission is required`);return null;}
+
+    // Parse date — support DD-MM-YYYY and YYYY-MM-DD
+    let parsedDate=doa;
+    if(/^\d{2}-\d{2}-\d{4}$/.test(doa)){
+      const [d,m,y]=doa.split('-');
+      parsedDate=`${y}-${m}-${d}`;
+    } else if(/^\d{2}\/\d{2}\/\d{4}$/.test(doa)){
+      const [d,m,y]=doa.split('/');
+      parsedDate=`${y}-${m}-${d}`;
+    }
+    if(isNaN(new Date(parsedDate).getTime())){errors.push(`Row ${rowNum}: invalid date "${doa}"`);return null;}
+
+    // Find agent
+    let agentId=null;
+    if(agentEmail && agentEmail!==adminEmail){
+      const ag=allAgents.find(a=>a.email.toLowerCase()===agentEmail);
+      if(!ag){errors.push(`Row ${rowNum}: agent email "${agentEmail}" not found`);return null;}
+      agentId=ag.id;
+    }
+
+    if(adv>fee && fee>0){errors.push(`Row ${rowNum}: advance (${adv}) > total fee (${fee})`);return null;}
+
+    return {student_name:name,bill_number:bill,doa:parsedDate,course,total_fee:fee,advance_paid:adv,fee_status:stat,referral_amount:ref,referral_paid:refP,agent_id:agentId};
+  }).filter(Boolean);
+
+  bulkRows=validRows;
+
+  // Show preview
+  const preview=document.getElementById('bulkPreview');
+  preview.style.display='block';
+  document.getElementById('bulkPreviewLabel').textContent=`✅ ${validRows.length} students ready to upload${errors.length?` — ⚠️ ${errors.length} rows skipped (see errors below)`:''}`;
+
+  const tbl=document.getElementById('bulkPreviewTable');
+  tbl.innerHTML=`<thead><tr><th>#</th><th>Name</th><th>Bill No</th><th>Date</th><th>Course</th><th>Fee</th><th>Status</th><th>Agent</th></tr></thead>
+  <tbody>${validRows.slice(0,10).map((r,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${esc(r.student_name)}</td>
+    <td style="font-size:11px">${esc(r.bill_number)}</td>
+    <td>${esc(r.doa)}</td>
+    <td>${esc(r.course||'—')}</td>
+    <td>₹${r.total_fee.toLocaleString('en-IN')}</td>
+    <td><span class="pill pill-${r.fee_status}">${r.fee_status}</span></td>
+    <td style="font-size:11px">${esc(allAgents.find(a=>a.id===r.agent_id)?.name||'—')}</td>
+  </tr>`).join('')}
+  ${validRows.length>10?`<tr><td colspan="8" style="text-align:center;color:var(--muted);font-size:11px">...and ${validRows.length-10} more rows</td></tr>`:''}
+  </tbody>`;
+
+  if(errors.length){
+    const errDiv=document.getElementById('bulkErrors');
+    errDiv.style.display='block';
+    errDiv.innerHTML='<b>⚠️ Skipped rows:</b><br>'+errors.map(e=>`• ${esc(e)}`).join('<br>');
+  }
+
+  document.getElementById('bulkUploadBtn').disabled=validRows.length===0;
+}
+
+async function startBulkUpload(){
+  if(!bulkRows.length) return;
+  const btn=document.getElementById('bulkUploadBtn');
+  btn.disabled=true;
+  document.getElementById('bulkProgress').style.display='block';
+
+  let done=0;
+  const total=bulkRows.length;
+  const BATCH=20; // insert 20 at a time
+  const failed=[];
+
+  for(let i=0;i<total;i+=BATCH){
+    const batch=bulkRows.slice(i,i+BATCH);
+    const {error}=await sb.from('students').insert(batch);
+    if(error){
+      // Try one by one to identify duplicates
+      for(const row of batch){
+        const {error:e2}=await sb.from('students').insert([row]);
+        if(e2) failed.push(`${row.bill_number}: ${e2.code==='23505'?'Bill number already exists':'Insert failed'}`);
+        else done++;
+      }
+    } else {
+      done+=batch.length;
+    }
+    const pct=Math.round((Math.min(i+BATCH,total)/total)*100);
+    document.getElementById('bulkBar').style.width=pct+'%';
+    document.getElementById('bulkProgressText').textContent=`Uploading... ${Math.min(i+BATCH,total)} of ${total}`;
+  }
+
+  document.getElementById('bulkProgressText').textContent=`✅ Done! ${done} uploaded${failed.length?`, ${failed.length} failed`:''}`;
+  document.getElementById('bulkBar').style.background=failed.length?'var(--amber)':'var(--green)';
+
+  if(failed.length){
+    const errDiv=document.getElementById('bulkErrors');
+    errDiv.style.display='block';
+    errDiv.innerHTML='<b>Failed rows:</b><br>'+failed.map(e=>`• ${esc(e)}`).join('<br>');
+  }
+
+  await loadData();
+  filterStu();
+  btn.disabled=false;
+}
+
+function closeBulkModal(){
+  closeM('bulkModal');
+  bulkRows=[];
+  document.getElementById('bulkPreview').style.display='none';
+  document.getElementById('bulkProgress').style.display='none';
+  document.getElementById('bulkErrors').style.display='none';
+  document.getElementById('bulkBar').style.width='0%';
+  document.getElementById('dropZone').innerHTML=`<div style="font-size:28px;margin-bottom:8px">📂</div><div style="font-size:13px;font-weight:600;color:var(--text)">Drag & drop CSV or Excel file here</div><div style="font-size:12px;color:var(--muted);margin-top:4px">or click to browse</div><input type="file" id="bulkFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(this)">`;
+  document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('bulkFile').click());
+  document.getElementById('bulkUploadBtn').disabled=true;
+}
+
+function openBulkModal(){ openM('bulkModal'); }
+
+window.downloadTemplate  = downloadTemplate;
+window.openBulkModal     = openBulkModal;
+window.handleDrop        = handleDrop;
+window.handleFileSelect  = handleFileSelect;
+window.startBulkUpload   = startBulkUpload;
+window.closeBulkModal    = closeBulkModal;
 
 // Expose functions globally for onclick handlers
 window.doLogin      = doLogin;
