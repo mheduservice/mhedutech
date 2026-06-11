@@ -310,11 +310,17 @@ tr:hover td{background:var(--g50)}
 .ledger-admin-note-alert{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:var(--r);padding:8px 12px;font-size:12px;margin-top:6px;color:#991b1b;font-weight:600}
 .admin-alert-label{font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
 
-/* ── SORT BAR ───────────────────────────────────── */
-.sort-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
-.sort-btn{padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:#fff;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif;transition:.15s}
-.sort-btn:hover{border-color:var(--g600);color:var(--g700);background:var(--g50)}
-.sort-btn.active{background:var(--g600);color:#fff;border-color:var(--g600)}
+/* ── DOA SORT BUTTON ──────────────────────────────── */
+.doa-sort-btn{display:inline-flex;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:0;font-family:'Inter',sans-serif;transition:.15s}
+.doa-sort-btn:hover{color:var(--g700)}
+.doa-sort-icon{font-size:12px;line-height:1}
+
+/* ── LOGIN BUTTON GLOW ────────────────────────────── */
+@keyframes btn-glow{
+  0%,100%{box-shadow:0 2px 8px rgba(22,163,74,.3),0 0 0 0 rgba(22,163,74,.2)}
+  50%{box-shadow:0 4px 20px rgba(22,163,74,.5),0 0 18px 4px rgba(74,222,128,.25)}
+}
+#loginBtn{animation:btn-glow 2.6s ease-in-out infinite;}
 
 /* ── MOBILE HAMBURGER AREA ────────────────────── */
 @media(max-width:768px){
@@ -323,23 +329,55 @@ tr:hover td{background:var(--g50)}
   .sidebar.open{transform:translateX(0)}
   .sb-overlay.open{display:block}
   .main{margin-left:0}
-  .content{padding:14px}
-  .topbar{padding:10px 14px 10px 60px}
+  .content{padding:12px 10px}
+  .topbar{padding:10px 12px 10px 58px;flex-wrap:wrap;gap:6px}
+  .topbar-right{gap:6px}
+  .user-chip{font-size:11px;padding:4px 10px}
+  .page-title{font-size:13px}
   .chart-row,.fr{grid-template-columns:1fr}
-  .metrics{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-  .modal{padding:20px 18px}
+  .metrics{grid-template-columns:repeat(2,1fr);gap:8px}
+  .metric{padding:12px 14px}
+  .m-val{font-size:22px}
+  .modal{padding:18px 14px;width:100%;max-width:100%;border-radius:12px}
+  .modal-title{font-size:15px}
   .ag-grid{grid-template-columns:1fr}
-  .ledger-summary{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
-  .tscroll table{min-width:600px}
-  .sr{flex-direction:column}
-  .sr input,.sr select{width:100%}
-  .modal-foot{flex-direction:column}
+  .ledger-summary{grid-template-columns:repeat(2,1fr);gap:8px}
+  .ledger-stat{padding:10px 12px}
+  .ledger-stat-value{font-size:18px}
+  .tscroll table{min-width:560px}
+  .sr{flex-direction:column;gap:7px}
+  .sr input,.sr select{width:100%;min-width:unset}
+  .modal-foot{flex-direction:column-reverse;gap:8px}
   .modal-foot .btn{width:100%;justify-content:center}
+  .card{padding:14px 12px}
+  .card-hdr{flex-direction:column;align-items:flex-start;gap:8px}
+  .ledger-item{padding:10px 12px}
+  .ledger-item-header{flex-direction:column;align-items:flex-start;gap:8px}
+  .ledger-amount{font-size:18px}
+  .ag-card{padding:14px 16px}
+  .ledger-filter-row{gap:6px}
+  .agent-filter-btn{font-size:11px;padding:4px 10px}
+  table{font-size:12px}
+  th{font-size:9px;padding:7px 8px}
+  td{padding:8px}
+  .btn-xs{font-size:10px;padding:2px 6px}
+  .btn-sm{font-size:11px;padding:4px 9px}
+  .note-row{flex-direction:column;gap:4px}
+  .note-row input{width:100%}
 }
 @media(max-width:420px){
   .metrics{grid-template-columns:1fr 1fr}
-  .m-val{font-size:20px}
-  .auth-box{padding:28px 20px}
+  .m-val{font-size:18px}
+  .auth-box{padding:24px 16px}
+  .content{padding:10px 8px}
+  .topbar{padding:8px 10px 8px 52px}
+  .fr{grid-template-columns:1fr}
+  .ledger-summary{grid-template-columns:1fr 1fr}
+}
+@media(max-width:360px){
+  .metrics{grid-template-columns:1fr}
+  .ledger-summary{grid-template-columns:1fr}
+  .hamburger{width:34px;height:34px;top:10px;left:10px}
 }
 </style>
 </head>
@@ -530,9 +568,6 @@ tr:hover td{background:var(--g50)}
       </div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Sem Fee Status</label>
-        <select id="sSemFee"><option value="">Not Set</option><option value="paid">Paid</option><option value="token">Token Only Paid</option></select>
-      </div>
       <div class="fg"><label>Assign to Agent</label><select id="sAgent"><option value="">-- Select Agent --</option></select></div>
     </div>
     <div class="fr">
@@ -800,6 +835,12 @@ function clean(v,n){
   return n?s.slice(0,n):s;
 }
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+// Validates Indian mobile numbers: 10 digits, optionally starting with +91 or 0
+function validMobile(v){
+  if(!v||!v.trim()) return true; // optional field — empty is fine
+  const stripped=v.replace(/[\s\-().+]/g,'');
+  return /^(?:0|91)?[6-9]\d{9}$/.test(stripped);
+}
 async function hashPwd(p){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(SALT+p));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -836,15 +877,25 @@ function startLockUI(){
   },1000);
 }
 
-// ── SESSION ──────────────────────────────────────────────────────
-let sTimer=null,sWarn=null;
+// ── SESSION — sliding window, resets on any user activity ────────
+let sTimer=null,sWarn=null,_lastActivity=Date.now();
+const SESSION_WARN_MS=7*60*60*1000;
+const SESSION_MAX_MS=8*60*60*1000;
 function startSession(){
+  _lastActivity=Date.now();
   clearTimeout(sTimer);clearTimeout(sWarn);
-  document.getElementById('swarn').style.display='none';
-  sWarn=setTimeout(()=>document.getElementById('swarn').style.display='block',7*60*60*1000);
-  sTimer=setTimeout(()=>{notify('Session expired. Please sign in again.','err');setTimeout(doLogout,2000);},8*60*60*1000);
-  ['click','keydown'].forEach(e=>document.addEventListener(e,()=>{if(currentUser)startSession();},{once:true}));
+  const warnEl=document.getElementById('swarn');
+  if(warnEl) warnEl.style.display='none';
+  sWarn=setTimeout(()=>{
+    if(currentUser){const el=document.getElementById('swarn');if(el)el.style.display='block';}
+  },SESSION_WARN_MS);
+  sTimer=setTimeout(()=>{
+    if(currentUser){notify('Session expired. Please sign in again.','err');setTimeout(doLogout,2000);}
+  },SESSION_MAX_MS);
 }
+// Sliding session — any activity resets the 8h clock
+document.addEventListener('click',()=>{if(currentUser)startSession();},{passive:true});
+document.addEventListener('keydown',()=>{if(currentUser)startSession();},{passive:true});
 function saveSession(){
   if(!currentUser) return;
   sessionStorage.setItem('_sess',JSON.stringify({user:currentUser,role:currentRole,agent:currentAgent,ts:Date.now()}));
@@ -926,12 +977,15 @@ async function getGeoFromIP(){
     return {ip:d.ip||'unknown',city:d.city||'unknown',region:d.region||'unknown',country:d.country_name||'unknown',lat:String(d.latitude||''),lon:String(d.longitude||'')};
   }catch(e){return {ip:'unknown',city:'unknown',region:'unknown',country:'unknown',lat:'',lon:''};}
 }
+let _cachedGPS=undefined; // undefined=not asked, null=denied/unavailable, {lat,lon}=got it
 function getGPS(){
+  // Return cached result immediately if already asked this session
+  if(_cachedGPS!==undefined) return Promise.resolve(_cachedGPS);
   return new Promise(resolve=>{
-    if(!navigator.geolocation){resolve(null);return;}
+    if(!navigator.geolocation){_cachedGPS=null;resolve(null);return;}
     navigator.geolocation.getCurrentPosition(
-      p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude}),
-      ()=>resolve(null),{timeout:5000,maximumAge:0}
+      p=>{_cachedGPS={lat:p.coords.latitude,lon:p.coords.longitude};resolve(_cachedGPS);},
+      ()=>{_cachedGPS=null;resolve(null);},{timeout:5000,maximumAge:300000}
     );
   });
 }
@@ -970,6 +1024,7 @@ async function doLogin(){
   loginBusy=true;
   const btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Signing in...';
+  btn.style.animationPlayState='paused';
   const secDataPromise=collectSecurityData();
   // 600ms delay slows in-page attacks; direct Supabase calls still hit DB rate limiter
   await new Promise(r=>setTimeout(r,600));
@@ -999,6 +1054,7 @@ async function doLogin(){
     startApp();
   }finally{
     loginBusy=false; btn.disabled=false; btn.textContent='Sign In';
+    btn.style.animationPlayState='running';
   }
 }
 
@@ -1007,7 +1063,7 @@ function doLogout(){
   sessionStorage.removeItem('_sess');
   clearTimeout(sTimer);clearTimeout(sWarn);
   if(lockInterval) clearInterval(lockInterval);
-  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  Object.values(charts).forEach(c=>{if(c&&typeof c.destroy==='function'){try{c.destroy();}catch(e){}}});
   charts={};
   document.getElementById('appPage').style.display='none';
   document.getElementById('authPage').style.display='flex';
@@ -1136,7 +1192,7 @@ function showSec(id){
   if(id==='agents'&&currentRole==='admin') renderAgents();
   if(id==='reports')   renderReports();
   if(id==='security'&&currentRole==='admin') renderSecurity();
-  if(id==='ledger')    renderLedger();
+  if(id==='ledger'){ledgerFilter='all'; renderLedger();} // reset filter on every visit
   if(id==='profile')   renderProfile();
 }
 
@@ -1146,6 +1202,7 @@ function renderDash(){
   const paid=sts.filter(s=>s.fee_status==='paid').length;
   const pend=sts.filter(s=>s.fee_status==='pending').length;
   const part=sts.filter(s=>s.fee_status==='partial').length;
+  const successful=sts.filter(s=>s.sem_fee_status==='paid').length; // Sem toggle ON = successful admission
   const adv=sts.reduce((a,s)=>a+(s.advance_paid||0),0);
   const tot=sts.reduce((a,s)=>a+(s.total_fee||0),0);
   const ref=sts.reduce((a,s)=>a+(s.referral_amount||0),0);
@@ -1161,8 +1218,8 @@ function renderDash(){
         <div class="m-sub">enrolled</div>
       </div>
       <div class="metric m-green">
-        <div class="m-label">Fees Paid</div>
-        <div class="m-val">${paid}</div>
+        <div class="m-label">Successful Admissions</div>
+        <div class="m-val">${successful}</div>
         <div class="m-sub">${pend} pending &middot; ${part} partial</div>
       </div>
       <div class="metric m-amber">
@@ -1261,14 +1318,8 @@ function agentColour(agentId){
   }
   return _agentColourMap[agentId];
 }
-function semFeePill(v){
-  if(v==='paid') return '<span class="pill pill-sem-paid">Sem Paid</span>';
-  if(v==='token') return '<span class="pill pill-sem-token">Token Paid</span>';
-  return '<span class="pill pill-sem-none">Sem —</span>';
-}
-
 // ── STUDENTS ─────────────────────────────────────────────────────
-let stuSort='doa_desc';
+let stuSortDir='desc'; // 'asc' or 'desc' — DOA sort direction
 function renderStudents(){
   const isA=currentRole==='admin';
   document.getElementById('sec-students').innerHTML=`
@@ -1285,22 +1336,20 @@ function renderStudents(){
         ${isA?'<button class="btn btn-primary btn-sm" onclick="openStuModal()">Add Student</button>':''}
         ${isA?'<button class="btn btn-outline btn-sm" onclick="openBulkModal()">Bulk Upload</button>':''}
       </div>
-      <div class="sort-bar" style="margin-top:10px">
-        <span style="font-size:11px;font-weight:600;color:var(--muted)">Sort:</span>
-        <button class="sort-btn ${stuSort==='doa_desc'?'active':''}" onclick="setStuSort('doa_desc')">Newest First</button>
-        <button class="sort-btn ${stuSort==='doa_asc'?'active':''}" onclick="setStuSort('doa_asc')">Oldest First</button>
-        <button class="sort-btn ${stuSort==='name'?'active':''}" onclick="setStuSort('name')">Name A-Z</button>
-        <button class="sort-btn ${stuSort==='status'?'active':''}" onclick="setStuSort('status')">By Status</button>
-        <button class="sort-btn ${stuSort==='sem'?'active':''}" onclick="setStuSort('sem')">Sem Fee</button>
-      </div>
     </div>
     <div class="card">
       <div class="tscroll">
         <table><thead><tr>
-          <th>#</th><th>Name</th><th>DOA</th><th>Bill No</th>
+          <th>#</th><th>Name</th>
+          <th>
+            <button class="doa-sort-btn" onclick="toggleDoaSort()" title="Sort by Date of Admission">
+              DOA <span class="doa-sort-icon" id="doaSortIcon">${stuSortDir==='desc'?'↓':'↑'}</span>
+            </button>
+          </th>
+          <th>Bill No</th>
           ${isA?'<th>Agent</th>':''}
           <th>Student Mob</th><th>Father Mob</th>
-          <th>Advance</th><th>Fee Status</th><th>Sem Fee</th>
+          <th>Advance</th><th>Fee Status</th>
           <th>Notes${!isA?' / Query':''}</th>
           ${isA?'<th>Sem Toggle</th><th>Actions</th>':''}
         </tr></thead><tbody id="stuBody"></tbody></table>
@@ -1309,8 +1358,13 @@ function renderStudents(){
   filterStu();
 }
 
-function setStuSort(s){stuSort=s;filterStu();}
-window.setStuSort=setStuSort;
+function toggleDoaSort(){
+  stuSortDir=stuSortDir==='desc'?'asc':'desc';
+  const icon=document.getElementById('doaSortIcon');
+  if(icon) icon.textContent=stuSortDir==='desc'?'↓':'↑';
+  filterStu();
+}
+window.toggleDoaSort=toggleDoaSort;
 
 function filterStu(){
   const q=clean(document.getElementById('q')?.value||'',80).toLowerCase();
@@ -1324,20 +1378,20 @@ function filterStu(){
       (s.father_mobile||'').includes(q))&&
     (!sf||s.fee_status===sf)&&(!af||s.agent_id===af)
   );
-  // Sort
-  if(stuSort==='doa_desc') list=[...list].sort((a,b)=>(b.doa||'').localeCompare(a.doa||''));
-  else if(stuSort==='doa_asc') list=[...list].sort((a,b)=>(a.doa||'').localeCompare(b.doa||''));
-  else if(stuSort==='name') list=[...list].sort((a,b)=>a.student_name.localeCompare(b.student_name));
-  else if(stuSort==='status') list=[...list].sort((a,b)=>a.fee_status.localeCompare(b.fee_status));
-  else if(stuSort==='sem') list=[...list].sort((a,b)=>(a.sem_fee_status||'').localeCompare(b.sem_fee_status||''));
+  // Sort by DOA only
+  list=[...list].sort((a,b)=>stuSortDir==='desc'
+    ?(b.doa||'').localeCompare(a.doa||'')
+    :(a.doa||'').localeCompare(b.doa||''));
 
   const tb=document.getElementById('stuBody'); if(!tb) return;
   if(!list.length){
-    tb.innerHTML=`<tr><td colspan="14" style="text-align:center;color:var(--muted);padding:28px">No students found</td></tr>`;
+    const cols=isA?12:9;
+    tb.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;color:var(--muted);padding:28px">No students found</td></tr>`;
     return;
   }
   tb.innerHTML=list.map((s,i)=>{
     const ac=agentColour(s.agent_id);
+    const semOn=s.sem_fee_status==='paid';
     const notes=(s.notes||[]).filter(n=>n.note_type!=='query').map(n=>`
       <div class="note-box">
         <span class="note-text">${esc(n.note_text)}</span>
@@ -1353,7 +1407,6 @@ function filterStu(){
       <input type="text" id="ni-${esc(s.id)}" placeholder="${isA?'Add note...':'Write query for admin...'}" maxlength="300">
       <button class="btn btn-xs ${isA?'btn-amber':'btn-primary'}" onclick="addNote('${esc(s.id)}','ni-${esc(s.id)}','${isA?'note':'query'}')">${isA?'Note':'Query'}</button>
     </div>`;
-    const semChecked=s.sem_fee_status==='paid'?'checked':'';
     const agentName=isA?`<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid" class="${ac}">${esc(s.agents?.name||'—')}</span></td>`:'';
     return `<tr>
       <td style="color:var(--muted);font-size:12px">${i+1}</td>
@@ -1365,15 +1418,14 @@ function filterStu(){
       <td style="font-size:12px">${esc(s.father_mobile||'—')}</td>
       <td style="font-weight:600">Rs.${(s.advance_paid||0).toLocaleString('en-IN')}</td>
       <td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td>
-      <td>${semFeePill(s.sem_fee_status)}</td>
       <td style="min-width:200px">${notes}${queries}${noteInput}</td>
       ${isA?`<td>
-        <label class="toggle-wrap" title="Toggle sem fee paid">
+        <label class="toggle-wrap" title="Sem fee cleared = successful admission">
           <span class="toggle">
-            <input type="checkbox" ${semChecked} onchange="toggleSemFee('${esc(s.id)}',this.checked)">
+            <input type="checkbox" ${semOn?'checked':''} onchange="toggleSemFee('${esc(s.id)}',this.checked)">
             <span class="toggle-slider"></span>
           </span>
-          <span class="toggle-label" id="semLbl-${esc(s.id)}">${s.sem_fee_status==='paid'?'Paid':'Off'}</span>
+          <span class="toggle-label" id="semLbl-${esc(s.id)}" style="color:${semOn?'var(--g700)':'var(--muted)'};font-weight:${semOn?'700':'600'}">${semOn?'✓ Cleared':'Pending'}</span>
         </label>
       </td>
       <td><div style="display:flex;gap:4px;flex-wrap:wrap">
@@ -1431,9 +1483,8 @@ function renderReports(){
   const paid=sts.filter(s=>s.fee_status==='paid').length;
   const pend=sts.filter(s=>s.fee_status==='pending').length;
   const part=sts.filter(s=>s.fee_status==='partial').length;
-  const semPaid=sts.filter(s=>s.sem_fee_status==='paid').length;
-  const semToken=sts.filter(s=>s.sem_fee_status==='token').length;
-  const semNone=sts.length-semPaid-semToken;
+  const semSuccess=sts.filter(s=>s.sem_fee_status==='paid').length; // toggle ON = successful
+  const semPending=sts.length-semSuccess;
 
   document.getElementById('sec-reports').innerHTML=`
     <div class="chart-row">
@@ -1447,11 +1498,10 @@ function renderReports(){
         <div class="cw" style="height:220px"><canvas id="rc1"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-hdr"><div class="card-title">Sem Fee Status</div></div>
+        <div class="card-hdr"><div class="card-title">Successful Admissions (Sem Toggle)</div></div>
         <div class="legend">
-          <span><span class="ldot" style="background:#16a34a"></span>Paid (${semPaid})</span>
-          <span><span class="ldot" style="background:#d97706"></span>Token (${semToken})</span>
-          <span><span class="ldot" style="background:#94a3b8"></span>Not Set (${semNone})</span>
+          <span><span class="ldot" style="background:#16a34a"></span>Cleared (${semSuccess})</span>
+          <span><span class="ldot" style="background:#94a3b8"></span>Pending (${semPending})</span>
         </div>
         <div class="cw" style="height:220px"><canvas id="rc4"></canvas></div>
       </div>
@@ -1476,7 +1526,7 @@ function renderReports(){
   const monthAdv=ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).reduce((a,s)=>a+(s.advance_paid||0),0));
 
   mkChart('rc1','doughnut',ml,[{data:[paid,part,pend],backgroundColor:['#16a34a','#2563eb','#d97706'],borderWidth:2,borderColor:'#fff',hoverOffset:8}],{plugins:{legend:{display:false}},cutout:'60%'});
-  mkChart('rc4','doughnut',ml,[{data:[semPaid,semToken,semNone],backgroundColor:['#16a34a','#d97706','#94a3b8'],borderWidth:2,borderColor:'#fff',hoverOffset:8}],{plugins:{legend:{display:false}},cutout:'60%'});
+  mkChart('rc4','doughnut',['Cleared','Pending'],[{data:[semSuccess,semPending],backgroundColor:['#16a34a','#94a3b8'],borderWidth:2,borderColor:'#fff',hoverOffset:8}],{plugins:{legend:{display:false}},cutout:'60%'});
   mkChart('rc2','bar',ml,[{
     data:monthCounts,
     backgroundColor:barColours,
@@ -1680,26 +1730,35 @@ function openStuModal(id){
     document.getElementById('sRef').value=s.referral_amount||'';
     document.getElementById('sStudentMobile').value=s.student_mobile||'';
     document.getElementById('sFatherMobile').value=s.father_mobile||'';
-    document.getElementById('sSemFee').value=s.sem_fee_status||'';
   } else {
     ['sName','sDOA','sBill','sCourse','sFee','sAdv','sRef','sStudentMobile','sFatherMobile'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('sStat').value='pending';
-    document.getElementById('sSemFee').value='';
   }
   openM('stuModal');
 }
 
 async function toggleSemFee(stuId,isPaid){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  const val=isPaid?'paid':'';
-  const {error}=await sb.from('students').update({sem_fee_status:val,updated_at:new Date().toISOString()}).eq('id',stuId);
-  if(error){notify('Could not update sem fee status.','err');return;}
+  // Toggle ON = sem fee cleared = successful admission (fee_status=paid)
+  // Toggle OFF = not paid = fee_status=pending
+  const update=isPaid
+    ?{sem_fee_status:'paid',fee_status:'paid',updated_at:new Date().toISOString()}
+    :{sem_fee_status:null,fee_status:'pending',updated_at:new Date().toISOString()};
+  const {error}=await sb.from('students').update(update).eq('id',stuId);
+  if(error){notify('Could not update sem status.','err');return;}
   const lbl=document.getElementById('semLbl-'+stuId);
-  if(lbl) lbl.textContent=isPaid?'Paid':'Off';
+  if(lbl){
+    lbl.textContent=isPaid?'✓ Cleared':'Pending';
+    lbl.style.color=isPaid?'var(--g700)':'var(--muted)';
+    lbl.style.fontWeight=isPaid?'700':'600';
+  }
   // Update local data without full reload for instant feedback
   const s=allStudents.find(x=>x.id===stuId);
-  if(s) s.sem_fee_status=val;
-  notify(isPaid?'Sem fee marked as Paid.':'Sem fee cleared.','ok');
+  if(s){
+    s.sem_fee_status=isPaid?'paid':null;
+    s.fee_status=isPaid?'paid':'pending';
+  }
+  notify(isPaid?'Sem cleared — marked as Successful Admission.':'Sem cleared removed — fee set to Pending.','ok');
 }
 window.toggleSemFee=toggleSemFee;
 
@@ -1718,16 +1777,17 @@ async function saveStu(){
   const ref=Math.max(0,parseFloat(document.getElementById('sRef').value)||0);
   const studentMobile=clean(document.getElementById('sStudentMobile').value,15);
   const fatherMobile=clean(document.getElementById('sFatherMobile').value,15);
-  const semFee=document.getElementById('sSemFee').value||'';
   const errEl=document.getElementById('stuModalErr');
   errEl.style.display='none';
   if(!name||!doa||!bill){errEl.textContent='Name, date and bill number are required.';errEl.style.display='block';return;}
+  if(studentMobile&&!validMobile(studentMobile)){errEl.textContent='Student mobile must be a valid 10-digit Indian number.';errEl.style.display='block';return;}
+  if(fatherMobile&&!validMobile(fatherMobile)){errEl.textContent='Father mobile must be a valid 10-digit Indian number.';errEl.style.display='block';return;}
   if(id&&!allStudents.some(s=>s.id===id)){notify('Invalid student record.','err');return;}
   const p={
     student_name:name,doa,bill_number:bill,course,total_fee:fee,advance_paid:adv,
     fee_status:stat,agent_id:agId,referral_amount:ref,
     student_mobile:studentMobile,father_mobile:fatherMobile,
-    sem_fee_status:semFee,updated_at:new Date().toISOString()
+    updated_at:new Date().toISOString()
   };
   const {error}=id?await sb.from('students').update(p).eq('id',id):await sb.from('students').insert([p]);
   if(error){const msg=error.code==='23505'?'Bill number already exists. Please use a unique bill number.':'Could not save student. Please try again.';errEl.textContent=msg;errEl.style.display='block';return;}
@@ -1797,6 +1857,7 @@ async function saveAgent(){
   const errEl=document.getElementById('agErr'); errEl.style.display='none';
   if(!name||!email){errEl.textContent='Name and email are required.';errEl.style.display='block';return;}
   if(!validEmail(email)){errEl.textContent='Enter a valid email address.';errEl.style.display='block';return;}
+  if(phone&&!validMobile(phone)){errEl.textContent='Phone must be a valid 10-digit Indian number.';errEl.style.display='block';return;}
   if(!id&&!pw){errEl.textContent='Password is required for new agents.';errEl.style.display='block';return;}
   if(pw&&pw.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.style.display='block';return;}
   if(pw&&pw!==pw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
@@ -1816,6 +1877,8 @@ async function saveAgent(){
 
 async function delAgent(id){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  // IDOR guard: verify the id exists in our loaded agent list — never trust arbitrary IDs
+  if(!id||!allAgents.some(a=>a.id===id)){notify('Invalid agent record.','err');return;}
   // Fix #6: Check for students belonging to this agent before deleting
   const orphans=allStudents.filter(s=>s.agent_id===id);
   const ag=allAgents.find(a=>a.id===id);
@@ -1897,7 +1960,9 @@ function renderLedger(){
   }
 
   ll.innerHTML=filtered.map(e=>{
-    const dateStr=new Date(e.entry_date+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    // Use UTC parsing to avoid date shifting on negative UTC offset timezones
+    const [dy,dm,dd]=(e.entry_date||'').split('-').map(Number);
+    const dateStr=(!dy||!dm||!dd)?'—':new Date(Date.UTC(dy,dm-1,dd)).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'});
     const agentInit=(e.agent_name||'?')[0].toUpperCase();
     const ac=agentColour(e.agent_id);
     const hasNote=e.note&&e.note.trim();
@@ -2072,7 +2137,8 @@ window.saveQueryNote=saveQueryNote;
 
 // ── CHART HELPER ─────────────────────────────────────────────────
 function mkChart(id,type,labels,datasets,opts){
-  if(charts[id]){charts[id].destroy();delete charts[id];}
+  if(charts[id]&&typeof charts[id].destroy==='function'){try{charts[id].destroy();}catch(e){}}
+  delete charts[id];
   const c=document.getElementById(id); if(!c) return;
   charts[id]=new Chart(c,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,...opts}});
 }
@@ -2176,8 +2242,10 @@ function parseCSV(text){
   else {errs.style.display='none';}
   document.getElementById('bulkUploadBtn').disabled=rows.length===0;
 }
+let _bulkUploading=false; // lock to prevent double-submit
 async function startBulkUpload(){
-  if(!bulkRows.length) return;
+  if(!bulkRows.length||_bulkUploading) return;
+  _bulkUploading=true;
   const btn=document.getElementById('bulkUploadBtn');
   btn.disabled=true;
   const prog=document.getElementById('bulkProgress');
@@ -2220,11 +2288,13 @@ async function startBulkUpload(){
     // Partial upload — clearly warn admin
     txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial upload: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedRows.slice(0,5).map(r=>String(r).slice(0,30)).join(', ')}${failedRows.length>5?'...':''}</span>`;
   }
+  _bulkUploading=false;
   await loadData();
   setTimeout(()=>closeBulkModal(),failed>0?4000:2000);
 }
 function openBulkModal(){
   bulkRows=[];
+  _bulkUploading=false;
   document.getElementById('bulkPreview').style.display='none';
   document.getElementById('bulkProgress').style.display='none';
   document.getElementById('bulkUploadBtn').disabled=true;
@@ -2313,8 +2383,8 @@ window.handleFileSelect=handleFileSelect;
 window.openBulkModal=openBulkModal;
 window.closeBulkModal=closeBulkModal;
 window.startBulkUpload=startBulkUpload;
-window.setStuSort=setStuSort;
 window.toggleSemFee=toggleSemFee;
+window.toggleDoaSort=toggleDoaSort;
 
 // ── AUTO RESTORE SESSION ────────────────────────────────────────
 if(loadSession()){startApp();}
