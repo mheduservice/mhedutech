@@ -7,11 +7,8 @@
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <title>MH EduTech</title>
-<style>
-@keyframes mhShine{0%{left:-80%}100%{left:120%}}
-</style>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -102,31 +99,15 @@ a{color:var(--g700)}
 .sidebar{width:220px;min-width:220px;background:var(--sb-bg);border-right:1.5px solid var(--sb-border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:30;overflow-y:auto;transition:transform .25s ease,width .25s ease}
 .logo-wrap{padding:18px 16px 14px;border-bottom:1.5px solid var(--sb-border)}
 .logo-inner{display:flex;align-items:center;gap:10px}
-/* ── SHINE SWEEP LOGO BADGE ─────────── */
-@keyframes shineSweep{0%{left:-80%}100%{left:120%}}
-.logo-badge{width:36px;height:36px;background:#14532d;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-.logo-badge::before{content:'';position:absolute;top:-4px;left:-80%;width:40%;height:200%;background:rgba(255,255,255,.18);transform:skewX(-20deg);animation:shineSweep 2.8s ease-in-out infinite}
+@keyframes shineSweepBadge{0%{left:-80%}100%{left:120%}}
+.logo-badge{width:36px;height:36px;background:#14532d;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.logo-badge::before{content:'';position:absolute;top:-4px;left:-80%;width:38%;height:200%;background:rgba(255,255,255,.16);transform:skewX(-20deg);animation:shineSweepBadge 2.8s ease-in-out infinite}
 .logo-badge span{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.3px;position:relative;z-index:1}
-/* ── THEME B sidebar ──────────────────── */
-.sidebar{background:#fff;border-right:1.5px solid #e5e7eb}
-.logo-wrap{border-bottom:1.5px solid #f1f5f9}
-.sb-user-email{color:#9ca3af}
-.sb-signout{background:#fff;border:1.5px solid #e5e7eb;color:#6b7280}
-.sb-signout:hover{background:#fef2f2;color:#dc2626;border-color:#fca5a5}
-/* nav items theme B */
-.ni{color:#6b7280}
-.ni:hover{background:#f0fdf4;color:#166534}
-.ni.active{background:#f0fdf4;color:#16a34a;font-weight:700;border-left:3px solid #16a34a;border-radius:0 var(--r) var(--r) 0}
-.ni.active .ni-icon{color:#16a34a}
-.ni-icon{font-size:16px;flex-shrink:0;color:#9ca3af;transition:.12s;width:18px;text-align:center}
-.ni:hover .ni-icon{color:#16a34a}
-/* remove dot — replaced by icon */
-.ni-dot{display:none}
 .logo-text{}
-.logo-name{font-size:13px;font-weight:800;color:#111827;line-height:1.2}
+.logo-name{font-size:13px;font-weight:800;color:var(--g900);line-height:1.2}
 .logo-tagline{font-size:10px;color:var(--muted);font-weight:500;margin-top:1px}
 .logo-role{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
-.role-admin{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.role-admin{background:var(--g100);color:var(--g800);border:1px solid var(--g200)}
 .role-agent{background:var(--blue-light);color:#1e40af;border:1px solid #bfdbfe}
 .sb-user-email{font-size:10px;color:var(--faint);margin-top:3px;word-break:break-all;display:block}
 .nav{padding:8px 8px;flex:1}
@@ -135,8 +116,11 @@ a{color:var(--g700)}
 .ni:hover{background:var(--g100);color:var(--g800)}
 .ni.active{background:var(--g600);color:#fff;font-weight:700}
 .ni.active .ni-dot{background:#fff}
-.ni-dot{width:6px;height:6px;border-radius:50%;background:var(--g300);flex-shrink:0;transition:.12s}
+.ni-dot{width:6px;height:6px;border-radius:50%;background:var(--g300);flex-shrink:0;transition:.12s;display:none}
 .ni:hover .ni-dot{background:var(--g600)}
+.ni-icon{font-size:16px;flex-shrink:0;width:18px;text-align:center;line-height:1;color:var(--muted);transition:.12s}
+.ni:hover .ni-icon{color:var(--g700)}
+.ni.active .ni-icon{color:#fff}
 .sb-footer{padding:12px 16px;border-top:1.5px solid var(--sb-border)}
 .sb-signout{width:100%;padding:8px;border-radius:var(--r);border:1.5px solid var(--border2);background:#fff;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s}
 .sb-signout:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-light)}
@@ -1215,31 +1199,43 @@ async function startApp(){
 }
 
 function buildSidebar(){
-  // icon map — each section gets its own Tabler icon
   const ICONS={
-    dashboard:'ti-layout-dashboard',
-    students:'ti-users',
-    cancelled:'ti-file-x',
-    agents:'ti-user-circle',
-    ledger:'ti-wallet',
-    reports:'ti-chart-bar',
-    security:'ti-shield-lock',
-    profile:'ti-user-circle'
+    'dashboard':'ti-layout-dashboard',
+    'students':'ti-users',
+    'cancelled':'ti-file-x',
+    'agents':'ti-user-circle',
+    'ledger':'ti-wallet',
+    'reports':'ti-chart-bar',
+    'security':'ti-shield-lock',
+    'profile':'ti-user'
   };
-  const items=currentRole==='admin'
-    ?[{id:'dashboard',lb:'Dashboard'},{id:'students',lb:'All Students'},
-      {id:'cancelled',lb:'Cancellations'},
-      {id:'agents',lb:'Agents'},{id:'ledger',lb:'Cash Ledger'},
-      {id:'reports',lb:'Reports'},{id:'security',lb:'Security Log'},{id:'profile',lb:'My Profile'}]
-    :[{id:'dashboard',lb:'My Dashboard'},{id:'students',lb:'My Students'},
-      {id:'cancelled',lb:'Cancellations'},
-      {id:'ledger',lb:'Cash Ledger'},{id:'reports',lb:'My Reports'},{id:'profile',lb:'My Profile'}];
-  document.getElementById('sbNav').innerHTML=items.map(it=>`
-    <button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}');closeSidebar()">
+  const adminItems=[
+    {id:'dashboard',lb:'Dashboard'},
+    {id:'students',lb:'All Students'},
+    {id:'cancelled',lb:'Cancellations'},
+    {id:'agents',lb:'Agents'},
+    {id:'ledger',lb:'Cash Ledger'},
+    {id:'reports',lb:'Reports'},
+    {id:'security',lb:'Security Log'},
+    {id:'profile',lb:'My Profile'}
+  ];
+  const agentItems=[
+    {id:'dashboard',lb:'My Dashboard'},
+    {id:'students',lb:'My Students'},
+    {id:'cancelled',lb:'Cancellations'},
+    {id:'ledger',lb:'Cash Ledger'},
+    {id:'reports',lb:'My Reports'},
+    {id:'profile',lb:'My Profile'}
+  ];
+  const items=currentRole==='admin'?adminItems:agentItems;
+  document.getElementById('sbNav').innerHTML=items.map(it=>{
+    const icon=ICONS[it.id]||'ti-circle';
+    return `<button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}');closeSidebar()">
       <span class="ni-dot"></span>
-      <i class="ti ${ICONS[it.id]||'ti-circle'} ni-icon" aria-hidden="true"></i>
+      <i class="ti ${icon} ni-icon"></i>
       <span>${it.lb}</span>
-    </button>`).join('');
+    </button>`;
+  }).join('');
 }
 
 // ── DATA LOAD ────────────────────────────────────────────────────
@@ -2664,53 +2660,45 @@ window.toggleDoaSort=toggleDoaSort;
 // ── AUTO RESTORE SESSION ────────────────────────────────────────
 // Show lock timer immediately on page load if still locked from previous session
 if(isLocked()){startLockUI();}
-/* ── AUTO RESTORE ────────────────────────── */
 if(loadSession()){startApp();}
 
-/* ── ANIMATED FAVICON ────────────────────── */
-(function(){
-  const SZ=64;
-  const cv=document.createElement('canvas');
-  cv.width=SZ;cv.height=SZ;
+/* ── ANIMATED FAVICON ─── */
+(function animFav(){
+  const SZ=64,cv=document.createElement('canvas');
+  cv.width=cv.height=SZ;
   const ctx=cv.getContext('2d');
-  let link=document.querySelector("link[rel~='icon']");
-  if(!link){link=document.createElement('link');link.rel='icon';document.head.appendChild(link);}
-  let shimX=-SZ*0.8;
-  function drawFrame(){
+  let lnk=document.querySelector("link[rel*='icon']");
+  if(!lnk){lnk=document.createElement('link');lnk.rel='icon';document.head.appendChild(lnk);}
+  lnk.type='image/png';
+  let sx=-50;
+  function frame(){
     ctx.clearRect(0,0,SZ,SZ);
-    // Rounded rect background
-    const r=14;
+    // dark green rounded square
+    const R=14;
     ctx.beginPath();
-    ctx.moveTo(r,0);ctx.lineTo(SZ-r,0);ctx.quadraticCurveTo(SZ,0,SZ,r);
-    ctx.lineTo(SZ,SZ-r);ctx.quadraticCurveTo(SZ,SZ,SZ-r,SZ);
-    ctx.lineTo(r,SZ);ctx.quadraticCurveTo(0,SZ,0,SZ-r);
-    ctx.lineTo(0,r);ctx.quadraticCurveTo(0,0,r,0);
+    ctx.moveTo(R,0);ctx.lineTo(SZ-R,0);ctx.arcTo(SZ,0,SZ,R,R);
+    ctx.lineTo(SZ,SZ-R);ctx.arcTo(SZ,SZ,SZ-R,SZ,R);
+    ctx.lineTo(R,SZ);ctx.arcTo(0,SZ,0,SZ-R,R);
+    ctx.lineTo(0,R);ctx.arcTo(0,0,R,0,R);
     ctx.closePath();
-    ctx.fillStyle='#14532d';
-    ctx.fill();
-    // Shine sweep
-    ctx.save();
-    ctx.clip();
-    const shimW=SZ*0.38;
-    ctx.save();
-    ctx.translate(shimX,0);
-    ctx.rotate(-0.35);
-    ctx.fillStyle='rgba(255,255,255,0.16)';
-    ctx.fillRect(-4,-4,shimW,SZ+8);
+    ctx.fillStyle='#14532d';ctx.fill();
+    // shine sweep
+    ctx.save();ctx.clip();
+    ctx.save();ctx.translate(sx,-4);ctx.rotate(-0.32);
+    ctx.fillStyle='rgba(255,255,255,0.15)';
+    ctx.fillRect(0,0,24,SZ+8);
     ctx.restore();
-    shimX+=1.2;
-    if(shimX>SZ*1.2) shimX=-SZ*0.8;
+    sx+=0.9;if(sx>SZ+20)sx=-50;
     ctx.restore();
     // MH text
-    ctx.fillStyle='#ffffff';
-    ctx.font='bold 26px Inter,sans-serif';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
+    ctx.fillStyle='#fff';
+    ctx.font='bold 24px Inter,Arial,sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText('MH',SZ/2,SZ/2+1);
-    link.href=cv.toDataURL('image/png');
-    requestAnimationFrame(drawFrame);
+    lnk.href=cv.toDataURL();
+    requestAnimationFrame(frame);
   }
-  drawFrame();
+  frame();
 })();
 
 })();
