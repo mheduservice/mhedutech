@@ -336,6 +336,16 @@ tr.row-cancelled:hover td{background:#fee2e2 !important}
 #dropZone{border:2px dashed var(--border2);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px}
 #dropZone:hover{border-color:var(--g600);background:var(--g50)}
 
+/* ── PASTE TABLE ─────────────────────────────── */
+.paste-hint{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.paste-hint kbd{display:inline-block;padding:2px 7px;background:var(--g50);border:1.5px solid var(--border2);border-radius:4px;font-size:11px;font-weight:700;color:var(--g800);font-family:monospace}
+#pasteArea{width:100%;min-height:180px;font-family:'Inter',monospace,sans-serif;font-size:12px;padding:10px 12px;border:1.5px solid var(--border2);border-radius:var(--r);background:var(--g50);color:var(--text);resize:vertical;outline:none;line-height:1.6;transition:border .15s}
+#pasteArea:focus{border-color:var(--g600);background:#fff;box-shadow:0 0 0 3px rgba(22,163,74,.08)}
+#pasteArea::placeholder{color:var(--faint);font-family:'Inter',sans-serif;font-size:12px}
+.paste-col-hint{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.pch{padding:3px 9px;background:var(--g50);border:1px solid var(--border2);border-radius:20px;font-size:10px;font-weight:600;color:var(--muted)}
+.pch.req{background:var(--g100);color:var(--g800);border-color:var(--g200)}
+
 /* ── AGENT COLOUR PALETTE (unique per agent index) ─── */
 :root{
   --ac0-bg:#dcfce7;--ac0-text:#166534;--ac0-border:#86efac;--ac0-dark:#16a34a;
@@ -749,6 +759,68 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
       <button class="btn btn-primary" id="bulkUploadBtn" onclick="startBulkUpload()" disabled>Upload Students</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PASTE TABLE MODAL ══════════ -->
+<div class="mbg" id="pasteModal">
+  <div class="modal" style="width:700px">
+    <div class="modal-title">Paste Students from Excel</div>
+    <div class="modal-sub">Copy rows from Excel and paste directly — no file needed</div>
+
+    <div style="background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--g800);margin-bottom:6px">How to use:</div>
+      <ol style="font-size:12px;color:var(--muted);padding-left:18px;line-height:2">
+        <li>Open your Excel file with student data</li>
+        <li>Select the rows you want to upload (with or without header row)</li>
+        <li>Press <kbd style="padding:1px 6px;background:#fff;border:1.5px solid var(--border2);border-radius:4px;font-size:11px;font-weight:700">Ctrl+C</kbd> to copy</li>
+        <li>Click the box below and press <kbd style="padding:1px 6px;background:#fff;border:1.5px solid var(--border2);border-radius:4px;font-size:11px;font-weight:700">Ctrl+V</kbd> to paste</li>
+      </ol>
+    </div>
+
+    <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Expected column order in your Excel:</div>
+    <div class="paste-col-hint">
+      <span class="pch req">1. Date of Admission *</span>
+      <span class="pch req">2. Bill Number *</span>
+      <span class="pch req">3. Student Name *</span>
+      <span class="pch">4. Course</span>
+      <span class="pch">5. Advance Paid</span>
+      <span class="pch">6. Fee Status</span>
+      <span class="pch">7. Student Mobile</span>
+      <span class="pch">8. Father Mobile</span>
+      <span class="pch">9. Agent Email</span>
+    </div>
+    <div style="font-size:11px;color:var(--amber);margin-bottom:10px;font-weight:500">
+      Date can be in any format: DD-MM-YYYY, DD/MM/YYYY, or YYYY-MM-DD — auto-converted
+    </div>
+
+    <div class="paste-hint">
+      Paste your Excel data here:
+    </div>
+    <textarea id="pasteArea" placeholder="Paste your Excel rows here (Ctrl+V)...&#10;&#10;Example:&#10;09-06-2026&#9;VTUEEE2026B12058&#9;Student Name&#9;CSE&#9;0&#9;pending&#9;9876543210&#9;9876543200&#9;agent@email.com" onpaste="setTimeout(()=>parsePaste(),50)" oninput="parsePaste()"></textarea>
+
+    <div id="pastePreview" style="display:none;margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div id="pasteSummary" style="font-size:12px;font-weight:600;color:var(--g800)"></div>
+        <button class="btn btn-ghost btn-xs" onclick="document.getElementById('pasteArea').value='';document.getElementById('pastePreview').style.display='none';document.getElementById('pasteUploadBtn').disabled=true">Clear</button>
+      </div>
+      <div class="tscroll" style="max-height:220px;overflow-y:auto;border:1.5px solid var(--border);border-radius:var(--r)">
+        <table id="pastePreviewTable" style="font-size:12px"></table>
+      </div>
+      <div id="pasteErrors" style="display:none;background:var(--red-bg);border:1.5px solid var(--red-light);border-radius:var(--r);padding:10px;font-size:12px;color:var(--red);margin-top:8px;max-height:80px;overflow-y:auto"></div>
+    </div>
+
+    <div id="pasteProgress" style="display:none;margin-top:12px">
+      <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
+        <div id="pasteBar" style="background:var(--g600);height:100%;width:0%;transition:.3s;border-radius:20px"></div>
+      </div>
+      <div id="pasteProgressText" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center"></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closePasteModal()">Cancel</button>
+      <button class="btn btn-primary" id="pasteUploadBtn" onclick="startPasteUpload()" disabled>Upload Students</button>
     </div>
   </div>
 </div>
@@ -1477,7 +1549,8 @@ function renderStudents(){
         </select>
         ${isA?`<select id="af" onchange="filterStu()"><option value="">All Agents</option>${allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>`:''}
         ${isA?'<button class="btn btn-primary btn-sm" onclick="openStuModal()">Add Student</button>':''}
-        ${isA?'<button class="btn btn-outline btn-sm" onclick="openBulkModal()">Bulk Upload</button>':''}
+        ${isA?'<button class="btn btn-outline btn-sm" onclick="openBulkModal()">Bulk Upload (CSV)</button>':''}
+        ${isA?'<button class="btn btn-ghost btn-sm" onclick="openPasteModal()" style="border-color:var(--blue-light);color:var(--blue)">Paste from Excel</button>':''}
       </div>
     </div>
     <div class="card">
@@ -2381,16 +2454,35 @@ function processFile(file){
     notify('Please upload a CSV or Excel file.','err');
   }
 }
+// ── DATE FORMAT CONVERTER ────────────────────────────────────
+function convertDate(d){
+  if(!d) return '';
+  d=d.trim();
+  // Already YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+  // DD-MM-YYYY or DD/MM/YYYY
+  const m1=d.match(/^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{4})$/);
+  if(m1) return `${m1[3]}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+  // MM-DD-YYYY or MM/DD/YYYY
+  const m2=d.match(/^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{2,4})$/);
+  if(m2){const yr=m2[3].length===2?'20'+m2[3]:m2[3];return `${yr}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`;}
+  return d; // return as-is if unknown
+}
+
 function parseCSV(text){
-  const lines=text.trim().split('\n');
+  // Strip BOM (﻿) that Excel adds to UTF-8 CSV files
+  text=text.replace(/^\uFEFF/,'').replace(/^\xEF\xBB\xBF/,'');
+  // Normalise line endings (Windows \r\n, Mac \r, Unix \n)
+  const lines=text.trim().replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
   if(lines.length<2){notify('File is empty or has no data rows.','err');return;}
-  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z_]/g,''));
+  // Strip BOM from first header too
+  const headers=lines[0].replace(/^\uFEFF/,'').split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z_]/g,''));
   const required=['date_of_admission','bill_number','student_name'];
   const missing=required.filter(r=>!headers.includes(r));
   if(missing.length){notify('Missing required columns: '+missing.join(', '),'err');return;}
   const rows=[];const errors=[];
   function splitCSVLine(line){
-    // Handle quoted fields with commas inside (standard CSV format from Excel)
+    // Handle quoted fields with commas inside (standard Excel CSV)
     const result=[];let cur='';let inQ=false;
     for(let ci=0;ci<line.length;ci++){
       const ch=line[ci];
@@ -2416,7 +2508,7 @@ function parseCSV(text){
     // WHITELIST — only these exact DB columns allowed, extra CSV cols ignored
     rows.push({
       student_name:    clean(row.student_name,100),
-      doa:             row.date_of_admission,
+      doa:             convertDate(row.date_of_admission), // auto-converts DD-MM-YYYY → YYYY-MM-DD
       bill_number:     clean(row.bill_number,50),
       course:          clean(row.course||'',50),
       advance_paid:    Math.max(0,parseFloat(row.advance_paid)||0),
@@ -2679,6 +2771,118 @@ window.openCancelModal=openCancelModal;
 window.confirmCancel=confirmCancel;
 window.restoreStudent=restoreStudent;
 
+/* ── PASTE FROM EXCEL FUNCTIONS ─────────────────────────────── */
+let pasteRows=[];
+
+function openPasteModal(){
+  pasteRows=[];
+  document.getElementById('pasteArea').value='';
+  document.getElementById('pastePreview').style.display='none';
+  document.getElementById('pasteProgress').style.display='none';
+  document.getElementById('pasteUploadBtn').disabled=true;
+  document.getElementById('pasteErrors').style.display='none';
+  openM('pasteModal');
+}
+function closePasteModal(){closeM('pasteModal');}
+
+function parsePaste(){
+  const raw=document.getElementById('pasteArea').value.trim();
+  if(!raw){
+    document.getElementById('pastePreview').style.display='none';
+    document.getElementById('pasteUploadBtn').disabled=true;
+    pasteRows=[];return;
+  }
+  const lines=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(l=>l.trim());
+  if(!lines.length){pasteRows=[];return;}
+  const firstLower=lines[0].toLowerCase();
+  const isHeader=firstLower.includes('date')||firstLower.includes('bill')||firstLower.includes('name')||firstLower.includes('student')||firstLower.includes('admission');
+  const dataLines=isHeader?lines.slice(1):lines;
+  const rows=[];const errors=[];
+  for(let i=0;i<dataLines.length;i++){
+    const line=dataLines[i];
+    if(!line.trim()) continue;
+    const sep=line.includes('\t')?'\t':',';
+    const cols=line.split(sep).map(v=>v.trim().replace(/^"|"$/g,'').trim());
+    const rawDate=cols[0]||'';
+    const bill=clean(cols[1]||'',50);
+    const name=clean(cols[2]||'',100);
+    const course=clean(cols[3]||'',50);
+    const advance=Math.max(0,parseFloat(cols[4])||0);
+    const rawFeeStatus=(cols[5]||'').toLowerCase().trim();
+    const feeStatus=['paid','pending','partial'].includes(rawFeeStatus)?rawFeeStatus:'pending';
+    const studentMobile=clean(cols[6]||'',15);
+    const fatherMobile=clean(cols[7]||'',15);
+    const agentEmail=(cols[8]||'').toLowerCase().trim();
+    if(!name||!bill||!rawDate){errors.push(`Row ${i+1}: Missing date, bill or name — skipped`);continue;}
+    const doa=convertDate(rawDate);
+    if(!doa||doa.length<8){errors.push(`Row ${i+1}: Could not read date "${rawDate}" — skipped`);continue;}
+    const ag=allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===agentEmail);
+    rows.push({student_name:name,doa,bill_number:bill,course,advance_paid:advance,fee_status:feeStatus,student_mobile:studentMobile,father_mobile:fatherMobile,sem_fee_status:'',referral_amount:0,agent_id:ag?ag.id:null});
+  }
+  pasteRows=rows;
+  document.getElementById('pastePreview').style.display='block';
+  document.getElementById('pasteSummary').textContent=`${rows.length} students ready${errors.length?' — '+errors.length+' skipped':''}`;
+  document.getElementById('pastePreviewTable').innerHTML=`<thead><tr><th>#</th><th>Name</th><th>Bill No</th><th>Date (converted)</th><th>Course</th><th>Status</th><th>Agent</th></tr></thead><tbody>
+    ${rows.slice(0,15).map((r,i)=>`<tr>
+      <td>${i+1}</td><td><b>${esc(r.student_name)}</b></td>
+      <td style="font-size:11px;color:var(--muted)">${esc(r.bill_number)}</td>
+      <td style="font-size:11px;color:var(--g700);font-weight:600">${esc(r.doa)}</td>
+      <td style="font-size:11px">${esc(r.course||'—')}</td>
+      <td><span class="pill pill-${esc(r.fee_status)}">${esc(r.fee_status)}</span></td>
+      <td style="font-size:11px;color:${r.agent_id?'var(--g700)':'var(--amber)'}">${r.agent_id?'✓ Matched':'⚠ No match'}</td>
+    </tr>`).join('')}
+    ${rows.length>15?`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:8px">...and ${rows.length-15} more</td></tr>`:''}</tbody>`;
+  const errs=document.getElementById('pasteErrors');
+  if(errors.length){errs.style.display='block';errs.innerHTML=errors.map(e=>`<div>⚠ ${esc(e)}</div>`).join('');}
+  else errs.style.display='none';
+  document.getElementById('pasteUploadBtn').disabled=rows.length===0;
+}
+
+let _pasteUploading=false;
+async function startPasteUpload(){
+  if(!pasteRows.length||_pasteUploading) return;
+  _pasteUploading=true;
+  document.getElementById('pasteUploadBtn').disabled=true;
+  const prog=document.getElementById('pasteProgress');
+  const bar=document.getElementById('pasteBar');
+  const txt=document.getElementById('pasteProgressText');
+  prog.style.display='block';txt.textContent='Preparing...';
+  const BATCH=20;let done=0,failed=0,failedNames=[];
+  for(let i=0;i<pasteRows.length;i+=BATCH){
+    const batch=pasteRows.slice(i,i+BATCH);
+    const {error}=await sb.from('students').insert(batch);
+    if(error){
+      for(const row of batch){
+        const {error:rowErr}=await sb.from('students').insert([row]);
+        if(rowErr){failed++;failedNames.push(row.student_name||row.bill_number);}
+        else done++;
+        bar.style.width=Math.round(((done+failed)/pasteRows.length)*100)+'%';
+        txt.textContent=`Uploading... ${done+failed} / ${pasteRows.length}`;
+      }
+    } else {
+      done+=batch.length;
+      bar.style.width=Math.round(((done+failed)/pasteRows.length)*100)+'%';
+      txt.textContent=`Uploading... ${done+failed} / ${pasteRows.length}`;
+    }
+  }
+  bar.style.width='100%';
+  if(failed===0){
+    txt.innerHTML=`<span style="color:var(--g700);font-weight:700">✓ All ${done} students uploaded!</span>`;
+  } else if(done===0){
+    txt.innerHTML=`<span style="color:var(--red);font-weight:700">Upload failed — check for duplicate bill numbers.</span>`;
+    bar.style.background='var(--red)';
+  } else {
+    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedNames.slice(0,5).join(', ')}${failedNames.length>5?'...':''}</span>`;
+  }
+  _pasteUploading=false;
+  await loadData();
+  setTimeout(()=>{if(failed===0)closePasteModal();},failed>0?5000:2000);
+}
+window.openPasteModal=openPasteModal;
+window.closePasteModal=closePasteModal;
+window.parsePaste=parsePaste;
+window.startPasteUpload=startPasteUpload;
+
 // ── WINDOW ASSIGNMENTS ──────────────────────────────────────────
 window.doLogin=doLogin;
 window.doLogout=doLogout;
@@ -2709,6 +2913,10 @@ window.handleFileSelect=handleFileSelect;
 window.openBulkModal=openBulkModal;
 window.closeBulkModal=closeBulkModal;
 window.startBulkUpload=startBulkUpload;
+window.openPasteModal=openPasteModal;
+window.closePasteModal=closePasteModal;
+window.startPasteUpload=startPasteUpload;
+window.parsePaste=parsePaste;
 window.toggleSemFee=toggleSemFee;
 window.toggleDoaSort=toggleDoaSort;
 
