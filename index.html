@@ -8,7 +8,6 @@
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <title>MH EduTech</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -99,9 +98,9 @@ a{color:var(--g700)}
 .sidebar{width:220px;min-width:220px;background:var(--sb-bg);border-right:1.5px solid var(--sb-border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:30;overflow-y:auto;transition:transform .25s ease,width .25s ease}
 .logo-wrap{padding:18px 16px 14px;border-bottom:1.5px solid var(--sb-border)}
 .logo-inner{display:flex;align-items:center;gap:10px}
-@keyframes shineSweepBadge{0%{left:-80%}100%{left:120%}}
+@keyframes sbShine{0%{left:-80%}100%{left:120%}}
 .logo-badge{width:36px;height:36px;background:#14532d;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.logo-badge::before{content:'';position:absolute;top:-4px;left:-80%;width:38%;height:200%;background:rgba(255,255,255,.16);transform:skewX(-20deg);animation:shineSweepBadge 2.8s ease-in-out infinite}
+.logo-badge::before{content:'';position:absolute;top:-4px;left:-80%;width:38%;height:200%;background:rgba(255,255,255,.16);transform:skewX(-20deg);animation:sbShine 2.8s ease-in-out infinite}
 .logo-badge span{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.3px;position:relative;z-index:1}
 .logo-text{}
 .logo-name{font-size:13px;font-weight:800;color:var(--g900);line-height:1.2}
@@ -115,12 +114,12 @@ a{color:var(--g700)}
 .ni{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r);font-size:13px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:.12s;font-family:'Inter',sans-serif;font-weight:500;margin-bottom:2px}
 .ni:hover{background:var(--g100);color:var(--g800)}
 .ni.active{background:var(--g600);color:#fff;font-weight:700}
-.ni.active .ni-dot{background:#fff}
-.ni-dot{width:6px;height:6px;border-radius:50%;background:var(--g300);flex-shrink:0;transition:.12s;display:none}
+.ni.active .ni-dot{display:none}
+.ni-dot{display:none}
 .ni:hover .ni-dot{background:var(--g600)}
-.ni-icon{font-size:16px;flex-shrink:0;width:18px;text-align:center;line-height:1;color:var(--muted);transition:.12s}
-.ni:hover .ni-icon{color:var(--g700)}
-.ni.active .ni-icon{color:#fff}
+.ni-icon{width:16px;height:16px;flex-shrink:0;opacity:.55;transition:.15s;display:block}
+.ni:hover .ni-icon{opacity:.9}
+.ni.active .ni-icon{opacity:1;filter:brightness(0) invert(1)}
 .sb-footer{padding:12px 16px;border-top:1.5px solid var(--sb-border)}
 .sb-signout{width:100%;padding:8px;border-radius:var(--r);border:1.5px solid var(--border2);background:#fff;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s}
 .sb-signout:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-light)}
@@ -1199,15 +1198,16 @@ async function startApp(){
 }
 
 function buildSidebar(){
-  const ICONS={
-    'dashboard':'ti-layout-dashboard',
-    'students':'ti-users',
-    'cancelled':'ti-file-x',
-    'agents':'ti-user-circle',
-    'ledger':'ti-wallet',
-    'reports':'ti-chart-bar',
-    'security':'ti-shield-lock',
-    'profile':'ti-user'
+  // Inline SVG icons — no CDN dependency, always renders
+  const SVG={
+    dashboard:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+    students:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>`,
+    cancelled:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="15" y2="11"/></svg>`,
+    agents:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    ledger:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
+    reports:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
+    security:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    profile:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
   };
   const adminItems=[
     {id:'dashboard',lb:'Dashboard'},
@@ -1228,14 +1228,12 @@ function buildSidebar(){
     {id:'profile',lb:'My Profile'}
   ];
   const items=currentRole==='admin'?adminItems:agentItems;
-  document.getElementById('sbNav').innerHTML=items.map(it=>{
-    const icon=ICONS[it.id]||'ti-circle';
-    return `<button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}');closeSidebar()">
+  document.getElementById('sbNav').innerHTML=items.map(it=>`
+    <button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}');closeSidebar()">
       <span class="ni-dot"></span>
-      <i class="ti ${icon} ni-icon"></i>
+      ${SVG[it.id]||SVG.profile}
       <span>${it.lb}</span>
-    </button>`;
-  }).join('');
+    </button>`).join('');
 }
 
 // ── DATA LOAD ────────────────────────────────────────────────────
@@ -2662,8 +2660,8 @@ window.toggleDoaSort=toggleDoaSort;
 if(isLocked()){startLockUI();}
 if(loadSession()){startApp();}
 
-/* ── ANIMATED FAVICON ─── */
-(function animFav(){
+/* ── ANIMATED FAVICON ─────────────────── */
+(function(){
   const SZ=64,cv=document.createElement('canvas');
   cv.width=cv.height=SZ;
   const ctx=cv.getContext('2d');
@@ -2673,7 +2671,6 @@ if(loadSession()){startApp();}
   let sx=-50;
   function frame(){
     ctx.clearRect(0,0,SZ,SZ);
-    // dark green rounded square
     const R=14;
     ctx.beginPath();
     ctx.moveTo(R,0);ctx.lineTo(SZ-R,0);ctx.arcTo(SZ,0,SZ,R,R);
@@ -2682,15 +2679,13 @@ if(loadSession()){startApp();}
     ctx.lineTo(0,R);ctx.arcTo(0,0,R,0,R);
     ctx.closePath();
     ctx.fillStyle='#14532d';ctx.fill();
-    // shine sweep
     ctx.save();ctx.clip();
     ctx.save();ctx.translate(sx,-4);ctx.rotate(-0.32);
     ctx.fillStyle='rgba(255,255,255,0.15)';
-    ctx.fillRect(0,0,24,SZ+8);
+    ctx.fillRect(0,0,22,SZ+8);
     ctx.restore();
     sx+=0.9;if(sx>SZ+20)sx=-50;
     ctx.restore();
-    // MH text
     ctx.fillStyle='#fff';
     ctx.font='bold 24px Inter,Arial,sans-serif';
     ctx.textAlign='center';ctx.textBaseline='middle';
