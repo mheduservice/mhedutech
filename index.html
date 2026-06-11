@@ -255,11 +255,69 @@ tr:hover td{background:var(--g50)}
 .mode-cheque{background:#fef9c3;color:#854d0e}
 .mode-other{background:#f1f5f9;color:#475569}
 .ledger-head-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--g50);border-bottom:1.5px solid var(--border)}
-.ledger-total-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--g50);border-top:1.5px solid var(--border);font-weight:700}
+/* ── ADMIN LEDGER NOTE (old rule removed — see indigo theme block below) ── */
 
-/* ── ADMIN LEDGER NOTE ────────────────────────── */
-.ledger-admin-note{background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:12px;margin-top:6px;color:var(--g800)}
-.admin-note-label{font-size:10px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+/* ── CASH LEDGER — DEEP INDIGO THEME ─────────────── */
+:root{
+  --ld-bg:#1e1b4b;--ld-bg2:#312e81;--ld-surface:#f5f3ff;
+  --ld-border:#c4b5fd;--ld-border2:#a78bfa;
+  --ld-accent:#7c3aed;--ld-accent2:#6d28d9;--ld-accent3:#5b21b6;
+  --ld-text:#1e1b4b;--ld-muted:#5b21b6;--ld-faint:#8b5cf6;
+  --ld-card:#ffffff;--ld-stat-bg:#ede9fe;
+  --ld-cash:#065f46;--ld-cash-bg:#d1fae5;
+  --ld-upi:#1e40af;--ld-upi-bg:#dbeafe;
+  --ld-bank:#5b21b6;--ld-bank-bg:#ede9fe;
+  --ld-cheque:#854d0e;--ld-cheque-bg:#fef9c3;
+  --ld-total-bg:#1e1b4b;--ld-total-text:#e9d5ff;
+}
+.ledger-section-wrap{background:var(--ld-surface);border-radius:var(--rxl);padding:20px;margin-bottom:2px}
+.ledger-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.ledger-stat{background:var(--ld-stat-bg);border:2px solid var(--ld-border);border-radius:var(--rl);padding:14px 16px;position:relative;overflow:hidden}
+.ledger-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ld-accent),var(--ld-faint))}
+.ledger-stat-label{font-size:10px;color:var(--ld-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.ledger-stat-value{font-size:22px;font-weight:800;color:var(--ld-accent3)}
+.ledger-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.agent-filter-btn{padding:5px 14px;border-radius:20px;border:2px solid var(--ld-border);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--ld-muted);font-family:'Inter',sans-serif}
+.agent-filter-btn:hover{border-color:var(--ld-accent);color:var(--ld-accent2);background:var(--ld-stat-bg)}
+.agent-filter-btn.active{background:var(--ld-accent);color:#fff;border-color:var(--ld-accent)}
+.ledger-card{background:var(--ld-card);border:2px solid var(--ld-border);border-radius:var(--rl);overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,.1)}
+.ledger-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--ld-bg);flex-wrap:wrap;gap:8px}
+.ledger-card-title{font-size:12px;font-weight:700;color:#e9d5ff;text-transform:uppercase;letter-spacing:.6px}
+.ledger-list{border:none}
+.ledger-item{display:grid;gap:10px;padding:14px 18px;border-bottom:1.5px solid #ede9fe;align-items:start;transition:.12s}
+.ledger-item:last-child{border-bottom:none}
+.ledger-item:hover{background:#faf5ff}
+.ledger-item-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.ledger-agent-av{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--ld-accent),var(--ld-accent3));color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.3)}
+.ledger-agent-name{font-size:13px;font-weight:700;color:var(--ld-text)}
+.ledger-date{font-size:11px;color:var(--ld-faint)}
+.ledger-amount{font-size:18px;font-weight:800;color:var(--ld-accent3);letter-spacing:-.3px}
+.ledger-note-text{font-size:12px;color:var(--ld-muted);margin-top:4px;font-style:italic}
+.mode-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border:1.5px solid}
+.mode-cash{background:var(--ld-cash-bg);color:var(--ld-cash);border-color:#6ee7b7}
+.mode-upi{background:var(--ld-upi-bg);color:var(--ld-upi);border-color:#93c5fd}
+.mode-bank{background:var(--ld-bank-bg);color:var(--ld-bank);border-color:#c4b5fd}
+.mode-cheque{background:var(--ld-cheque-bg);color:var(--ld-cheque);border-color:#fde047}
+.mode-other{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
+.ledger-head-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--ld-stat-bg);border-bottom:1.5px solid var(--ld-border)}
+.ledger-total-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--ld-total-bg);font-weight:700}
+.ledger-total-bar span:first-child{color:#c4b5fd;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.ledger-total-bar span:last-child{color:#e9d5ff;font-size:18px;font-weight:800}
+
+/* ── LEDGER NOTES — INDIGO THEME ─────────────────── */
+.ledger-admin-note{background:var(--ld-stat-bg);border:1.5px solid var(--ld-border2);border-radius:var(--r);padding:8px 11px;font-size:12px;margin-top:6px;color:var(--ld-text)}
+.admin-note-label{font-size:10px;font-weight:700;color:var(--ld-accent2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.ledger-agent-note{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:var(--r);padding:7px 10px;font-size:12px;margin-top:6px;color:#1e40af}
+.agent-note-label{font-size:10px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.ledger-admin-note-alert{background:#fdf4ff;border:1.5px solid var(--ld-border2);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-top:6px;color:var(--ld-accent3);font-weight:600}
+.admin-alert-label{font-size:10px;font-weight:700;color:var(--ld-accent);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+
+/* ── CANCELLATION TAB ─────────────────────────────── */
+.pill-cancelled{background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5}
+tr.row-cancelled td{background:#fff5f5 !important;opacity:.85}
+tr.row-cancelled:hover td{background:#fee2e2 !important}
+.cancel-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5}
+.cancel-reason-box{background:#fff5f5;border:1.5px solid #fca5a5;border-radius:var(--r);padding:7px 10px;font-size:12px;margin-top:5px;color:#991b1b;word-break:break-word}
 
 /* ── SECURITY LOG ─────────────────────────────── */
 .ip-blocked{background:var(--red-light);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;margin-left:4px}
@@ -298,6 +356,10 @@ tr:hover td{background:var(--g50)}
 .toggle input:checked+.toggle-slider{background:var(--g600)}
 .toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
 .toggle-label{font-size:12px;font-weight:600;color:var(--muted)}
+
+/* ── LAVENDER ROW GLOW (sem cleared) ─────────────── */
+tr.sem-cleared td{background:#F7F3FF !important;transition:background .3s}
+tr.sem-cleared:hover td{background:#ede8ff !important}
 
 /* ── SEM FEE PILLS ──────────────────────────────── */
 .pill-sem-paid{background:#dcfce7;color:#166534}
@@ -534,6 +596,7 @@ tr:hover td{background:var(--g50)}
       <div id="notif" class="notif"></div>
       <div id="sec-dashboard" class="section"></div>
       <div id="sec-students"  class="section"></div>
+      <div id="sec-cancelled" class="section"></div>
       <div id="sec-agents"    class="section"></div>
       <div id="sec-reports"   class="section"></div>
       <div id="sec-security"  class="section"></div>
@@ -756,6 +819,23 @@ tr:hover td{background:var(--g50)}
   </div>
 </div>
 
+<!-- ═══════════════ CANCEL STUDENT MODAL ═════════ -->
+<div class="mbg" id="cancelModal">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--red)">Cancel Student Admission</div>
+    <div class="modal-sub">Mark this student as cancelled. They will be moved to the Cancellations tab.</div>
+    <input type="hidden" id="cancelStuId">
+    <div class="fg"><label>Reason for Cancellation *</label>
+      <textarea id="cancelReason" maxlength="300" rows="3" placeholder="e.g. Student withdrew, fee not paid, duplicate entry..."></textarea>
+    </div>
+    <div id="cancelErr" class="auth-err"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('cancelModal')">Go Back</button>
+      <button class="btn btn-red" onclick="confirmCancel()">Confirm Cancellation</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -836,10 +916,18 @@ function clean(v,n){
 }
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
 // Validates Indian mobile numbers: 10 digits, optionally starting with +91 or 0
+// Validates Indian mobile numbers (10 digits starting 6-9) OR landlines (starting 2-5).
+// Also accepts +91/0 prefix. Empty value is always valid (optional field).
 function validMobile(v){
   if(!v||!v.trim()) return true; // optional field — empty is fine
   const stripped=v.replace(/[\s\-().+]/g,'');
-  return /^(?:0|91)?[6-9]\d{9}$/.test(stripped);
+  // Standard Indian mobile: 10 digits starting 6-9 (with optional 0 or 91 prefix)
+  if(/^(?:0|91)?[6-9]\d{9}$/.test(stripped)) return true;
+  // Landline: area code (2-5 digits) + number = 10 digits total
+  if(/^(?:0|91)?[2-5]\d{9}$/.test(stripped)) return true;
+  // Bare 10-digit number starting 1 (rare but don't block)
+  if(/^\d{10}$/.test(stripped)) return true;
+  return false;
 }
 async function hashPwd(p){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(SALT+p));
@@ -1086,6 +1174,9 @@ window.closeSidebar=closeSidebar;
 
 // ── APP START ────────────────────────────────────────────────────
 async function startApp(){
+  // On page restore: if in-memory lock is expired (page was refreshed), it's gone — that's expected.
+  // sessionStorage lock however persists across refresh — check and show UI if still locked.
+  if(isLocked()){startLockUI();}
   document.getElementById('authPage').style.display='none';
   document.getElementById('appPage').style.display='flex';
   document.getElementById('topName').textContent=esc(currentUser.name);
@@ -1104,9 +1195,11 @@ async function startApp(){
 function buildSidebar(){
   const items=currentRole==='admin'
     ?[{id:'dashboard',lb:'Dashboard'},{id:'students',lb:'All Students'},
+      {id:'cancelled',lb:'Cancellations'},
       {id:'agents',lb:'Agents'},{id:'ledger',lb:'Cash Ledger'},
       {id:'reports',lb:'Reports'},{id:'security',lb:'Security Log'},{id:'profile',lb:'My Profile'}]
     :[{id:'dashboard',lb:'My Dashboard'},{id:'students',lb:'My Students'},
+      {id:'cancelled',lb:'Cancellations'},
       {id:'ledger',lb:'Cash Ledger'},{id:'reports',lb:'My Reports'},{id:'profile',lb:'My Profile'}];
   document.getElementById('sbNav').innerHTML=items.map(it=>`
     <button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}');closeSidebar()">
@@ -1167,8 +1260,8 @@ function showSecAlert(attempt){
 let curSec='dashboard';
 function refreshSec(){showSec(curSec);}
 
-const ADMIN_SEC=['dashboard','students','agents','reports','security','ledger','profile'];
-const AGENT_SEC=['dashboard','students','reports','ledger','profile'];
+const ADMIN_SEC=['dashboard','students','cancelled','agents','reports','security','ledger','profile'];
+const AGENT_SEC=['dashboard','students','cancelled','reports','ledger','profile'];
 
 function showSec(id){
   const allowed=currentRole==='admin'?ADMIN_SEC:AGENT_SEC;
@@ -1183,26 +1276,33 @@ function showSec(id){
   const titles={
     dashboard:currentRole==='admin'?'Dashboard':'My Dashboard',
     students:currentRole==='admin'?'All Students':'My Students',
+    cancelled:'Cancellations',
     agents:'Agents',reports:'Reports',security:'Security Log',
     ledger:'Cash Ledger',profile:'My Profile'
   };
   document.getElementById('pageTitle').textContent=titles[id]||id;
   if(id==='dashboard') renderDash();
   if(id==='students')  renderStudents();
+  if(id==='cancelled') renderCancelled();
   if(id==='agents'&&currentRole==='admin') renderAgents();
   if(id==='reports')   renderReports();
   if(id==='security'&&currentRole==='admin') renderSecurity();
-  if(id==='ledger'){ledgerFilter='all'; renderLedger();} // reset filter on every visit
+  if(id==='ledger'){
+    // Only reset filter if current filter is a specific agent AND user is agent (can't filter by agent)
+    if(currentRole!=='admin'&&ledgerFilter!=='all') ledgerFilter='all';
+    renderLedger();
+  }
   if(id==='profile')   renderProfile();
 }
 
 // ── DASHBOARD ────────────────────────────────────────────────────
 function renderDash(){
-  const sts=myStudents();
+  // CRITICAL: exclude cancelled students from ALL metrics — cancelled ≠ enrolled
+  const sts=myStudents().filter(s=>!s.is_cancelled);
   const paid=sts.filter(s=>s.fee_status==='paid').length;
   const pend=sts.filter(s=>s.fee_status==='pending').length;
   const part=sts.filter(s=>s.fee_status==='partial').length;
-  const successful=sts.filter(s=>s.sem_fee_status==='paid').length; // Sem toggle ON = successful admission
+  const successful=sts.filter(s=>s.sem_fee_status==='paid').length;
   const adv=sts.reduce((a,s)=>a+(s.advance_paid||0),0);
   const tot=sts.reduce((a,s)=>a+(s.total_fee||0),0);
   const ref=sts.reduce((a,s)=>a+(s.referral_amount||0),0);
@@ -1279,7 +1379,8 @@ function renderDash(){
     const ap=document.getElementById('agPerf');
     if(!allAgents.length){ap.innerHTML='<p style="color:var(--muted);font-size:13px">No agents yet.</p>';return;}
     ap.innerHTML=allAgents.map(ag=>{
-      const as=allStudents.filter(s=>s.agent_id===ag.id);
+      // Exclude cancelled students from agent performance stats
+      const as=allStudents.filter(s=>s.agent_id===ag.id&&!s.is_cancelled);
       const aa=as.reduce((a,s)=>a+(s.advance_paid||0),0);
       const ar=as.reduce((a,s)=>a+(s.referral_amount||0),0);
       return `<div class="ag-card">
@@ -1295,7 +1396,8 @@ function renderDash(){
     }).join('');
   }
   const rt=document.getElementById('recentTbl');
-  const rec=myStudents().slice(0,5);
+  // Exclude cancelled from recent students list too
+  const rec=myStudents().filter(s=>!s.is_cancelled).slice(0,5);
   if(!rec.length){rt.innerHTML='<p style="color:var(--muted);font-size:13px;padding:10px 0">No students yet.</p>';return;}
   rt.innerHTML=`<table><thead><tr><th>Name</th><th>Agent</th><th>Advance</th><th>Status</th></tr></thead><tbody>
     ${rec.map(s=>`<tr>
@@ -1391,7 +1493,9 @@ function filterStu(){
   }
   tb.innerHTML=list.map((s,i)=>{
     const ac=agentColour(s.agent_id);
-    const semOn=s.sem_fee_status==='paid';
+    const semOn=s.sem_fee_status==='paid'; // sem cleared = toggle ON (single source of truth)
+    const isCancelled=s.is_cancelled===true||s.is_cancelled==='true';
+    if(isCancelled) return ''; // hide cancelled from main list
     const notes=(s.notes||[]).filter(n=>n.note_type!=='query').map(n=>`
       <div class="note-box">
         <span class="note-text">${esc(n.note_text)}</span>
@@ -1408,7 +1512,7 @@ function filterStu(){
       <button class="btn btn-xs ${isA?'btn-amber':'btn-primary'}" onclick="addNote('${esc(s.id)}','ni-${esc(s.id)}','${isA?'note':'query'}')">${isA?'Note':'Query'}</button>
     </div>`;
     const agentName=isA?`<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid" class="${ac}">${esc(s.agents?.name||'—')}</span></td>`:'';
-    return `<tr>
+    return `<tr class="${semOn?'sem-cleared':''}">
       <td style="color:var(--muted);font-size:12px">${i+1}</td>
       <td><b>${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
       <td style="white-space:nowrap;font-size:12px">${esc(s.doa||'')}</td>
@@ -1431,9 +1535,10 @@ function filterStu(){
       <td><div style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="btn btn-xs btn-outline" onclick="openStuModal('${esc(s.id)}')">Edit</button>
         <button class="btn btn-xs btn-red" onclick="delStu('${esc(s.id)}')">Del</button>
+        <button class="btn btn-xs" style="background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:var(--r);font-size:11px;padding:3px 8px;cursor:pointer;font-weight:600;font-family:'Inter',sans-serif" onclick="openCancelModal('${esc(s.id)}')">Cancel</button>
       </div></td>`:''}
     </tr>`;
-  }).join('');
+  }).filter(Boolean).join('');
 }
 
 // ── AGENTS ───────────────────────────────────────────────────────
@@ -1447,7 +1552,7 @@ function renderAgents(){
   const al=document.getElementById('agList');
   if(!allAgents.length){al.innerHTML='<p style="color:var(--muted);font-size:13px">No agents yet.</p>';return;}
   al.innerHTML=allAgents.map(ag=>{
-    const as=allStudents.filter(s=>s.agent_id===ag.id);
+    const as=allStudents.filter(s=>s.agent_id===ag.id&&!s.is_cancelled);
     const aa=as.reduce((a,s)=>a+(s.advance_paid||0),0);
     const ar=as.reduce((a,s)=>a+(s.referral_amount||0),0);
     const rp=as.filter(s=>s.referral_paid).reduce((a,s)=>a+(s.referral_amount||0),0);
@@ -1473,11 +1578,11 @@ function renderAgents(){
 
 // ── REPORTS ──────────────────────────────────────────────────────
 function renderReports(){
-  const sts=myStudents();
+  // Exclude cancelled students from all report data
+  const sts=myStudents().filter(s=>!s.is_cancelled);
   const isA=currentRole==='admin';
   const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
-  // Multi-colour bar per month — gradient palette
   const barColours=['#16a34a','#2563eb','#7c3aed','#d97706','#db2777','#0d9488','#dc2626','#ca8a04','#059669','#8b5cf6','#f97316','#0ea5e9'];
 
   const paid=sts.filter(s=>s.fee_status==='paid').length;
@@ -1556,7 +1661,7 @@ function renderReports(){
 
   if(isA&&allAgents.length){
     const agLabels=allAgents.map(a=>a.name);
-    const agCounts=allAgents.map(a=>allStudents.filter(s=>s.agent_id===a.id).length);
+    const agCounts=allAgents.map(a=>allStudents.filter(s=>s.agent_id===a.id&&!s.is_cancelled).length);
     const acDarks=['#16a34a','#2563eb','#7c3aed','#d97706','#db2777','#0d9488'];
     mkChart('rc5','bar',agLabels,[{
       data:agCounts,
@@ -1739,26 +1844,51 @@ function openStuModal(id){
 
 async function toggleSemFee(stuId,isPaid){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  // Toggle ON = sem fee cleared = successful admission (fee_status=paid)
-  // Toggle OFF = not paid = fee_status=pending
+  // Guard: never toggle sem on a cancelled student
+  const stuRecord=allStudents.find(x=>x.id===stuId);
+  if(!stuRecord){notify('Student not found.','err');return;}
+  if(stuRecord.is_cancelled){notify('Cannot modify a cancelled student.','err');return;}
+
+  // IMPORTANT: preserve original fee_status when toggling OFF
+  // Toggle ON → sem_fee_status=paid + fee_status=paid (sem cleared = admission confirmed)
+  // Toggle OFF → sem_fee_status=null + restore original fee_status (don't force pending)
+  const originalFeeStatus=stuRecord.fee_status;
+  const restoredStatus=(originalFeeStatus&&originalFeeStatus!=='paid')?originalFeeStatus:'pending';
+
   const update=isPaid
     ?{sem_fee_status:'paid',fee_status:'paid',updated_at:new Date().toISOString()}
-    :{sem_fee_status:null,fee_status:'pending',updated_at:new Date().toISOString()};
+    :{sem_fee_status:null,fee_status:restoredStatus,updated_at:new Date().toISOString()};
   const {error}=await sb.from('students').update(update).eq('id',stuId);
   if(error){notify('Could not update sem status.','err');return;}
+  // Update label
   const lbl=document.getElementById('semLbl-'+stuId);
   if(lbl){
     lbl.textContent=isPaid?'✓ Cleared':'Pending';
     lbl.style.color=isPaid?'var(--g700)':'var(--muted)';
     lbl.style.fontWeight=isPaid?'700':'600';
   }
-  // Update local data without full reload for instant feedback
-  const s=allStudents.find(x=>x.id===stuId);
-  if(s){
-    s.sem_fee_status=isPaid?'paid':null;
-    s.fee_status=isPaid?'paid':'pending';
+  // Update row lavender glow instantly
+  const checkbox=document.querySelector(`input[onchange*="${stuId}"]`);
+  if(checkbox){
+    const row=checkbox.closest('tr');
+    if(row){
+      if(isPaid) row.classList.add('sem-cleared');
+      else row.classList.remove('sem-cleared');
+      // Update fee_status pill in the same row instantly
+      const pillEl=row.querySelector('.pill');
+      if(pillEl){
+        const newStatus=isPaid?'paid':restoredStatus;
+        pillEl.className='pill pill-'+newStatus;
+        pillEl.textContent=newStatus;
+      }
+    }
   }
-  notify(isPaid?'Sem cleared — marked as Successful Admission.':'Sem cleared removed — fee set to Pending.','ok');
+  // Update local data without full reload for instant feedback
+  if(stuRecord){
+    stuRecord.sem_fee_status=isPaid?'paid':null;
+    stuRecord.fee_status=isPaid?'paid':restoredStatus;
+  }
+  notify(isPaid?'Sem cleared — marked as Successful Admission.':'Sem cleared removed.','ok');
 }
 window.toggleSemFee=toggleSemFee;
 
@@ -1925,6 +2055,7 @@ function renderLedger(){
   }
 
   document.getElementById('sec-ledger').innerHTML=`
+    <div class="ledger-section-wrap">
     <div class="ledger-summary">
       <div class="ledger-stat">
         <div class="ledger-stat-label">Total Collected</div>
@@ -1944,13 +2075,14 @@ function renderLedger(){
       </div>
     </div>
     ${agentFilterHtml}
-    <div class="card">
-      <div class="card-hdr">
-        <div class="card-title">${isA?'All Cash Entries':'My Cash Entries'}</div>
-        ${isA?'<button class="btn btn-primary btn-sm" onclick="openLedgerModal(null)">Add Entry</button>':
-          '<span style="font-size:12px;color:var(--muted)">Admin adds entries. You can add notes on each.</span>'}
+    <div class="ledger-card">
+      <div class="ledger-card-hdr">
+        <div class="ledger-card-title">${isA?'💰 All Cash Entries':'💰 My Cash Entries'}</div>
+        ${isA?'<button class="btn btn-primary btn-sm" onclick="openLedgerModal(null)">+ Add Entry</button>':
+          '<span style="font-size:12px;color:#c4b5fd">Admin adds entries. You can add notes on each.</span>'}
       </div>
       <div class="ledger-list" id="ledgerList"></div>
+    </div>
     </div>`;
 
   const ll=document.getElementById('ledgerList');
@@ -2005,7 +2137,7 @@ function renderLedger(){
     </div>`;
   }).join('')+`<div class="ledger-total-bar">
     <span>Total shown</span>
-    <span style="color:var(--g700)">Rs.${total.toLocaleString('en-IN')}</span>
+    <span>Rs.${total.toLocaleString('en-IN')}</span>
   </div>`;
 }
 
@@ -2301,7 +2433,11 @@ function openBulkModal(){
   document.getElementById('bulkFile').value='';
   openM('bulkModal');
 }
-function closeBulkModal(){closeM('bulkModal');}
+function closeBulkModal(){
+  // Reset upload lock so user can start fresh next time
+  _bulkUploading=false;
+  closeM('bulkModal');
+}
 
 // ── AGENT LEDGER NOTE ────────────────────────────────────────────
 function openAgentNoteModal(ledgerId,existing){
@@ -2353,6 +2489,110 @@ async function saveAdminLedgerNote(){
 window.openAdminNoteModal=openAdminNoteModal;
 window.saveAdminLedgerNote=saveAdminLedgerNote;
 
+// ── CANCELLATION ─────────────────────────────────────────────────
+function openCancelModal(stuId){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  if(!stuId||!allStudents.some(s=>s.id===stuId)){notify('Invalid student record.','err');return;}
+  document.getElementById('cancelStuId').value=stuId;
+  document.getElementById('cancelReason').value='';
+  document.getElementById('cancelErr').style.display='none';
+  openM('cancelModal');
+}
+
+async function confirmCancel(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  const stuId=document.getElementById('cancelStuId').value;
+  const reason=clean(document.getElementById('cancelReason').value,300);
+  const errEl=document.getElementById('cancelErr');
+  errEl.style.display='none';
+  if(!reason){errEl.textContent='Please provide a reason for cancellation.';errEl.style.display='block';return;}
+  // IDOR guard: verify ID exists in our own loaded data
+  const stuRecord=allStudents.find(s=>s.id===stuId);
+  if(!stuId||!stuRecord){notify('Invalid student record.','err');return;}
+  // Guard: prevent double-cancellation
+  if(stuRecord.is_cancelled){notify('Student is already cancelled.','err');closeM('cancelModal');return;}
+  const {error}=await sb.from('students').update({
+    is_cancelled:true,
+    cancel_reason:reason,
+    cancelled_at:new Date().toISOString(),
+    cancelled_by:currentUser.name,
+    updated_at:new Date().toISOString()
+  }).eq('id',stuId);
+  if(error){errEl.textContent='Could not cancel student. Try again.';errEl.style.display='block';return;}
+  notify('Student marked as cancelled.','ok');
+  closeM('cancelModal');
+  await loadData();
+  filterStu();
+}
+
+async function restoreStudent(stuId){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  const stuRecord=allStudents.find(s=>s.id===stuId);
+  if(!stuId||!stuRecord){notify('Invalid student record.','err');return;}
+  if(!stuRecord.is_cancelled){notify('Student is not cancelled.','err');return;}
+  if(!confirm('Restore this student back to the active list?')) return;
+  const {error}=await sb.from('students').update({
+    is_cancelled:false,
+    cancel_reason:null,
+    cancelled_at:null,
+    cancelled_by:null,
+    updated_at:new Date().toISOString()
+  }).eq('id',stuId);
+  if(error){notify('Could not restore student.','err');return;}
+  notify('Student restored to active list.','ok');
+  await loadData();
+  renderCancelled();
+}
+
+function renderCancelled(){
+  const isA=currentRole==='admin';
+  const cancelled=allStudents.filter(s=>s.is_cancelled===true||s.is_cancelled==='true');
+  document.getElementById('sec-cancelled').innerHTML=`
+    <div class="card" style="margin-bottom:12px;background:#fff5f5;border-color:#fca5a5">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">🚫</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#991b1b">Cancelled Admissions</div>
+          <div style="font-size:12px;color:#b91c1c;margin-top:2px">${cancelled.length} student(s) cancelled${isA?' — Only admin can restore them':' — Contact admin to restore'}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tscroll">
+        <table><thead><tr>
+          <th>#</th><th>Name</th><th>DOA</th><th>Bill No</th>
+          ${isA?'<th>Agent</th>':''}
+          <th>Advance</th><th>Cancelled By</th><th>Reason</th>
+          ${isA?'<th>Actions</th>':''}
+        </tr></thead><tbody>
+          ${!cancelled.length?`<tr><td colspan="${isA?9:7}" style="text-align:center;color:var(--muted);padding:28px">No cancelled students.</td></tr>`
+            :cancelled.map((s,i)=>{
+              const ac=agentColour(s.agent_id);
+              const cancelledAt=s.cancelled_at?new Date(s.cancelled_at).toLocaleDateString('en-IN'):'—';
+              return `<tr class="row-cancelled">
+                <td style="color:var(--muted);font-size:12px">${i+1}</td>
+                <td><b>${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
+                <td style="font-size:12px">${esc(s.doa||'')}</td>
+                <td style="font-size:11px;color:var(--muted)">${esc(s.bill_number||'')}</td>
+                ${isA?`<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid" class="${ac}">${esc(s.agents?.name||'—')}</span></td>`:''}
+                <td style="font-weight:600">Rs.${(s.advance_paid||0).toLocaleString('en-IN')}</td>
+                <td style="font-size:12px"><span class="cancel-badge">By ${esc(s.cancelled_by||'Admin')}</span><br><span style="font-size:11px;color:var(--muted)">${cancelledAt}</span></td>
+                <td style="max-width:220px"><div class="cancel-reason-box">${esc(s.cancel_reason||'—')}</div></td>
+                ${isA?`<td><div style="display:flex;gap:4px;flex-wrap:wrap">
+                  <button class="btn btn-xs btn-outline" onclick="restoreStudent('${esc(s.id)}')">Restore</button>
+                  <button class="btn btn-xs btn-red" onclick="delStu('${esc(s.id)}')">Delete</button>
+                </div></td>`:''}
+              </tr>`;
+            }).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
+}
+
+window.openCancelModal=openCancelModal;
+window.confirmCancel=confirmCancel;
+window.restoreStudent=restoreStudent;
+
 // ── WINDOW ASSIGNMENTS ──────────────────────────────────────────
 window.doLogin=doLogin;
 window.doLogout=doLogout;
@@ -2387,6 +2627,8 @@ window.toggleSemFee=toggleSemFee;
 window.toggleDoaSort=toggleDoaSort;
 
 // ── AUTO RESTORE SESSION ────────────────────────────────────────
+// Show lock timer immediately on page load if still locked from previous session
+if(isLocked()){startLockUI();}
 if(loadSession()){startApp();}
 
 })();
