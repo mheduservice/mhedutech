@@ -636,6 +636,13 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
       </div>
     </div>
     <div class="fr">
+      <div class="fg"><label>Sem Fee Status</label>
+        <select id="sSemFee">
+          <option value="">Not Set</option>
+          <option value="token">Token Only Paid</option>
+          <option value="paid">Fully Paid</option>
+        </select>
+      </div>
       <div class="fg"><label>Assign to Agent</label><select id="sAgent"><option value="">-- Select Agent --</option></select></div>
     </div>
     <div class="fr">
@@ -708,8 +715,13 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
     <div class="modal-title">Bulk Upload Students</div>
     <div class="modal-sub">Upload CSV or Excel file to add multiple students at once</div>
     <div style="background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--g800);margin-bottom:14px">
-      Required columns: date_of_admission, bill_number, student_name, course, total_fee, advance_paid, fee_status, referral_amount, referral_paid, agent_email<br>
-      <span style="color:var(--muted);margin-top:4px;display:block">fee_status: paid / pending / partial &nbsp;|&nbsp; referral_paid: true / false</span>
+      <b>Required:</b> date_of_admission, bill_number, student_name<br>
+      <b>Optional:</b> course, advance_paid, fee_status, student_mobile, father_mobile, sem_fee_status, referral_amount, agent_email<br>
+      <span style="color:var(--muted);margin-top:4px;display:block">
+        fee_status: <b>paid / partial / pending</b> &nbsp;|&nbsp;
+        sem_fee_status: <b>paid / token</b> &nbsp;|&nbsp;
+        agent_email: must match existing agent's login email
+      </span>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()" style="margin-bottom:14px">Download Template CSV</button>
     <div id="dropZone"
@@ -1864,9 +1876,11 @@ function openStuModal(id){
     document.getElementById('sRef').value=s.referral_amount||'';
     document.getElementById('sStudentMobile').value=s.student_mobile||'';
     document.getElementById('sFatherMobile').value=s.father_mobile||'';
+    document.getElementById('sSemFee').value=s.sem_fee_status||'';
   } else {
     ['sName','sDOA','sBill','sCourse','sFee','sAdv','sRef','sStudentMobile','sFatherMobile'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('sStat').value='pending';
+    document.getElementById('sSemFee').value='';
   }
   openM('stuModal');
 }
@@ -1942,10 +1956,12 @@ async function saveStu(){
   if(studentMobile&&!validMobile(studentMobile)){errEl.textContent='Student mobile must be a valid 10-digit Indian number.';errEl.style.display='block';return;}
   if(fatherMobile&&!validMobile(fatherMobile)){errEl.textContent='Father mobile must be a valid 10-digit Indian number.';errEl.style.display='block';return;}
   if(id&&!allStudents.some(s=>s.id===id)){notify('Invalid student record.','err');return;}
+  const semFeeVal=document.getElementById('sSemFee').value||'';
   const p={
     student_name:name,doa,bill_number:bill,course,total_fee:fee,advance_paid:adv,
     fee_status:stat,agent_id:agId,referral_amount:ref,
     student_mobile:studentMobile,father_mobile:fatherMobile,
+    sem_fee_status:['paid','token'].includes(semFeeVal)?semFeeVal:'',
     updated_at:new Date().toISOString()
   };
   const {error}=id?await sb.from('students').update(p).eq('id',id):await sb.from('students').insert([p]);
@@ -2319,12 +2335,21 @@ function notify(msg,type){
 // ── BULK UPLOAD ───────────────────────────────────────────────────
 let bulkRows=[];
 function downloadTemplate(){
-  const csv=['date_of_admission,bill_number,student_name,course,total_fee,advance_paid,fee_status,referral_amount,referral_paid,agent_email',
-    '2026-01-26,VTU2026B001,Sample Student,B.Tech CSE,50000,10000,pending,2000,false,lakshman@mhedutech.com',
-  ].join('\n');
+  // Correct columns matching current DB schema
+  const rows=[
+    'date_of_admission,bill_number,student_name,course,advance_paid,fee_status,student_mobile,father_mobile,sem_fee_status,referral_amount,agent_email',
+    '2026-06-01,MH2026001,Priya Sharma,B.Tech Computer Science,15000,partial,9876543210,9876543200,token,2000,lakshman@mhedutech.com',
+    '2026-06-02,MH2026002,Ravi Kumar,MBA Finance,40000,paid,9876543211,9876543201,paid,3000,lakshman@mhedutech.com',
+    '2026-06-03,MH2026003,Anjali Reddy,B.Com Honours,0,pending,9876543212,9876543202,,0,ravi@mhedutech.com',
+    '2026-06-04,MH2026004,Suresh Naidu,B.Sc Agriculture,10000,partial,9876543213,9876543203,token,1500,ravi@mhedutech.com',
+    '2026-06-05,MH2026005,Meena Patel,BBA Management,25000,paid,9876543214,9876543204,paid,2500,lakshman@mhedutech.com',
+  ];
+  const csv=rows.join('\n');
   const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='students_template.csv'; a.click();
+  // BOM (\uFEFF) ensures Excel opens correctly with UTF-8
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='MH_EduTech_Bulk_Upload_Template.csv';
+  a.click();
 }
 document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('bulkFile').click());
 function handleDrop(e){
@@ -2364,8 +2389,21 @@ function parseCSV(text){
   const missing=required.filter(r=>!headers.includes(r));
   if(missing.length){notify('Missing required columns: '+missing.join(', '),'err');return;}
   const rows=[];const errors=[];
+  function splitCSVLine(line){
+    // Handle quoted fields with commas inside (standard CSV format from Excel)
+    const result=[];let cur='';let inQ=false;
+    for(let ci=0;ci<line.length;ci++){
+      const ch=line[ci];
+      if(ch==='"'){inQ=!inQ;}
+      else if(ch===','&&!inQ){result.push(cur.trim());cur='';}
+      else{cur+=ch;}
+    }
+    result.push(cur.trim());
+    return result.map(v=>v.replace(/^"|"$/g,'').trim());
+  }
   for(let i=1;i<lines.length;i++){
-    const vals=lines[i].split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+    if(!lines[i].trim()) continue; // skip empty lines
+    const vals=splitCSVLine(lines[i]);
     const row={};
     headers.forEach((h,j)=>row[h]=vals[j]||'');
     if(!row.student_name||!row.bill_number||!row.date_of_admission){
@@ -2375,18 +2413,19 @@ function parseCSV(text){
     const ag=allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===(row.agent_email||'').toLowerCase());
     // L1: WHITELIST — only these exact columns can be set via bulk upload
     // Any extra CSV columns (e.g. is_admin, verified) are silently ignored
+    // WHITELIST — only these exact DB columns allowed, extra CSV cols ignored
     rows.push({
-      student_name: clean(row.student_name,100),
-      doa:          row.date_of_admission,
-      bill_number:  clean(row.bill_number,50),
-      course:       clean(row.course||'',50),
-      total_fee:    Math.max(0,parseFloat(row.total_fee)||0),
-      advance_paid: Math.max(0,parseFloat(row.advance_paid)||0),
-      fee_status:   ['paid','pending','partial'].includes(row.fee_status)?row.fee_status:'pending',
+      student_name:    clean(row.student_name,100),
+      doa:             row.date_of_admission,
+      bill_number:     clean(row.bill_number,50),
+      course:          clean(row.course||'',50),
+      advance_paid:    Math.max(0,parseFloat(row.advance_paid)||0),
+      fee_status:      ['paid','pending','partial'].includes(row.fee_status)?row.fee_status:'pending',
+      student_mobile:  clean(row.student_mobile||'',15),
+      father_mobile:   clean(row.father_mobile||'',15),
+      sem_fee_status:  ['paid','token'].includes(row.sem_fee_status)?row.sem_fee_status:'',
       referral_amount: Math.max(0,parseFloat(row.referral_amount)||0),
-      referral_paid:   row.referral_paid==='true',
       agent_id:        ag?ag.id:null,
-      // Explicitly NOT included: id, created_at, updated_at, balance (computed), any other columns
     });
   }
   bulkRows=rows;
@@ -2396,9 +2435,27 @@ function parseCSV(text){
   const errs=document.getElementById('bulkErrors');
   preview.style.display='block';
   label.textContent=`${rows.length} valid rows found${errors.length?' ('+errors.length+' skipped)':''}`;
-  table.innerHTML=`<thead><tr><th>#</th><th>Name</th><th>Bill No</th><th>DOA</th><th>Course</th><th>Fee</th><th>Status</th></tr></thead><tbody>
-    ${rows.slice(0,10).map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.student_name)}</td><td>${esc(r.bill_number)}</td><td>${esc(r.doa)}</td><td>${esc(r.course)}</td><td>Rs.${r.total_fee.toLocaleString('en-IN')}</td><td>${esc(r.fee_status)}</td></tr>`).join('')}
-    ${rows.length>10?`<tr><td colspan="7" style="text-align:center;color:var(--muted)">...and ${rows.length-10} more</td></tr>`:''}</tbody>`;
+  table.innerHTML=`<thead><tr>
+      <th>#</th><th>Name</th><th>Bill No</th><th>DOA</th><th>Course</th>
+      <th>Advance</th><th>Status</th><th>Sem Fee</th>
+      <th>Student Mob</th><th>Father Mob</th><th>Agent</th>
+    </tr></thead><tbody>
+    ${rows.slice(0,10).map((r,i)=>`<tr>
+      <td>${i+1}</td>
+      <td><b>${esc(r.student_name)}</b></td>
+      <td style="font-size:11px;color:var(--muted)">${esc(r.bill_number)}</td>
+      <td style="font-size:11px">${esc(r.doa)}</td>
+      <td style="font-size:11px">${esc(r.course||'—')}</td>
+      <td>Rs.${(r.advance_paid||0).toLocaleString('en-IN')}</td>
+      <td><span class="pill pill-${esc(r.fee_status)}">${esc(r.fee_status)}</span></td>
+      <td style="font-size:11px">${esc(r.sem_fee_status||'—')}</td>
+      <td style="font-size:11px">${esc(r.student_mobile||'—')}</td>
+      <td style="font-size:11px">${esc(r.father_mobile||'—')}</td>
+      <td style="font-size:11px;color:${r.agent_id?'var(--g700)':'var(--amber)'}">
+        ${r.agent_id?'✓ Matched':'⚠ No agent'}
+      </td>
+    </tr>`).join('')}
+    ${rows.length>10?`<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:8px">...and ${rows.length-10} more rows</td></tr>`:''}</tbody>`;
   if(errors.length){errs.style.display='block';errs.innerHTML=errors.slice(0,10).map(e=>`<div>${e}</div>`).join('');}
   else {errs.style.display='none';}
   document.getElementById('bulkUploadBtn').disabled=rows.length===0;
