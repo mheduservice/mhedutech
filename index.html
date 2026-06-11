@@ -2,195 +2,444 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <title>MH EduTech</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f4f4f5;--surface:#fff;--border:#e4e4e7;--border2:#d4d4d8;
-  --text:#18181b;--muted:#71717a;--faint:#a1a1aa;
-  --blue:#2563eb;--blue-bg:#eff6ff;--blue-t:#1d4ed8;--blue-light:#dbeafe;
-  --green:#16a34a;--green-bg:#f0fdf4;--green-t:#15803d;--green-light:#dcfce7;
-  --amber:#d97706;--amber-bg:#fffbeb;--amber-light:#fef3c7;
+  --g50:#f0fdf4;--g100:#dcfce7;--g200:#bbf7d0;--g300:#86efac;
+  --g400:#4ade80;--g500:#22c55e;--g600:#16a34a;--g700:#15803d;
+  --g800:#166534;--g900:#14532d;
+  --white:#ffffff;--bg:#f7fdf9;--surface:#ffffff;
+  --sb-bg:#f0fdf4;--sb-border:#d1fae5;
+  --border:#d1fae5;--border2:#a7f3d0;
+  --text:#1a2e1e;--muted:#4b7a62;--faint:#86b99a;
   --red:#dc2626;--red-bg:#fef2f2;--red-light:#fee2e2;
-  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-light:#ede9fe;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-light:#fef3c7;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-light:#dbeafe;
   --r:8px;--rl:12px;--rxl:16px;
-  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow:0 1px 4px rgba(0,0,0,.05);
+  --shadow2:0 4px 16px rgba(0,0,0,.08);
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg)}
-.auth-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rxl);padding:40px;width:400px;max-width:95vw;box-shadow:var(--shadow)}
-.auth-logo{font-size:22px;font-weight:700;margin-bottom:4px}
-.auth-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+a{color:var(--g700)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--g200);border-radius:10px}
+
+/* ── LOGIN SPLIT LAYOUT ───────────────────────── */
+.auth-wrap{min-height:100vh;display:flex;background:#fff}
+.auth-left{flex:1;background:linear-gradient(155deg,#e8faf0 0%,#d1fae5 45%,#a7f3d0 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 40px;position:relative;overflow:hidden}
+.auth-left-deco{position:absolute;inset:0;pointer-events:none}
+.deco-c{position:absolute;border-radius:50%;opacity:.15}
+.auth-left-content{position:relative;z-index:2;max-width:400px;width:100%}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:44px}
+.auth-brand-badge{width:44px;height:44px;background:var(--g600);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 10px rgba(22,163,74,.25)}
+.auth-brand-badge span{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.auth-brand-name{font-size:18px;font-weight:800;color:var(--g900);letter-spacing:-.3px}
+.auth-brand-sub{font-size:12px;color:var(--g700);font-weight:500;margin-top:1px}
+.quote-card{background:rgba(255,255,255,.75);border:1.5px solid rgba(255,255,255,.95);border-radius:20px;padding:30px 30px 24px;backdrop-filter:blur(6px);box-shadow:0 8px 32px rgba(22,163,74,.09)}
+.quote-icon-wrap{width:40px;height:40px;background:var(--g100);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.quote-text{font-family:'Playfair Display',Georgia,serif;font-size:21px;font-style:italic;color:var(--g900);line-height:1.5;letter-spacing:-.1px;margin-bottom:14px;min-height:64px;transition:opacity .4s}
+.quote-line{width:36px;height:3px;background:var(--g500);border-radius:4px;margin-bottom:12px}
+.quote-source{font-size:11px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:.8px}
+.quote-dots{display:flex;gap:7px;margin-top:18px}
+.qdot{width:7px;height:7px;border-radius:50%;background:var(--g200);transition:.4s;cursor:pointer;border:none}
+.qdot.active{background:var(--g600);width:22px;border-radius:20px}
+.auth-illustration{margin-top:28px;display:flex;justify-content:center}
+.auth-right{width:430px;min-width:300px;display:flex;align-items:center;justify-content:center;padding:40px 36px;background:#fff;border-left:1.5px solid var(--border)}
+.auth-form-wrap{width:100%;max-width:340px}
+.auth-form-title{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-bottom:4px}
+.auth-form-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.fg label{font-size:12px;font-weight:500;color:var(--muted)}
-.fg input,.fg select,.fg textarea{font-size:13px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s}
-.fg input:focus,.fg select:focus{border-color:var(--blue);background:var(--surface)}
-.auth-err{background:var(--red-bg);border:1px solid var(--red-light);color:var(--red);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-bottom:12px;display:none}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:.15s;white-space:nowrap;font-family:'Inter',sans-serif}
-.btn:hover{background:var(--bg)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-primary:hover:not(:disabled){background:var(--blue-t)}
+.fg label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fg input,.fg select,.fg textarea{font-size:13px;padding:10px 13px;border:1.5px solid var(--border2);border-radius:var(--r);background:var(--g50);color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s,box-shadow .15s;width:100%}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--g600);background:#fff;box-shadow:0 0 0 3px rgba(22,163,74,.1)}
+.auth-err{background:var(--red-bg);border:1.5px solid var(--red-light);color:var(--red);border-radius:var(--r);padding:9px 12px;font-size:12px;margin-bottom:12px;display:none;font-weight:500}
+@media(max-width:768px){
+  .auth-wrap{flex-direction:column}
+  .auth-left{padding:28px 20px;min-height:auto}
+  .quote-text{font-size:17px;min-height:auto}
+  .auth-right{width:100%;border-left:none;border-top:1.5px solid var(--border);padding:24px 20px}
+  .auth-illustration{display:none}
+  .auth-brand{margin-bottom:24px}
+}
+
+/* ── BUTTONS ──────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border2);background:var(--white);color:var(--text);transition:.15s;white-space:nowrap;font-family:'Inter',sans-serif;text-decoration:none}
+.btn:hover{background:var(--g50);border-color:var(--g600);color:var(--g700)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--g600);color:#fff;border-color:var(--g600);box-shadow:0 2px 6px rgba(22,163,74,.25)}
+.btn-primary:hover:not(:disabled){background:var(--g700);border-color:var(--g700);color:#fff}
 .btn-red{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-red:hover{background:#b91c1c}
+.btn-red:hover{background:#b91c1c;color:#fff;border-color:#b91c1c}
 .btn-amber{background:var(--amber);color:#fff;border-color:var(--amber)}
-.btn-sm{padding:5px 10px;font-size:12px}
-.btn-full{width:100%;justify-content:center;padding:10px}
+.btn-amber:hover{background:#b45309;color:#fff}
+.btn-outline{background:transparent;color:var(--g700);border-color:var(--g300)}
+.btn-outline:hover{background:var(--g50);border-color:var(--g600)}
+.btn-ghost{background:transparent;color:var(--muted);border-color:var(--border2)}
+.btn-ghost:hover{background:var(--g50);color:var(--text);border-color:var(--g300)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+.btn-full{width:100%;justify-content:center;padding:11px}
+
+/* ── APP LAYOUT ───────────────────────────────── */
 .app{display:flex;min-height:100vh}
-.sidebar{width:230px;min-width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:20;overflow-y:auto}
-.main{flex:1;margin-left:230px;display:flex;flex-direction:column;min-height:100vh}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:10;box-shadow:var(--shadow)}
-.content{padding:24px;flex:1}
-.logo-wrap{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
-.logo-name{font-size:16px;font-weight:700}
-.logo-role{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:4px;display:inline-block}
-.role-admin{background:var(--blue-bg);color:var(--blue)}
-.role-agent{background:var(--green-bg);color:var(--green)}
-.nav{padding:8px 0;flex:1}
-.ni{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:.1s}
-.ni:hover{background:var(--bg);color:var(--text)}
-.ni.active{background:var(--blue-bg);color:var(--blue);font-weight:500}
-.ni svg{width:17px;height:17px;flex-shrink:0;stroke-width:1.8}
-.sb-footer{padding:16px 20px;border-top:1px solid var(--border)}
-.page-title{font-size:15px;font-weight:600}
+
+/* ── SIDEBAR — light green ────────────────────── */
+.sidebar{width:220px;min-width:220px;background:var(--sb-bg);border-right:1.5px solid var(--sb-border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:30;overflow-y:auto;transition:transform .25s ease,width .25s ease}
+.logo-wrap{padding:18px 16px 14px;border-bottom:1.5px solid var(--sb-border)}
+.logo-inner{display:flex;align-items:center;gap:10px}
+.logo-badge{width:34px;height:34px;background:var(--g600);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-badge span{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.3px}
+.logo-text{}
+.logo-name{font-size:13px;font-weight:800;color:var(--g900);line-height:1.2}
+.logo-tagline{font-size:10px;color:var(--muted);font-weight:500;margin-top:1px}
+.logo-role{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+.role-admin{background:var(--g100);color:var(--g800);border:1px solid var(--g200)}
+.role-agent{background:var(--blue-light);color:#1e40af;border:1px solid #bfdbfe}
+.sb-user-email{font-size:10px;color:var(--faint);margin-top:3px;word-break:break-all;display:block}
+.nav{padding:8px 8px;flex:1}
+.nav-section-label{font-size:9px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:1px;padding:12px 10px 4px;display:block}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--r);font-size:13px;color:var(--muted);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:.12s;font-family:'Inter',sans-serif;font-weight:500;margin-bottom:2px}
+.ni:hover{background:var(--g100);color:var(--g800)}
+.ni.active{background:var(--g600);color:#fff;font-weight:700}
+.ni.active .ni-dot{background:#fff}
+.ni-dot{width:6px;height:6px;border-radius:50%;background:var(--g300);flex-shrink:0;transition:.12s}
+.ni:hover .ni-dot{background:var(--g600)}
+.sb-footer{padding:12px 16px;border-top:1.5px solid var(--sb-border)}
+.sb-signout{width:100%;padding:8px;border-radius:var(--r);border:1.5px solid var(--border2);background:#fff;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.15s}
+.sb-signout:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-light)}
+
+/* ── HAMBURGER ────────────────────────────────── */
+.hamburger{display:none;position:fixed;top:12px;left:12px;z-index:40;width:38px;height:38px;border-radius:var(--r);background:var(--g600);border:none;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;box-shadow:var(--shadow2)}
+.hamburger span{display:block;width:18px;height:2px;background:#fff;border-radius:2px;transition:.2s}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:25}
+
+/* ── MAIN ─────────────────────────────────────── */
+.main{flex:1;margin-left:220px;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .25s ease}
+.topbar{background:var(--white);border-bottom:1.5px solid var(--border);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:20;box-shadow:var(--shadow)}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.page-title{font-size:15px;font-weight:700;color:var(--text)}
 .topbar-right{display:flex;align-items:center;gap:8px}
-.user-chip{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;color:var(--muted)}
-.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--blue-light);color:var(--blue)}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;box-shadow:var(--shadow)}
-.m-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.m-val{font-size:28px;font-weight:700;line-height:1}
+.rt-status{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--g50);border:1px solid var(--border);border-radius:20px}
+.rt-dot{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.rt-dot.live{background:var(--g500);animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.rt-lbl{font-size:11px;color:var(--muted);font-weight:500}
+.user-chip{display:flex;align-items:center;gap:7px;padding:5px 12px;background:var(--g50);border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;color:var(--muted)}
+.av{width:26px;height:26px;border-radius:50%;background:var(--g600);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── CONTENT ──────────────────────────────────── */
+.content{padding:20px;flex:1}
+.section{display:none}
+
+/* ── METRICS ──────────────────────────────────── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.metric{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:16px 18px;position:relative;overflow:hidden}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.m-blue::before{background:var(--blue)}.m-green::before{background:var(--g600)}.m-amber::before{background:var(--amber)}.m-red::before{background:var(--red)}.m-purple::before{background:#7c3aed}
+.m-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.m-val{font-size:26px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.m-blue .m-val{color:var(--blue)}.m-green .m-val{color:var(--g700)}.m-amber .m-val{color:var(--amber)}.m-red .m-val{color:var(--red)}.m-purple .m-val{color:#7c3aed}
 .m-sub{font-size:11px;color:var(--faint);margin-top:4px}
-.m-blue .m-val{color:var(--blue)}.m-green .m-val{color:var(--green)}.m-amber .m-val{color:var(--amber)}.m-purple .m-val{color:var(--purple)}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px 22px;margin-bottom:16px;box-shadow:var(--shadow)}
-.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-.card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
-.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+
+/* ── CARDS ────────────────────────────────────── */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .cw{position:relative;width:100%}
-.tscroll{overflow-x:auto}
+
+/* ── TABLES ───────────────────────────────────── */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:10px 12px;font-size:11px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;background:var(--bg)}
-td{padding:10px 12px;color:var(--text);border-bottom:1px solid var(--border);vertical-align:top}
+th{text-align:left;padding:9px 11px;font-size:10px;font-weight:700;color:var(--muted);border-bottom:1.5px solid var(--border);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;background:var(--g50)}
+td{padding:10px 11px;color:var(--text);border-bottom:1px solid var(--border);vertical-align:top}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#fafafa}
-.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
-.pill-paid{background:var(--green-light);color:var(--green-t)}
-.pill-pending{background:var(--amber-light);color:var(--amber)}
-.pill-partial{background:var(--blue-light);color:var(--blue-t)}
+tr:hover td{background:var(--g50)}
+
+/* ── PILLS ────────────────────────────────────── */
+.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;display:inline-block}
+.pill-paid{background:var(--g100);color:var(--g800)}
+.pill-pending{background:var(--amber-light);color:#854d0e}
+.pill-partial{background:var(--blue-light);color:#1e40af}
 .pill-fail{background:var(--red-light);color:var(--red)}
-.pill-success{background:var(--green-light);color:var(--green-t)}
-.sr{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.sr input,.sr select{font-size:13px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);color:var(--text);font-family:'Inter',sans-serif;outline:none}
+.pill-success{background:var(--g100);color:var(--g800)}
+.pill-admin{background:var(--g100);color:var(--g800);border:1px solid var(--g200)}
+.pill-agent{background:var(--blue-light);color:#1e40af;border:1px solid #bfdbfe}
+
+/* ── SEARCH ROW ───────────────────────────────── */
+.sr{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sr input,.sr select{font-size:13px;padding:8px 12px;border:1.5px solid var(--border2);border-radius:var(--r);background:var(--white);color:var(--text);font-family:'Inter',sans-serif;outline:none;transition:border .15s}
+.sr input:focus,.sr select:focus{border-color:var(--g600)}
 .sr input{flex:1;min-width:180px}
-.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:16px}
+
+/* ── MODALS ───────────────────────────────────── */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
 .mbg.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--rxl);padding:28px 32px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal-title{font-size:16px;font-weight:700;margin-bottom:4px}
-.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
-.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.modal{background:var(--white);border-radius:var(--rxl);padding:26px 28px;width:560px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:3px;color:var(--text)}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1.5px solid var(--border)}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.notif{border-radius:var(--r);padding:10px 14px;font-size:13px;margin-bottom:14px;display:none;font-weight:500;border:1px solid}
-.notif-ok{background:var(--green-bg);color:var(--green-t);border-color:var(--green-light)}
+
+/* ── NOTIFICATIONS ────────────────────────────── */
+.notif{border-radius:var(--rl);padding:11px 15px;font-size:13px;margin-bottom:14px;display:none;font-weight:600;border:1.5px solid;display:flex;align-items:center;gap:8px}
+.notif.show{display:flex}
+.notif-ok{background:var(--g50);color:var(--g800);border-color:var(--g200)}
 .notif-err{background:var(--red-bg);color:var(--red);border-color:var(--red-light)}
-.note-box{background:var(--amber-bg);border:1px solid var(--amber-light);border-radius:var(--r);padding:8px 10px;font-size:12px;margin-top:6px;color:#92400e;word-break:break-word}
+
+/* ── SESSION WARN ─────────────────────────────── */
+.sw{background:var(--amber-bg);border:1.5px solid var(--amber-light);color:var(--amber);border-radius:var(--r);padding:8px 14px;font-size:12px;font-weight:600;display:none;margin-bottom:10px;text-align:center}
+
+/* ── INFO/WARN BOXES ──────────────────────────── */
+.info-box{background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--g800);margin-top:8px}
+.warn-box{background:var(--red-bg);border:1.5px solid var(--red-light);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--red);margin-top:8px}
+
+/* ── STUDENT NOTES ────────────────────────────── */
+.note-box{background:var(--amber-bg);border:1.5px solid var(--amber-light);border-radius:var(--r);padding:7px 10px;font-size:12px;margin-top:5px;color:#78350f;word-break:break-word;display:flex;align-items:flex-start;gap:6px;justify-content:space-between}
+.note-text{flex:1;line-height:1.4}
 .note-row{display:flex;gap:6px;margin-top:6px}
-.note-row input{flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--r);font-family:'Inter',sans-serif;background:var(--surface);color:var(--text)}
-.ag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:16px}
-.ag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px 20px;box-shadow:var(--shadow)}
-.ag-av{width:44px;height:44px;border-radius:50%;background:var(--green-light);color:var(--green-t);font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
-.ag-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
-/* Cash Ledger */
-.ledger-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
-.ledger-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px 18px;box-shadow:var(--shadow)}
-.ledger-stat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.ledger-stat-value{font-size:22px;font-weight:700;color:var(--text)}
-.ledger-stat-value.green{color:var(--green)}
-.ledger-row{display:grid;grid-template-columns:90px 1fr 100px 90px 1fr auto;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
-.ledger-row:last-child{border-bottom:none}
-.ledger-row:hover{background:var(--bg)}
-.ledger-head{background:var(--bg);border-radius:var(--r) var(--r) 0 0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-.ledger-body{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;box-shadow:var(--shadow)}
-.mode-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
-.mode-cash{background:#dcfce7;color:#166534}.mode-upi{background:#dbeafe;color:#1e40af}
-.mode-bank{background:#f3e8ff;color:#6b21a8}.mode-cheque{background:#fef9c3;color:#854d0e}
+.note-row input{flex:1;font-size:12px;padding:5px 9px;border:1.5px solid var(--border2);border-radius:var(--r);font-family:'Inter',sans-serif;background:var(--white);color:var(--text);outline:none}
+.note-row input:focus{border-color:var(--g600)}
+
+/* ── QUERY NOTE (Agent to Admin) ─────────────── */
+.query-note-box{background:#fffbeb;border:1.5px solid #fde68a;border-radius:var(--r);padding:8px 11px;font-size:12px;margin-top:5px;color:#78350f;word-break:break-word}
+.qn-header{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
+.qn-label{font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.4px;background:#fef9c3;padding:2px 7px;border-radius:20px}
+.qn-text{font-size:12px;color:#78350f;line-height:1.5}
+.qn-meta{font-size:10px;color:#a16207;margin-top:3px}
+
+/* ── AGENT CARDS ──────────────────────────────── */
+.ag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-bottom:16px}
+.ag-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:18px 20px;box-shadow:var(--shadow);transition:.15s}
+.ag-card:hover{border-color:var(--g300);box-shadow:0 2px 12px rgba(22,163,74,.1)}
+.ag-av{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--g500),var(--g700));color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:10px;box-shadow:0 3px 8px rgba(22,163,74,.3)}
+.ag-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.ag-stat{background:var(--g50);border-radius:var(--r);padding:8px 10px;border:1px solid var(--border)}
+.ag-sl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.ag-sv{font-size:16px;font-weight:700;margin-top:2px;color:var(--g800)}
+
+/* ── CASH LEDGER ──────────────────────────────── */
+.ledger-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.ledger-stat{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:14px 16px}
+.ledger-stat-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.ledger-stat-value{font-size:22px;font-weight:800;color:var(--g700)}
+.ledger-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.agent-filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted);font-family:'Inter',sans-serif}
+.agent-filter-btn:hover{border-color:var(--g600);color:var(--g700);background:var(--g50)}
+.agent-filter-btn.active{background:var(--g600);color:#fff;border-color:var(--g600)}
+.ledger-list{border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;background:var(--white)}
+.ledger-item{display:grid;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:start;transition:.12s}
+.ledger-item:last-child{border-bottom:none}
+.ledger-item:hover{background:var(--g50)}
+.ledger-item-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.ledger-agent-av{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--g400),var(--g700));color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ledger-agent-name{font-size:13px;font-weight:700;color:var(--text)}
+.ledger-date{font-size:11px;color:var(--muted)}
+.ledger-amount{font-size:16px;font-weight:800;color:var(--g700)}
+.ledger-note-text{font-size:12px;color:var(--muted);margin-top:4px;font-style:italic}
+.mode-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.mode-cash{background:var(--g100);color:var(--g800)}
+.mode-upi{background:var(--blue-light);color:#1e40af}
+.mode-bank{background:#ede9fe;color:#5b21b6}
+.mode-cheque{background:#fef9c3;color:#854d0e}
 .mode-other{background:#f1f5f9;color:#475569}
-.ledger-note{color:var(--muted);font-size:12px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-.ledger-agent-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.ledger-agent-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;font-weight:500;transition:.15s}
-.ledger-agent-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-.ag-stat{background:var(--bg);border-radius:var(--r);padding:8px 10px}
-.ag-sl{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
-.ag-sv{font-size:16px;font-weight:700;margin-top:2px}
+.ledger-head-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--g50);border-bottom:1.5px solid var(--border)}
+.ledger-total-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--g50);border-top:1.5px solid var(--border);font-weight:700}
+
+/* ── ADMIN LEDGER NOTE ────────────────────────── */
+.ledger-admin-note{background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:7px 10px;font-size:12px;margin-top:6px;color:var(--g800)}
+.admin-note-label{font-size:10px;font-weight:700;color:var(--g700);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+
+/* ── SECURITY LOG ─────────────────────────────── */
+.ip-blocked{background:var(--red-light);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:700;margin-left:4px}
+
+/* ── LEGEND ───────────────────────────────────── */
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:5px}
 .ldot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
-.sw{background:var(--amber-bg);border:1px solid var(--amber-light);color:var(--amber);border-radius:var(--r);padding:8px 14px;font-size:12px;font-weight:500;display:none;margin-bottom:10px;text-align:center}
-.info-box{background:var(--blue-bg);border:1px solid var(--blue-light);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--blue-t);margin-top:8px}
-.warn-box{background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--red);margin-top:8px}
 
-/* Blocked IP badge */
-.ip-blocked{background:var(--red-light);color:var(--red);font-size:10px;padding:1px 6px;border-radius:10px;font-weight:600;margin-left:4px}
+/* ── BULK UPLOAD ──────────────────────────────── */
+#dropZone{border:2px dashed var(--border2);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px}
+#dropZone:hover{border-color:var(--g600);background:var(--g50)}
+
+/* ── MOBILE HAMBURGER AREA ────────────────────── */
 @media(max-width:768px){
-  .sidebar{width:54px;min-width:54px}
-  .logo-wrap,.ni span,.sb-footer{display:none}
-  .ni{justify-content:center;padding:12px}
-  .main{margin-left:54px}
+  .hamburger{display:flex}
+  .sidebar{transform:translateX(-100%);width:240px}
+  .sidebar.open{transform:translateX(0)}
+  .sb-overlay.open{display:block}
+  .main{margin-left:0}
+  .content{padding:14px}
+  .topbar{padding:10px 14px 10px 60px}
   .chart-row,.fr{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+  .modal{padding:20px 18px}
+  .ag-grid{grid-template-columns:1fr}
+  .ledger-summary{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+  .tscroll table{min-width:600px}
+  .sr{flex-direction:column}
+  .sr input,.sr select{width:100%}
+  .modal-foot{flex-direction:column}
+  .modal-foot .btn{width:100%;justify-content:center}
+}
+@media(max-width:420px){
+  .metrics{grid-template-columns:1fr 1fr}
+  .m-val{font-size:20px}
+  .auth-box{padding:28px 20px}
 }
 </style>
 </head>
 <body>
 
-
 <canvas id="camCanvas" style="display:none"></canvas>
 
-<!-- LOGIN -->
+<!-- HAMBURGER -->
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+
+<!-- ═══════════════════════════ LOGIN ═══════════════════════════ -->
 <div id="authPage" class="auth-wrap">
-  <div class="auth-box">
-    <div class="auth-logo">MH EduTech</div>
-    <div class="auth-sub">Enter your credentials to continue</div>
-    <div id="authErr" class="auth-err"></div>
-    <div class="fg">
-      <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="your@email.com" maxlength="100" autocomplete="email">
+
+  <!-- LEFT PANEL: quotes + illustration -->
+  <div class="auth-left">
+    <!-- Decorative circles (pure CSS) -->
+    <div class="auth-left-deco">
+      <div class="deco-c" style="width:340px;height:340px;background:#16a34a;top:-100px;right:-80px"></div>
+      <div class="deco-c" style="width:180px;height:180px;background:#22c55e;bottom:60px;left:-40px"></div>
+      <div class="deco-c" style="width:100px;height:100px;background:#4ade80;top:55%;right:30px;opacity:.1"></div>
+      <svg style="position:absolute;bottom:0;left:0;width:100%;opacity:.12" viewBox="0 0 600 100" preserveAspectRatio="none">
+        <path d="M0,50 C150,0 350,100 600,30 L600,100 L0,100Z" fill="#16a34a"/>
+      </svg>
     </div>
-    <div class="fg">
-      <label>Password</label>
-      <input type="password" id="loginPassword" placeholder="Password" maxlength="128" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+
+    <div class="auth-left-content">
+      <!-- Brand -->
+      <div class="auth-brand">
+        <div class="auth-brand-badge"><span>MH</span></div>
+        <div>
+          <div class="auth-brand-name">MH EduTech</div>
+          <div class="auth-brand-sub">Education Management Portal</div>
+        </div>
+      </div>
+
+      <!-- Quote card -->
+      <div class="quote-card">
+        <div class="quote-icon-wrap">
+          <svg width="22" height="18" viewBox="0 0 22 18" fill="none">
+            <path d="M0 18V11C0 4.667 2.333 1.167 7 0L8.4 2.2C6.267 3 4.8 4.167 4 5.7 3.2 7.167 2.867 8.867 3 11H6V18H0ZM12 18V11C12 4.667 14.333 1.167 19 0L20.4 2.2C18.267 3 16.8 4.167 16 5.7 15.2 7.167 14.867 8.867 15 11H18V18H12Z" fill="#16a34a"/>
+          </svg>
+        </div>
+        <div class="quote-text" id="quoteText">We rise by lifting others</div>
+        <div class="quote-line"></div>
+        <div class="quote-source" id="quoteSource">MH EduTech Spirit</div>
+        <div class="quote-dots" id="quoteDots"></div>
+      </div>
+
+      <!-- Illustration: people + education (pure SVG, no external images) -->
+      <div class="auth-illustration">
+        <svg width="300" height="110" viewBox="0 0 300 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Person 1 -->
+          <circle cx="55" cy="26" r="15" fill="#bbf7d0"/>
+          <rect x="41" y="45" width="28" height="42" rx="8" fill="#bbf7d0"/>
+          <!-- Book stack -->
+          <rect x="67" y="68" width="12" height="16" rx="2" fill="#86efac"/>
+          <rect x="69" y="65" width="12" height="16" rx="2" fill="#4ade80"/>
+          <!-- Person 2 (featured, centre) -->
+          <circle cx="150" cy="18" r="19" fill="#86efac"/>
+          <rect x="131" y="41" width="38" height="52" rx="10" fill="#86efac"/>
+          <!-- Graduation cap -->
+          <rect x="138" y="4" width="24" height="6" rx="3" fill="#16a34a" opacity=".7"/>
+          <polygon points="150,2 138,8 150,14 162,8" fill="#22c55e" opacity=".8"/>
+          <!-- Laptop on lap -->
+          <rect x="133" y="70" width="34" height="18" rx="3" fill="#a7f3d0"/>
+          <rect x="131" y="87" width="38" height="4" rx="2" fill="#6ee7b7"/>
+          <!-- Person 3 -->
+          <circle cx="245" cy="26" r="15" fill="#bbf7d0"/>
+          <rect x="231" y="45" width="28" height="42" rx="8" fill="#bbf7d0"/>
+          <!-- Phone -->
+          <rect x="257" y="60" width="10" height="18" rx="3" fill="#86efac"/>
+          <!-- Connecting arc -->
+          <path d="M72 36 Q150 5 228 36" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5 4" fill="none" opacity=".45"/>
+          <!-- Stars -->
+          <circle cx="110" cy="14" r="3" fill="#4ade80" opacity=".6"/>
+          <circle cx="190" cy="10" r="2" fill="#22c55e" opacity=".5"/>
+          <circle cx="80" cy="50" r="2" fill="#86efac" opacity=".6"/>
+          <!-- Ground -->
+          <rect x="20" y="95" width="260" height="3" rx="1.5" fill="#d1fae5"/>
+        </svg>
+      </div>
     </div>
-    <div id="lockTimer" style="font-size:12px;color:var(--red);margin-bottom:10px;display:none;text-align:center;font-weight:500;background:var(--red-bg);padding:8px;border-radius:var(--r)"></div>
-    <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Sign in</button>
-    <p style="font-size:11px;color:var(--faint);text-align:center;margin-top:16px">Authorised users only. All access is monitored and logged.</p>
+  </div>
+
+  <!-- RIGHT PANEL: login form -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-title">Welcome back</div>
+      <div class="auth-form-sub">Sign in to your MH EduTech account</div>
+      <div id="authErr" class="auth-err"></div>
+      <div class="fg">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com" maxlength="100" autocomplete="email">
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" maxlength="128" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="lockTimer" style="font-size:12px;color:var(--red);margin-bottom:10px;display:none;text-align:center;font-weight:600;background:var(--red-bg);padding:8px 12px;border-radius:var(--r)"></div>
+      <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Sign In</button>
+      <p style="font-size:11px;color:var(--faint);text-align:center;margin-top:18px;line-height:1.7">Authorised users only. All access is monitored and logged.<br>Login events capture IP address, device info, and location data for security purposes.</p>
+      <div style="margin-top:20px;padding-top:18px;border-top:1.5px solid var(--border);text-align:center">
+        <span style="font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.3px">MH EDUTECH &copy; 2026</span>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- APP -->
+<!-- ═══════════════════════════ APP ════════════════════════════ -->
 <div id="appPage" class="app" style="display:none">
-  <div class="sidebar">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebarEl">
     <div class="logo-wrap">
-      <div class="logo-name">MH EduTech</div>
+      <div class="logo-inner">
+        <div class="logo-badge"><span>MH</span></div>
+        <div class="logo-text">
+          <div class="logo-name">MH EduTech</div>
+          <div class="logo-tagline">Education Portal</div>
+        </div>
+      </div>
       <div id="roleChip" class="logo-role role-admin">Admin</div>
-      <div id="sbUser" style="font-size:11px;color:var(--muted);margin-top:3px;word-break:break-all"></div>
+      <span id="sbUser" class="sb-user-email"></span>
     </div>
     <nav class="nav" id="sbNav"></nav>
     <div class="sb-footer">
-      <button class="btn btn-sm" style="width:100%;justify-content:center" onclick="doLogout()">Sign out</button>
+      <button class="sb-signout" onclick="doLogout()">Sign Out</button>
     </div>
   </div>
+
+  <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-left">
+        <div class="page-title" id="pageTitle">Dashboard</div>
+      </div>
       <div class="topbar-right">
-        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)">
-          <span id="rtDot" style="width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block"></span>
-          <span id="rtLbl">Connecting</span>
+        <div class="rt-status">
+          <div class="rt-dot" id="rtDot"></div>
+          <span class="rt-lbl" id="rtLbl">Connecting</span>
         </div>
         <div class="user-chip">
           <div class="av" id="topAv">A</div>
@@ -198,99 +447,101 @@ tr:hover td{background:#fafafa}
         </div>
       </div>
     </div>
+
     <div class="content">
       <div id="swarn" class="sw">Session expiring soon — please save your work.</div>
       <div id="notif" class="notif"></div>
       <div id="sec-dashboard" class="section"></div>
-      <div id="sec-students"  class="section" style="display:none"></div>
-      <div id="sec-agents"    class="section" style="display:none"></div>
-      <div id="sec-reports"   class="section" style="display:none"></div>
-      <div id="sec-security"  class="section" style="display:none"></div>
-      <div id="sec-ledger"    class="section" style="display:none"></div>
-      <div id="sec-profile"   class="section" style="display:none"></div>
+      <div id="sec-students"  class="section"></div>
+      <div id="sec-agents"    class="section"></div>
+      <div id="sec-reports"   class="section"></div>
+      <div id="sec-security"  class="section"></div>
+      <div id="sec-ledger"    class="section"></div>
+      <div id="sec-profile"   class="section"></div>
     </div>
   </div>
 </div>
 
-<!-- Student Modal -->
+<!-- ═══════════════ STUDENT MODAL ════════════════ -->
 <div class="mbg" id="stuModal">
   <div class="modal">
-    <div class="modal-title" id="stuModalTitle">Add student</div>
-    <div class="modal-sub">Fill in enrollment details</div>
+    <div class="modal-title" id="stuModalTitle">Add Student</div>
+    <div class="modal-sub">Fill in the enrollment details below</div>
     <input type="hidden" id="stuId">
     <div class="fr">
-      <div class="fg"><label>Student name *</label><input type="text" id="sName" maxlength="100"></div>
-      <div class="fg"><label>Date of admission *</label><input type="date" id="sDOA"></div>
+      <div class="fg"><label>Student Name *</label><input type="text" id="sName" maxlength="100" placeholder="Full name"></div>
+      <div class="fg"><label>Date of Admission *</label><input type="date" id="sDOA"></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Bill number *</label><input type="text" id="sBill" maxlength="50"></div>
-      <div class="fg"><label>Course</label><input type="text" id="sCourse" maxlength="50"></div>
+      <div class="fg"><label>Bill Number *</label><input type="text" id="sBill" maxlength="50" placeholder="e.g. VTU2026B001"></div>
+      <div class="fg"><label>Course</label><input type="text" id="sCourse" maxlength="50" placeholder="e.g. B.Tech CSE"></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Total fee (₹)</label><input type="number" id="sFee" min="0" max="9999999"></div>
-      <div class="fg"><label>Advance paid (₹)</label><input type="number" id="sAdv" min="0" max="9999999"></div>
+      <div class="fg"><label>Total Fee (Rs.)</label><input type="number" id="sFee" min="0" max="9999999" placeholder="0"></div>
+      <div class="fg"><label>Advance Paid (Rs.)</label><input type="number" id="sAdv" min="0" max="9999999" placeholder="0"></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Fee status</label>
+      <div class="fg"><label>Fee Status</label>
         <select id="sStat"><option value="pending">Pending</option><option value="partial">Partial</option><option value="paid">Paid</option></select>
       </div>
-      <div class="fg"><label>Assign to agent</label><select id="sAgent"><option value="">-- Select --</option></select></div>
+      <div class="fg"><label>Assign to Agent</label><select id="sAgent"><option value="">-- Select Agent --</option></select></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Referral amount (₹)</label><input type="number" id="sRef" min="0" max="999999"></div>
-      <div class="fg"><label>Referral paid?</label><select id="sRefPaid"><option value="false">No</option><option value="true">Yes</option></select></div>
+      <div class="fg"><label>Referral Amount (Rs.)</label><input type="number" id="sRef" min="0" max="999999" placeholder="0"></div>
+      <div class="fg"><label>Referral Paid?</label><select id="sRefPaid"><option value="false">No</option><option value="true">Yes</option></select></div>
     </div>
+    <div id="stuModalErr" class="auth-err" style="margin-top:6px"></div>
     <div class="modal-foot">
-      <button class="btn" onclick="closeM('stuModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveStu()">Save</button>
+      <button class="btn btn-ghost" onclick="closeM('stuModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStu()">Save Student</button>
     </div>
   </div>
 </div>
 
-<!-- Agent Modal -->
+<!-- ═══════════════ AGENT MODAL ═════════════════ -->
 <div class="mbg" id="agModal">
   <div class="modal">
-    <div class="modal-title" id="agModalTitle">Add agent</div>
+    <div class="modal-title" id="agModalTitle">Add Agent</div>
     <div class="modal-sub">Create a login account for the agent</div>
     <input type="hidden" id="agId">
     <div class="fr">
-      <div class="fg"><label>Name *</label><input type="text" id="agName" maxlength="60"></div>
-      <div class="fg"><label>Phone</label><input type="text" id="agPhone" maxlength="15"></div>
+      <div class="fg"><label>Full Name *</label><input type="text" id="agName" maxlength="60" placeholder="Agent name"></div>
+      <div class="fg"><label>Phone Number</label><input type="text" id="agPhone" maxlength="15" placeholder="10-digit number"></div>
     </div>
-    <div class="fg"><label>Email * (login email)</label><input type="email" id="agEmail" maxlength="100"></div>
+    <div class="fg"><label>Email * (used for login)</label><input type="email" id="agEmail" maxlength="100" placeholder="agent@email.com"></div>
     <div class="fr">
-      <div class="fg"><label id="agPwLabel">Password * (min 8 chars)</label><input type="password" id="agPw" maxlength="64"></div>
-      <div class="fg"><label>Confirm password *</label><input type="password" id="agPw2" maxlength="64"></div>
+      <div class="fg"><label id="agPwLabel">Password * (min 8 chars)</label><input type="password" id="agPw" maxlength="64" placeholder="Strong password"></div>
+      <div class="fg"><label>Confirm Password *</label><input type="password" id="agPw2" maxlength="64" placeholder="Repeat password"></div>
     </div>
     <div id="agErr" class="auth-err" style="margin-top:8px"></div>
-    <div class="info-box">Agent logs in using this email + password. Share credentials privately.</div>
+    <div class="info-box">Agent logs in using this email and password. Share credentials privately.</div>
     <div class="modal-foot">
-      <button class="btn" onclick="closeM('agModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveAgent()">Save agent</button>
+      <button class="btn btn-ghost" onclick="closeM('agModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAgent()">Save Agent</button>
     </div>
   </div>
 </div>
 
-<!-- Change Password Modal -->
+<!-- ═══════════════ PASSWORD MODAL ══════════════ -->
 <div class="mbg" id="pwModal">
   <div class="modal">
-    <div class="modal-title">Change your password</div>
+    <div class="modal-title">Change Password</div>
     <div class="modal-sub">Enter current password and choose a new strong one</div>
-    <div class="fg"><label>Current password *</label><input type="password" id="pwCur" maxlength="64"></div>
-    <div class="fg"><label>New password * (min 8 chars)</label><input type="password" id="pwNew" maxlength="64"></div>
-    <div class="fg"><label>Confirm new password *</label><input type="password" id="pwNew2" maxlength="64"></div>
+    <div class="fg"><label>Current Password *</label><input type="password" id="pwCur" maxlength="64" placeholder="Current password"></div>
+    <div class="fg"><label>New Password * (min 8 chars)</label><input type="password" id="pwNew" maxlength="64" placeholder="New password"></div>
+    <div class="fg"><label>Confirm New Password *</label><input type="password" id="pwNew2" maxlength="64" placeholder="Repeat new password"></div>
     <div id="pwErr" class="auth-err" style="margin-top:4px"></div>
     <div class="modal-foot">
-      <button class="btn" onclick="closeM('pwModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="savePwd()">Update password</button>
+      <button class="btn btn-ghost" onclick="closeM('pwModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePwd()">Update Password</button>
     </div>
   </div>
 </div>
 
-<!-- Alert Detail Modal -->
+<!-- ═══════════════ ALERT DETAIL MODAL ══════════ -->
 <div class="mbg" id="alertModal">
   <div class="modal">
-    <div class="modal-title" style="color:var(--red)">⚠ Login Attempt Detail</div>
+    <div class="modal-title" style="color:var(--red)">Login Attempt Detail</div>
     <div class="modal-sub">Full details of this access attempt</div>
     <div id="alertDetail"></div>
     <div class="modal-foot">
@@ -299,57 +550,48 @@ tr:hover td{background:#fafafa}
   </div>
 </div>
 
-<!-- Bulk Upload Modal -->
+<!-- ═══════════════ BULK UPLOAD MODAL ═══════════ -->
 <div class="mbg" id="bulkModal">
   <div class="modal" style="width:680px">
-    <div class="modal-title">⬆ Bulk Upload Students</div>
+    <div class="modal-title">Bulk Upload Students</div>
     <div class="modal-sub">Upload CSV or Excel file to add multiple students at once</div>
-
-    <!-- Download template -->
-    <div style="background:var(--blue-bg);border:1px solid var(--blue-light);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--blue-t);margin-bottom:14px">
-      📋 <b>Required columns:</b> date_of_admission, bill_number, student_name, course, total_fee, advance_paid, fee_status, referral_amount, referral_paid, agent_email
-      <br><span style="color:var(--muted);margin-top:4px;display:block">fee_status: paid / pending / partial &nbsp;|&nbsp; referral_paid: true / false &nbsp;|&nbsp; agent_email: lakshman@mhedutech.com</span>
+    <div style="background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--g800);margin-bottom:14px">
+      Required columns: date_of_admission, bill_number, student_name, course, total_fee, advance_paid, fee_status, referral_amount, referral_paid, agent_email<br>
+      <span style="color:var(--muted);margin-top:4px;display:block">fee_status: paid / pending / partial &nbsp;|&nbsp; referral_paid: true / false</span>
     </div>
-
-    <button class="btn btn-sm" onclick="downloadTemplate()" style="margin-bottom:14px">⬇ Download Template CSV</button>
-
-    <!-- Drop zone -->
-    <div id="dropZone" style="border:2px dashed var(--border2);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px"
-      ondragover="event.preventDefault();this.style.borderColor='var(--blue)';this.style.background='var(--blue-bg)'"
+    <button class="btn btn-ghost btn-sm" onclick="downloadTemplate()" style="margin-bottom:14px">Download Template CSV</button>
+    <div id="dropZone"
+      ondragover="event.preventDefault();this.style.borderColor='var(--g600)';this.style.background='var(--g50)'"
       ondragleave="this.style.borderColor='var(--border2)';this.style.background=''"
       ondrop="handleDrop(event)">
       <div style="font-size:28px;margin-bottom:8px">📂</div>
-      <div style="font-size:13px;font-weight:600;color:var(--text)">Drag & drop CSV or Excel file here</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text)">Drag and drop CSV or Excel file here</div>
       <div style="font-size:12px;color:var(--muted);margin-top:4px">or click to browse</div>
       <input type="file" id="bulkFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(this)">
     </div>
-
-    <!-- Preview table -->
     <div id="bulkPreview" style="display:none">
       <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px" id="bulkPreviewLabel"></div>
       <div class="tscroll" style="max-height:220px;overflow-y:auto">
         <table id="bulkPreviewTable" style="font-size:12px"></table>
       </div>
-      <div id="bulkErrors" style="display:none;background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--r);padding:10px;font-size:12px;color:var(--red);margin-top:10px;max-height:100px;overflow-y:auto"></div>
+      <div id="bulkErrors" style="display:none;background:var(--red-bg);border:1.5px solid var(--red-light);border-radius:var(--r);padding:10px;font-size:12px;color:var(--red);margin-top:10px;max-height:100px;overflow-y:auto"></div>
     </div>
-
     <div id="bulkProgress" style="display:none;margin-top:12px">
       <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
-        <div id="bulkBar" style="background:var(--green);height:100%;width:0%;transition:.3s;border-radius:20px"></div>
+        <div id="bulkBar" style="background:var(--g600);height:100%;width:0%;transition:.3s;border-radius:20px"></div>
       </div>
       <div id="bulkProgressText" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center"></div>
     </div>
-
     <div class="modal-foot">
-      <button class="btn" onclick="closeBulkModal()">Cancel</button>
-      <button class="btn btn-primary" id="bulkUploadBtn" onclick="startBulkUpload()" disabled style="background:var(--green);border-color:var(--green)">Upload Students</button>
+      <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+      <button class="btn btn-primary" id="bulkUploadBtn" onclick="startBulkUpload()" disabled>Upload Students</button>
     </div>
   </div>
 </div>
 
-<!-- Cash Ledger Modal -->
+<!-- ═══════════════ CASH LEDGER MODAL ═══════════ -->
 <div class="mbg" id="ledgerModal">
-  <div class="modal" style="width:560px">
+  <div class="modal">
     <div class="modal-title" id="ledgerModalTitle">Add Cash Entry</div>
     <div class="modal-sub">Record a payment received from agent</div>
     <input type="hidden" id="ledgerId">
@@ -358,8 +600,8 @@ tr:hover td{background:#fafafa}
       <div class="fg"><label>Agent *</label><select id="lAgent"></select></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Amount (₹) *</label><input type="number" id="lAmount" min="1" max="9999999" placeholder="0"></div>
-      <div class="fg"><label>Payment mode</label>
+      <div class="fg"><label>Amount (Rs.) *</label><input type="number" id="lAmount" min="1" max="9999999" placeholder="0"></div>
+      <div class="fg"><label>Payment Mode</label>
         <select id="lMode">
           <option value="cash">Cash</option>
           <option value="upi">UPI</option>
@@ -370,10 +612,28 @@ tr:hover td{background:#fafafa}
       </div>
     </div>
     <div class="fg"><label>Note / Remarks</label><textarea id="lNote" maxlength="300" rows="3" placeholder="Add any notes or remarks here..."></textarea></div>
+    <div class="fg" id="lAdminNoteWrap" style="display:none"><label>Admin Note (visible to agent)</label><textarea id="lAdminNote" maxlength="300" rows="2" placeholder="Admin note or correction message..."></textarea></div>
     <div id="ledgerErr" class="auth-err"></div>
     <div class="modal-foot">
-      <button class="btn" onclick="closeM('ledgerModal')">Cancel</button>
+      <button class="btn btn-ghost" onclick="closeM('ledgerModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveLedger()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ QUERY NOTE MODAL ════════════ -->
+<div class="mbg" id="queryModal">
+  <div class="modal">
+    <div class="modal-title">Add Query Note</div>
+    <div class="modal-sub">Write your question or issue about this transaction for admin to review</div>
+    <input type="hidden" id="queryLedgerId">
+    <div class="fg"><label>Your Query / Message *</label>
+      <textarea id="queryText" maxlength="500" rows="4" placeholder="Describe the issue or question about this entry..."></textarea>
+    </div>
+    <div id="queryErr" class="auth-err"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('queryModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveQueryNote()">Submit Query</button>
     </div>
   </div>
 </div>
@@ -382,35 +642,78 @@ tr:hover td{background:#fafafa}
 (function(){
 'use strict';
 
+/* ── QUOTE ROTATOR ───────────────────────────── */
+const QUOTES=[
+  {text:"We rise by lifting others",source:"MH EduTech Spirit"},
+  {text:"Proud members of an awesome team",source:"Our Team Values"},
+  {text:"Be the person you want to work with",source:"Workplace Culture"},
+  {text:"A beautiful day begins with a beautiful mindset",source:"Daily Inspiration"},
+  {text:"Don't stop until you're proud",source:"Our Work Ethic"}
+];
+let qIdx=0,qTimer=null;
+function initQuotes(){
+  const dots=document.getElementById('quoteDots');
+  if(!dots)return;
+  dots.innerHTML=QUOTES.map((_,i)=>`<button class="qdot${i===0?' active':''}" onclick="goQuote(${i})" aria-label="Quote ${i+1}"></button>`).join('');
+  showQuote(0,false);
+  qTimer=setInterval(()=>{qIdx=(qIdx+1)%QUOTES.length;showQuote(qIdx,true);},8000);
+}
+function showQuote(i,animate){
+  const qt=document.getElementById('quoteText');
+  const qs=document.getElementById('quoteSource');
+  if(!qt)return;
+  if(animate){
+    qAnimating=true;
+    qt.style.opacity='0';
+    setTimeout(()=>{
+      qt.textContent=QUOTES[i].text;
+      qs.textContent=QUOTES[i].source;
+      qt.style.opacity='1';
+      setTimeout(()=>{qAnimating=false;},400);
+    },380);
+  }else{
+    qt.textContent=QUOTES[i].text;
+    qs.textContent=QUOTES[i].source;
+  }
+  document.querySelectorAll('.qdot').forEach((d,j)=>{d.className='qdot'+(j===i?' active':'');});
+  qIdx=i;
+}
+let qAnimating=false;
+function goQuote(i){
+  // Debounce: ignore clicks while animation is running
+  if(qAnimating) return;
+  if(qTimer){clearInterval(qTimer);qTimer=null;}
+  showQuote(i,true);
+  qTimer=setInterval(()=>{qIdx=(qIdx+1)%QUOTES.length;showQuote(qIdx,true);},8000);
+}
+window.goQuote=goQuote;
+document.addEventListener('DOMContentLoaded',initQuotes);
+
 // ── CONFIG ──────────────────────────────────────────────────────
-// ⚠️  PASTE YOUR SUPABASE VALUES BELOW
-// Go to: https://supabase.com → Your Project → Settings → API
-// Copy "Project URL" and the "anon / public" key (starts with eyJ...)
 const SB_URL = 'https://wwxobmubeyqifyisxnhe.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3eG9ibXViZXlxaWZ5aXN4bmhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMjQ1NDksImV4cCI6MjA5NTgwMDU0OX0.XEpNJkUzFy_NypVYLrjaejm3tXKb7kpd7xC9PnH74hM';
-const sb     = supabase.createClient(SB_URL, SB_KEY);
+const sb = supabase.createClient(SB_URL, SB_KEY);
+const SALT = 'mhEdu$alt!2026_';
+const BLOCK_AFTER = 3;
+const LOCK_MS = 15 * 60 * 1000;
 
-// ── CONFIG CHECK (shows friendly error if key not set) ──────────
-if(!SB_KEY || SB_KEY === 'PASTE_YOUR_ANON_KEY_HERE' || !SB_KEY.startsWith('eyJ')) {
-  document.getElementById('authErr').textContent =
-    'System configuration error. Please contact administrator.';
-  document.getElementById('authErr').style.display = 'block';
-  document.getElementById('loginBtn').disabled = true;
-} else {
-  const sg = document.getElementById('setupGuide');
-  if(sg) sg.style.display = 'none';
-}
-const SALT   = 'mhEdu$alt!2026_';
-const BLOCK_AFTER = 3; // block IP after this many fails
-const LOCK_MS     = 15 * 60 * 1000; // 15 min lockout
-
-// ── SECURITY HELPERS ───────────────────────────────────────────
+// ── SECURITY HELPERS ─────────────────────────────────────────────
 function esc(v){
   if(v==null) return '';
   return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 }
 function clean(v,n){
-  let s=String(v||'').replace(/<[^>]*>/g,'').replace(/[<>"`;]/g,'').trim();
+  let s=String(v||'');
+  // Strip null bytes
+  s=s.replace(/\x00/g,'');
+  // Strip zero-width and invisible unicode characters
+  s=s.replace(/[\u200B-\u200D\uFEFF\u00AD\u2028\u2029]/g,'');
+  // Decode HTML entities before stripping tags (prevents &#60;script&#62; bypass)
+  s=s.replace(/&#(\d+);/gi,(m,d)=>String.fromCharCode(parseInt(d,10)));
+  s=s.replace(/&#x([0-9a-f]+);/gi,(m,h)=>String.fromCharCode(parseInt(h,16)));
+  s=s.replace(/&amp;/gi,'&').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&quot;/gi,'"');
+  // Now strip HTML tags and dangerous chars
+  s=s.replace(/<[^>]*>/g,'').replace(/[<>"`;]/g,'').trim();
   return n?s.slice(0,n):s;
 }
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
@@ -419,11 +722,14 @@ async function hashPwd(p){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── BRUTE FORCE: tracked in sessionStorage (survives refresh, not new tab) ──
-function getFails()  {return parseInt(sessionStorage.getItem('_lf')||'0');}
-function getLock()   {return parseInt(sessionStorage.getItem('_ll')||'0');}
-function setFails(n) {sessionStorage.setItem('_lf',n);}
-function setLock(t)  {sessionStorage.setItem('_ll',t);}
+// ── BRUTE FORCE ──────────────────────────────────────────────────
+// ── BRUTE FORCE — dual layer (client + server) ──────────────────
+// Client-side: sessionStorage tracks fails per tab session
+// Server-side: verify_agent_login RPC enforces its own rate limit in DB
+function getFails(){return parseInt(sessionStorage.getItem('_lf')||'0');}
+function getLock(){return parseInt(sessionStorage.getItem('_ll')||'0');}
+function setFails(n){sessionStorage.setItem('_lf',n);}
+function setLock(t){sessionStorage.setItem('_ll',t);}
 function clearLockData(){sessionStorage.removeItem('_lf');sessionStorage.removeItem('_ll');}
 function isLocked(){
   const l=getLock();
@@ -443,24 +749,22 @@ function startLockUI(){
     const el=document.getElementById('lockTimer');
     if(left<=0){clearInterval(lockInterval);el.style.display='none';return;}
     el.style.display='block';
-    el.textContent=`🔒 Access blocked. Try again in ${Math.ceil(left/60000)}m ${Math.ceil((left%60000)/1000)}s`;
+    el.textContent='Access blocked. Try again in '+Math.ceil(left/60000)+'m '+Math.ceil((left%60000)/1000)+'s';
   },1000);
 }
 
-// ── SESSION TIMEOUT 8 hours ─────────────────────────────────────
+// ── SESSION ──────────────────────────────────────────────────────
 let sTimer=null,sWarn=null;
 function startSession(){
   clearTimeout(sTimer);clearTimeout(sWarn);
   document.getElementById('swarn').style.display='none';
-  sWarn =setTimeout(()=>document.getElementById('swarn').style.display='block',7*60*60*1000);
+  sWarn=setTimeout(()=>document.getElementById('swarn').style.display='block',7*60*60*1000);
   sTimer=setTimeout(()=>{notify('Session expired. Please sign in again.','err');setTimeout(doLogout,2000);},8*60*60*1000);
   ['click','keydown'].forEach(e=>document.addEventListener(e,()=>{if(currentUser)startSession();},{once:true}));
 }
-
-// ── SESSION PERSISTENCE (survive page refresh) ──────────────────
 function saveSession(){
   if(!currentUser) return;
-  sessionStorage.setItem('_sess', JSON.stringify({user:currentUser,role:currentRole,agent:currentAgent,ts:Date.now()}));
+  sessionStorage.setItem('_sess',JSON.stringify({user:currentUser,role:currentRole,agent:currentAgent,ts:Date.now()}));
 }
 function loadSession(){
   try{
@@ -468,140 +772,150 @@ function loadSession(){
     if(!raw) return false;
     const s=JSON.parse(raw);
     if(!s||!s.user||!s.ts) return false;
-    if(Date.now()-s.ts > 8*60*60*1000){sessionStorage.removeItem('_sess');return false;}
-    currentUser=s.user; currentRole=s.role; currentAgent=s.agent;
+    // M3: max session age 8h — absolute, not sliding
+    if(Date.now()-s.ts>8*60*60*1000){sessionStorage.removeItem('_sess');return false;}
+    // Validate role strictly — reject anything that is not exactly admin or agent
+    if(!['admin','agent'].includes(s.role)){sessionStorage.removeItem('_sess');return false;}
+    // Validate required fields exist and are strings
+    if(!s.user.id||typeof s.user.id!=='string'){sessionStorage.removeItem('_sess');return false;}
+    if(!s.user.email||typeof s.user.email!=='string'){sessionStorage.removeItem('_sess');return false;}
+    // Sanitize every restored value — never trust stored strings directly
+    currentUser={
+      name:String(s.user.name||'').replace(/[<>"]/g,'').slice(0,100),
+      email:String(s.user.email||'').toLowerCase().slice(0,100),
+      id:String(s.user.id||'').replace(/[^a-f0-9-]/gi,'').slice(0,40)
+    };
+    currentRole=s.role;
+    currentAgent=s.agent||null;
     return true;
-  } catch(e){ return false; }
+  }catch(e){sessionStorage.removeItem('_sess');return false;}
 }
 
-// ── STATE ───────────────────────────────────────────────────────
+// ── STATE ────────────────────────────────────────────────────────
 let currentUser=null,currentRole=null,currentAgent=null;
 let allStudents=[],allAgents=[];
 let charts={},loginBusy=false;
+// Fix #5: In-memory attempt counter — survives sessionStorage.clear() within same JS context
+// An attacker using fetch() directly against Supabase still hits DB-side rate limiting
+let _memFails=0,_memLockedUntil=0;
+function memLocked(){return _memLockedUntil>Date.now();}
+function memAddFail(){
+  _memFails++;
+  if(_memFails>=BLOCK_AFTER){_memLockedUntil=Date.now()+LOCK_MS;}
+}
+function memClear(){_memFails=0;_memLockedUntil=0;}
 
-
-// ── CAMERA CAPTURE ─────────────────────────────────────────────
-// ── DEVICE FINGERPRINT ─────────────────────────────────────────
+// ── DEVICE / GEO ─────────────────────────────────────────────────
+// M2: async SHA-256 fingerprint — computed once, cached for session
+let _cachedFingerprint=null;
+async function buildFingerprint(){
+  if(_cachedFingerprint) return _cachedFingerprint;
+  const raw=[
+    navigator.userAgent,screen.width,screen.height,
+    navigator.language,navigator.platform,
+    Intl.DateTimeFormat().resolvedOptions().timeZone||'',
+    screen.colorDepth,navigator.hardwareConcurrency||'',
+    navigator.deviceMemory||''
+  ].join('|');
+  try{
+    const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));
+    _cachedFingerprint=Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,32);
+  }catch(e){
+    // Fallback djb2 if SubtleCrypto unavailable
+    let h=5381;for(let i=0;i<raw.length;i++){h=((h<<5)+h)^raw.charCodeAt(i);h=h>>>0;}
+    _cachedFingerprint=h.toString(16).padStart(8,'0');
+  }
+  return _cachedFingerprint;
+}
 function getDeviceInfo(){
-  return {
-    browser: navigator.userAgent.slice(0,120),
-    os:      navigator.platform||'unknown',
-    screen:  `${screen.width}x${screen.height}`,
-    lang:    navigator.language||'unknown',
-    tz:      Intl.DateTimeFormat().resolvedOptions().timeZone||'unknown',
-    finger:  btoa([navigator.userAgent,screen.width,screen.height,navigator.language,navigator.platform].join('|')).slice(0,40),
+  // Returns sync fields; fingerprint is added async in collectSecurityData()
+  return{
+    browser:navigator.userAgent.slice(0,200),
+    os:navigator.platform||'unknown',
+    screen:`${screen.width}x${screen.height}`,
+    finger:'computing',  // replaced by async SHA-256 in collectSecurityData()
   };
 }
-
-// ── GEO LOCATION from IP (no permission needed) ─────────────────
 async function getGeoFromIP(){
   try{
     const r=await fetch('https://ipapi.co/json/',{signal:AbortSignal.timeout(4000)});
     const d=await r.json();
-    return {
-      ip:      d.ip||'unknown',
-      city:    d.city||'unknown',
-      region:  d.region||'unknown',
-      country: d.country_name||'unknown',
-      lat:     String(d.latitude||''),
-      lon:     String(d.longitude||''),
-      org:     d.org||'',
-    };
-  } catch(e){
-    return {ip:'unknown',city:'unknown',region:'unknown',country:'unknown',lat:'',lon:'',org:''};
-  }
+    return {ip:d.ip||'unknown',city:d.city||'unknown',region:d.region||'unknown',country:d.country_name||'unknown',lat:String(d.latitude||''),lon:String(d.longitude||'')};
+  }catch(e){return {ip:'unknown',city:'unknown',region:'unknown',country:'unknown',lat:'',lon:''};}
 }
-
-// ── GPS LOCATION (browser permission) ─────────────────────────
 function getGPS(){
   return new Promise(resolve=>{
     if(!navigator.geolocation){resolve(null);return;}
     navigator.geolocation.getCurrentPosition(
-      p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy}),
-      ()=>resolve(null),
-      {timeout:5000,maximumAge:0}
+      p=>resolve({lat:p.coords.latitude,lon:p.coords.longitude}),
+      ()=>resolve(null),{timeout:5000,maximumAge:0}
     );
   });
 }
-
-// ── LOG ATTEMPT TO SUPABASE ────────────────────────────────────
-async function logAttempt(email, success, extras={}){
+async function logAttempt(email,success,extras={}){
   try{
     await sb.from('login_attempts').insert([{
-      email, success,
-      ip_address:     extras.ip||'unknown',
-      city:           extras.city||'',
-      region:         extras.region||'',
-      country:        extras.country||'',
-      latitude:       extras.lat||extras.gpsLat||'',
-      longitude:      extras.lon||extras.gpsLon||'',
-      device_browser: extras.browser||'',
-      device_os:      extras.os||'',
-      device_screen:  extras.screen||'',
-      device_finger:  extras.finger||'',
+      email,success,
+      ip_address:extras.ip||'unknown',
+      city:extras.city||'',region:extras.region||'',country:extras.country||'',
+      latitude:extras.lat||extras.gpsLat||'',longitude:extras.lon||extras.gpsLon||'',
+      device_browser:extras.browser||'',device_os:extras.os||'',
+      device_screen:extras.screen||'',device_finger:extras.finger||'',
     }]);
-  } catch(e){}
+  }catch(e){}
 }
-
-// ── COLLECT ALL SECURITY DATA ───────────────────────────────────
 async function collectSecurityData(){
-  const dev = getDeviceInfo();
-  const geo = await getGeoFromIP();
-  const gps = await getGPS();
-  return {
-    ...dev, ...geo,
-    gpsLat: gps?.lat ? String(gps.lat) : '',
-    gpsLon: gps?.lon ? String(gps.lon) : '',
-  };
+  // M2: run fingerprint, geo, and GPS in parallel for speed
+  const [finger,geo,gps]=await Promise.all([buildFingerprint(),getGeoFromIP(),getGPS()]);
+  const dev=getDeviceInfo();
+  dev.finger=finger; // replace placeholder with real SHA-256
+  return {...dev,...geo,gpsLat:gps?.lat?String(gps.lat):'',gpsLon:gps?.lon?String(gps.lon):''};
 }
 
-// ── MAIN LOGIN ─────────────────────────────────────────────────
+// ── LOGIN ────────────────────────────────────────────────────────
 async function doLogin(){
-  if(loginBusy||isLocked()){if(isLocked())startLockUI();return;}
+  // Fix #5: dual lockout — sessionStorage + in-memory (in-memory survives sessionStorage.clear())
+  if(loginBusy){return;}
+  if(isLocked()||memLocked()){startLockUI();return;}
   const errEl=document.getElementById('authErr');
   errEl.style.display='none';
-
   const email=clean(document.getElementById('loginEmail').value,100).toLowerCase();
-  const pass =document.getElementById('loginPassword').value;
-
+  const pass=document.getElementById('loginPassword').value;
   if(!email||!pass){errEl.textContent='Please enter email and password.';errEl.style.display='block';return;}
   if(!validEmail(email)){errEl.textContent='Enter a valid email.';errEl.style.display='block';return;}
-  if(pass.length>128){errEl.textContent='Invalid input.';errEl.style.display='block';return;}
-
+  if(pass.length<8||pass.length>128){errEl.textContent='Invalid email or password.';errEl.style.display='block';return;}
   loginBusy=true;
   const btn=document.getElementById('loginBtn');
   btn.disabled=true; btn.textContent='Signing in...';
-
-  const secDataPromise = collectSecurityData();
-
-  // small delay to prevent instant brute force
-  await new Promise(r=>setTimeout(r,300));
-
+  const secDataPromise=collectSecurityData();
+  // 600ms delay slows in-page attacks; direct Supabase calls still hit DB rate limiter
+  await new Promise(r=>setTimeout(r,600));
   try{
     const inputHash=await hashPwd(pass);
     const {data,error}=await sb.rpc('verify_agent_login',{p_email:email,p_hash:inputHash});
-
-    const secData = await secDataPromise;
-
+    const secData=await secDataPromise;
     if(error||!data||!data.success){
-      addFail();
-      await logAttempt(email, false, secData);
-      errEl.textContent=isLocked()?'Access blocked. Too many failed attempts.':'Incorrect email or password.';
+      addFail(); memAddFail(); // update both counters
+      await logAttempt(email,false,secData);
+      if(data?.error==='rate_limited'){
+        setLock(Date.now()+LOCK_MS);
+        _memLockedUntil=Date.now()+LOCK_MS;
+      }
+      startLockUI();
+      errEl.textContent=(isLocked()||memLocked())?'Access blocked for 15 minutes. Too many failed attempts.':'Invalid email or password.';
       errEl.style.display='block';
       return;
     }
-
-    // SUCCESS
-    clearLockData();
-    await logAttempt(email, true, secData);
-    currentRole  = data.role;
-    currentAgent = data.role==='agent'?data:null;
-    currentUser  = {name:data.name,email:data.email,id:data.id};
+    clearLockData(); memClear();
+    await logAttempt(email,true,secData);
+    const role=['admin','agent'].includes(data.role)?data.role:'agent';
+    currentRole=role;
+    currentAgent=role==='agent'?data:null;
+    currentUser={name:String(data.name||'').slice(0,100),email:String(data.email||'').slice(0,100),id:String(data.id||'')};
     saveSession();
     startApp();
-
-  } finally{
-    loginBusy=false; btn.disabled=false; btn.textContent='Sign in';
+  }finally{
+    loginBusy=false; btn.disabled=false; btn.textContent='Sign In';
   }
 }
 
@@ -619,13 +933,25 @@ function doLogout(){
   document.getElementById('authErr').style.display='none';
 }
 
-// ── APP START ───────────────────────────────────────────────────
+// ── SIDEBAR MOBILE ───────────────────────────────────────────────
+function toggleSidebar(){
+  document.getElementById('sidebarEl').classList.toggle('open');
+  document.getElementById('sbOverlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebarEl').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('open');
+}
+window.toggleSidebar=toggleSidebar;
+window.closeSidebar=closeSidebar;
+
+// ── APP START ────────────────────────────────────────────────────
 async function startApp(){
   document.getElementById('authPage').style.display='none';
   document.getElementById('appPage').style.display='flex';
-  document.getElementById('topName').textContent =esc(currentUser.name);
-  document.getElementById('topAv').textContent   =esc(currentUser.name[0].toUpperCase());
-  document.getElementById('sbUser').textContent  =esc(currentUser.email);
+  document.getElementById('topName').textContent=esc(currentUser.name);
+  document.getElementById('topAv').textContent=esc(currentUser.name[0].toUpperCase());
+  document.getElementById('sbUser').textContent=esc(currentUser.email);
   const chip=document.getElementById('roleChip');
   chip.textContent=currentRole==='admin'?'Admin':'Agent';
   chip.className='logo-role '+(currentRole==='admin'?'role-admin':'role-agent');
@@ -638,82 +964,70 @@ async function startApp(){
 
 function buildSidebar(){
   const items=currentRole==='admin'
-    ?[{id:'dashboard',ic:'grid',lb:'Dashboard'},{id:'students',ic:'users',lb:'All Students'},
-      {id:'agents',ic:'brief',lb:'Agents'},{id:'reports',ic:'bar',lb:'Reports'},
-      {id:'ledger',ic:'wallet',lb:'Cash Ledger'},
-      {id:'security',ic:'shield',lb:'Security Log'},{id:'profile',ic:'key',lb:'My Profile'}]
-    :[{id:'dashboard',ic:'grid',lb:'My Dashboard'},{id:'students',ic:'users',lb:'My Students'},
-      {id:'reports',ic:'bar',lb:'My Reports'},
-      {id:'ledger',ic:'wallet',lb:'Cash Ledger'},
-      {id:'profile',ic:'key',lb:'My Profile'}];
+    ?[{id:'dashboard',lb:'Dashboard'},{id:'students',lb:'All Students'},
+      {id:'agents',lb:'Agents'},{id:'ledger',lb:'Cash Ledger'},
+      {id:'reports',lb:'Reports'},{id:'security',lb:'Security Log'},{id:'profile',lb:'My Profile'}]
+    :[{id:'dashboard',lb:'My Dashboard'},{id:'students',lb:'My Students'},
+      {id:'ledger',lb:'Cash Ledger'},{id:'reports',lb:'My Reports'},{id:'profile',lb:'My Profile'}];
   document.getElementById('sbNav').innerHTML=items.map(it=>`
-    <button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}')">
-      ${icon(it.ic)}<span>${it.lb}</span>
+    <button class="ni" id="nav-${it.id}" onclick="showSec('${it.id}');closeSidebar()">
+      <span class="ni-dot"></span><span>${it.lb}</span>
     </button>`).join('');
 }
 
-function icon(n){
-  return {
-    grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
-    users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    brief:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
-    bar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-    shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-    key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6M15.5 7.5L19 4M18 5l2 2"/></svg>',
-    wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 13a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/><path d="M22 9H2"/></svg>',
-  }[n]||'';
-}
-
-// ── DATA ────────────────────────────────────────────────────────
+// ── DATA LOAD ────────────────────────────────────────────────────
 async function loadData(){
-  const [r1,r2]=await Promise.all([
+  const [r1,r2,r3]=await Promise.all([
     sb.from('students').select('*,notes(*)').order('created_at',{ascending:false}),
     sb.rpc('get_agents'),
+    sb.from('cash_ledger').select('*').order('entry_date',{ascending:false}),
   ]);
-  // Attach agent name to students manually
   const agentMap={};
   const agentsRaw=r2.data||[];
   agentsRaw.forEach(a=>agentMap[a.id]=a);
   allStudents=(r1.data||[]).map(s=>({...s,agents:agentMap[s.agent_id]||null}));
   allAgents=agentsRaw.filter(a=>a.role==='agent');
+  allLedger=r3.data||[];
 }
 function myStudents(){
   if(currentRole==='admin') return allStudents;
   return allStudents.filter(s=>s.agent_id===currentAgent?.id);
 }
+function myLedger(){
+  if(currentRole==='admin') return allLedger;
+  return allLedger.filter(e=>e.agent_id===currentAgent?.id);
+}
 
-// ── REALTIME ────────────────────────────────────────────────────
+// ── REALTIME ─────────────────────────────────────────────────────
 function subscribeRT(){
-  sb.channel('rt')
+  sb.channel('rt-main')
     .on('postgres_changes',{event:'*',schema:'public',table:'students'},async()=>{await loadData();refreshSec();})
     .on('postgres_changes',{event:'*',schema:'public',table:'notes'},async()=>{await loadData();refreshSec();})
     .on('postgres_changes',{event:'*',schema:'public',table:'agents'},async()=>{await loadData();refreshSec();})
-    .on('postgres_changes',{event:'*',schema:'public',table:'cash_ledger'},async()=>{if(curSec==='ledger')renderLedger();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'cash_ledger'},async()=>{
+      const r=await sb.from('cash_ledger').select('*').order('entry_date',{ascending:false});
+      allLedger=r.data||[];
+      if(curSec==='ledger') renderLedger();
+    })
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'login_attempts'},async(payload)=>{
-      // Real-time alert to admin when failed login happens
-      if(currentRole==='admin' && payload.new && !payload.new.success){
-        showSecAlert(payload.new);
-      }
-      if(curSec==='security') refreshSec();
+      if(currentRole==='admin'&&payload.new&&!payload.new.success) showSecAlert(payload.new);
+      if(curSec==='security') renderSecurity();
     })
     .subscribe(s=>{
       const ok=s==='SUBSCRIBED';
-      document.getElementById('rtDot').style.background=ok?'var(--green)':'var(--amber)';
-      document.getElementById('rtLbl').textContent=ok?'Live':'Connecting';
+      const dot=document.getElementById('rtDot');
+      if(dot){dot.className='rt-dot'+(ok?' live':'');}
+      const lbl=document.getElementById('rtLbl');
+      if(lbl) lbl.textContent=ok?'Live':'Connecting';
     });
 }
-
-// Real-time popup alert for admin when attack detected
 function showSecAlert(attempt){
-  const loc=`${attempt.city||'?'}, ${attempt.country||'?'}`;
-  const msg=`🚨 Failed login attempt!\nEmail tried: ${attempt.email||'unknown'}\nLocation: ${loc}\nDevice: ${(attempt.device_browser||'').slice(0,60)}`;
-  notify(msg,'err');
+  notify('Failed login: '+(attempt.email||'?')+' from '+(attempt.city||'?')+', '+(attempt.country||'?'),'err');
 }
 
 let curSec='dashboard';
 function refreshSec(){showSec(curSec);}
 
-// ── SECTION GUARD ───────────────────────────────────────────────
 const ADMIN_SEC=['dashboard','students','agents','reports','security','ledger','profile'];
 const AGENT_SEC=['dashboard','students','reports','ledger','profile'];
 
@@ -727,7 +1041,12 @@ function showSec(id){
   if(sec) sec.style.display='block';
   const nav=document.getElementById('nav-'+id);
   if(nav) nav.classList.add('active');
-  const titles={dashboard:currentRole==='admin'?'Dashboard':'My Dashboard',students:currentRole==='admin'?'All Students':'My Students',agents:'Agents',reports:'Reports',security:'Security Log',ledger:'Cash Ledger',profile:'My Profile'};
+  const titles={
+    dashboard:currentRole==='admin'?'Dashboard':'My Dashboard',
+    students:currentRole==='admin'?'All Students':'My Students',
+    agents:'Agents',reports:'Reports',security:'Security Log',
+    ledger:'Cash Ledger',profile:'My Profile'
+  };
   document.getElementById('pageTitle').textContent=titles[id]||id;
   if(id==='dashboard') renderDash();
   if(id==='students')  renderStudents();
@@ -738,40 +1057,83 @@ function showSec(id){
   if(id==='profile')   renderProfile();
 }
 
-// ── DASHBOARD ───────────────────────────────────────────────────
+// ── DASHBOARD ────────────────────────────────────────────────────
 function renderDash(){
   const sts=myStudents();
   const paid=sts.filter(s=>s.fee_status==='paid').length;
   const pend=sts.filter(s=>s.fee_status==='pending').length;
   const part=sts.filter(s=>s.fee_status==='partial').length;
-  const adv =sts.reduce((a,s)=>a+(s.advance_paid||0),0);
-  const tot =sts.reduce((a,s)=>a+(s.total_fee||0),0);
-  const ref =sts.reduce((a,s)=>a+(s.referral_amount||0),0);
+  const adv=sts.reduce((a,s)=>a+(s.advance_paid||0),0);
+  const tot=sts.reduce((a,s)=>a+(s.total_fee||0),0);
+  const ref=sts.reduce((a,s)=>a+(s.referral_amount||0),0);
   const refP=sts.filter(s=>s.referral_paid).reduce((a,s)=>a+(s.referral_amount||0),0);
   const isA=currentRole==='admin';
+  const ledgerTotal=myLedger().reduce((a,e)=>a+(e.amount||0),0);
+
   document.getElementById('sec-dashboard').innerHTML=`
     <div class="metrics">
-      <div class="metric m-blue"><div class="m-label">Total students</div><div class="m-val">${sts.length}</div><div class="m-sub">enrolled</div></div>
-      <div class="metric m-green"><div class="m-label">Fees paid</div><div class="m-val">${paid}</div><div class="m-sub">${pend} pending · ${part} partial</div></div>
-      <div class="metric m-amber"><div class="m-label">Advance collected</div><div class="m-val">₹${adv.toLocaleString('en-IN')}</div><div class="m-sub">of ₹${tot.toLocaleString('en-IN')}</div></div>
-      <div class="metric m-purple"><div class="m-label">${isA?'Referral due':'My referral'}</div><div class="m-val">₹${ref.toLocaleString('en-IN')}</div><div class="m-sub">₹${refP.toLocaleString('en-IN')} paid</div></div>
-      ${isA?`<div class="metric"><div class="m-label">Agents</div><div class="m-val">${allAgents.length}</div><div class="m-sub">active</div></div>`:''}
+      <div class="metric m-blue">
+        <div class="m-label">Total Students</div>
+        <div class="m-val">${sts.length}</div>
+        <div class="m-sub">enrolled</div>
+      </div>
+      <div class="metric m-green">
+        <div class="m-label">Fees Paid</div>
+        <div class="m-val">${paid}</div>
+        <div class="m-sub">${pend} pending &middot; ${part} partial</div>
+      </div>
+      <div class="metric m-amber">
+        <div class="m-label">Advance Collected</div>
+        <div class="m-val" style="font-size:20px">Rs.${adv.toLocaleString('en-IN')}</div>
+        <div class="m-sub">of Rs.${tot.toLocaleString('en-IN')}</div>
+      </div>
+      <div class="metric m-purple">
+        <div class="m-label">${isA?'Total Referral':'My Referral'}</div>
+        <div class="m-val" style="font-size:20px">Rs.${ref.toLocaleString('en-IN')}</div>
+        <div class="m-sub">Rs.${refP.toLocaleString('en-IN')} paid</div>
+      </div>
+      ${isA?`<div class="metric m-green">
+        <div class="m-label">Active Agents</div>
+        <div class="m-val">${allAgents.length}</div>
+        <div class="m-sub">total agents</div>
+      </div>`:''}
+      <div class="metric m-green">
+        <div class="m-label">${isA?'Total Cash Collected':'My Cash'}</div>
+        <div class="m-val" style="font-size:20px">Rs.${ledgerTotal.toLocaleString('en-IN')}</div>
+        <div class="m-sub">ledger entries</div>
+      </div>
     </div>
     <div class="chart-row">
-      <div class="card"><div class="card-title">Fee status</div>
-        <div class="legend"><span><span class="ldot" style="background:#16a34a"></span>Paid</span><span><span class="ldot" style="background:#2563eb"></span>Partial</span><span><span class="ldot" style="background:#d97706"></span>Pending</span></div>
-        <div class="cw" style="height:200px"><canvas id="c1" role="img" aria-label="Fee status">Fee</canvas></div></div>
-      <div class="card"><div class="card-title">Monthly enrollments</div>
-        <div class="legend"><span><span class="ldot" style="background:#2563eb"></span>Students</span></div>
-        <div class="cw" style="height:200px"><canvas id="c2" role="img" aria-label="Monthly">Monthly</canvas></div></div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Fee Status</div></div>
+        <div class="legend">
+          <span><span class="ldot" style="background:var(--g600)"></span>Paid</span>
+          <span><span class="ldot" style="background:var(--blue)"></span>Partial</span>
+          <span><span class="ldot" style="background:var(--amber)"></span>Pending</span>
+        </div>
+        <div class="cw" style="height:200px"><canvas id="c1"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Monthly Enrollments</div></div>
+        <div class="cw" style="height:200px"><canvas id="c2"></canvas></div>
+      </div>
     </div>
-    ${isA?`<div class="card"><div class="card-hdr"><div class="card-title">Agent performance</div></div><div class="ag-grid" id="agPerf"></div></div>`:''}
-    <div class="card"><div class="card-hdr"><div class="card-title">Recent students</div><button class="btn btn-sm btn-primary" onclick="showSec('students')">View all</button></div><div id="recentTbl"></div></div>`;
+    ${isA?`<div class="card">
+      <div class="card-hdr"><div class="card-title">Agent Performance</div></div>
+      <div class="ag-grid" id="agPerf"></div>
+    </div>`:''}
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">Recent Students</div>
+        <button class="btn btn-sm btn-outline" onclick="showSec('students')">View All</button>
+      </div>
+      <div class="tscroll" id="recentTbl"></div>
+    </div>`;
 
   const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
   mkChart('c1','doughnut',ml,[{data:[paid,part,pend],backgroundColor:['#16a34a','#2563eb','#d97706'],borderWidth:0}],{plugins:{legend:{display:false}},cutout:'65%'});
-  mkChart('c2','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#2563eb',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
+  mkChart('c2','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#16a34a',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
 
   if(isA){
     const ap=document.getElementById('agPerf');
@@ -782,12 +1144,12 @@ function renderDash(){
       const ar=as.reduce((a,s)=>a+(s.referral_amount||0),0);
       return `<div class="ag-card">
         <div class="ag-av">${esc(ag.name[0].toUpperCase())}</div>
-        <div style="font-size:14px;font-weight:600">${esc(ag.name)}</div>
+        <div style="font-size:14px;font-weight:700">${esc(ag.name)}</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${esc(ag.email)}</div>
         <div class="ag-stats">
           <div class="ag-stat"><div class="ag-sl">Students</div><div class="ag-sv">${as.length}</div></div>
-          <div class="ag-stat"><div class="ag-sl">Advance</div><div class="ag-sv">₹${aa.toLocaleString('en-IN')}</div></div>
-          <div class="ag-stat"><div class="ag-sl">Referral</div><div class="ag-sv">₹${ar.toLocaleString('en-IN')}</div></div>
+          <div class="ag-stat"><div class="ag-sl">Advance</div><div class="ag-sv" style="font-size:13px">Rs.${aa.toLocaleString('en-IN')}</div></div>
+          <div class="ag-stat"><div class="ag-sl">Referral</div><div class="ag-sv" style="font-size:13px">Rs.${ar.toLocaleString('en-IN')}</div></div>
           <div class="ag-stat"><div class="ag-sl">Paid</div><div class="ag-sv">${as.filter(s=>s.fee_status==='paid').length}</div></div>
         </div></div>`;
     }).join('');
@@ -796,34 +1158,49 @@ function renderDash(){
   const rec=myStudents().slice(0,5);
   if(!rec.length){rt.innerHTML='<p style="color:var(--muted);font-size:13px;padding:10px 0">No students yet.</p>';return;}
   rt.innerHTML=`<table><thead><tr><th>Name</th><th>Agent</th><th>Advance</th><th>Status</th></tr></thead><tbody>
-    ${rec.map(s=>`<tr><td>${esc(s.student_name)}</td><td>${esc(s.agents?.name||'—')}</td><td>₹${(s.advance_paid||0).toLocaleString('en-IN')}</td><td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td></tr>`).join('')}
+    ${rec.map(s=>`<tr>
+      <td><b>${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
+      <td>${esc(s.agents?.name||'—')}</td>
+      <td>Rs.${(s.advance_paid||0).toLocaleString('en-IN')}</td>
+      <td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td>
+    </tr>`).join('')}
   </tbody></table>`;
 }
 
-// ── STUDENTS ────────────────────────────────────────────────────
+// ── STUDENTS ─────────────────────────────────────────────────────
 function renderStudents(){
   const isA=currentRole==='admin';
   document.getElementById('sec-students').innerHTML=`
-    <div class="card" style="margin-bottom:14px"><div class="sr">
-      <input type="text" id="q" placeholder="Search name or bill number..." oninput="filterStu()" maxlength="80">
-      <select id="sf" onchange="filterStu()"><option value="">All status</option><option value="paid">Paid</option><option value="partial">Partial</option><option value="pending">Pending</option></select>
-      ${isA?`<select id="af" onchange="filterStu()"><option value="">All agents</option>${allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>`:''}
-      ${isA?'<button class="btn btn-primary" onclick="openStuModal()">+ Add student</button>':''}
-      ${isA?'<button class="btn btn-primary" onclick="openBulkModal()" style="background:var(--green);border-color:var(--green)">&#11014; Bulk Upload</button>':''}
-    </div></div>
-    <div class="card"><div class="tscroll">
-      <table><thead><tr>
-        <th>#</th><th>Name</th><th>DOA</th><th>Bill no</th>
-        ${isA?'<th>Agent</th>':''}
-        <th>Total fee</th><th>Advance</th><th>Balance</th><th>Status</th><th>Referral</th><th>Notes</th>
-        ${isA?'<th>Actions</th>':''}
-      </tr></thead><tbody id="stuBody"></tbody></table>
-    </div></div>`;
+    <div class="card" style="margin-bottom:12px">
+      <div class="sr">
+        <input type="text" id="q" placeholder="Search name or bill number..." oninput="filterStu()" maxlength="80">
+        <select id="sf" onchange="filterStu()">
+          <option value="">All Status</option>
+          <option value="paid">Paid</option>
+          <option value="partial">Partial</option>
+          <option value="pending">Pending</option>
+        </select>
+        ${isA?`<select id="af" onchange="filterStu()"><option value="">All Agents</option>${allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>`:''}
+        ${isA?'<button class="btn btn-primary btn-sm" onclick="openStuModal()">Add Student</button>':''}
+        ${isA?'<button class="btn btn-outline btn-sm" onclick="openBulkModal()">Bulk Upload</button>':''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="tscroll">
+        <table><thead><tr>
+          <th>#</th><th>Name</th><th>DOA</th><th>Bill No</th>
+          ${isA?'<th>Agent</th>':''}
+          <th>Total Fee</th><th>Advance</th><th>Balance</th><th>Status</th><th>Referral</th>
+          <th>Notes${!isA?' / Query':''}</th>
+          ${isA?'<th>Actions</th>':''}
+        </tr></thead><tbody id="stuBody"></tbody></table>
+      </div>
+    </div>`;
   filterStu();
 }
 
 function filterStu(){
-  const q =clean(document.getElementById('q')?.value||'',80).toLowerCase();
+  const q=clean(document.getElementById('q')?.value||'',80).toLowerCase();
   const sf=document.getElementById('sf')?.value||'';
   const af=document.getElementById('af')?.value||'';
   const isA=currentRole==='admin';
@@ -832,39 +1209,59 @@ function filterStu(){
     (!sf||s.fee_status===sf)&&(!af||s.agent_id===af)
   );
   const tb=document.getElementById('stuBody'); if(!tb) return;
-  if(!list.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:28px">No students found</td></tr>';return;}
+  if(!list.length){
+    tb.innerHTML=`<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:28px">No students found</td></tr>`;
+    return;
+  }
   tb.innerHTML=list.map((s,i)=>{
-    const notes=(s.notes||[]).map(n=>`
-      <div class="note-box">${esc(n.note_text)}
-        ${isA?`<button class="btn btn-red btn-sm" style="padding:2px 6px;margin-left:6px" onclick="delNote('${esc(n.id)}')">×</button>`:''}
+    const notes=(s.notes||[]).filter(n=>n.note_type!=='query').map(n=>`
+      <div class="note-box">
+        <span class="note-text">${esc(n.note_text)}</span>
+        ${isA?`<button class="btn btn-red btn-xs" onclick="delNote('${esc(n.id)}')">x</button>`:''}
       </div>`).join('');
-    const ni=`<div class="note-row"><input type="text" id="ni-${esc(s.id)}" placeholder="Add note..." maxlength="300"><button class="btn btn-sm btn-amber" onclick="addNote('${esc(s.id)}','ni-${esc(s.id)}')">Add</button></div>`;
+    const queries=(s.notes||[]).filter(n=>n.note_type==='query').map(n=>`
+      <div class="query-note-box">
+        <div class="qn-header">
+          <span class="qn-label">Agent Query</span>
+          ${isA?`<button class="btn btn-red btn-xs" onclick="delNote('${esc(n.id)}')">x</button>`:''}
+        </div>
+        <div class="qn-text">${esc(n.note_text)}</div>
+        <div class="qn-meta">by ${esc(n.agent_name||'Agent')}</div>
+      </div>`).join('');
+    const noteInput=`<div class="note-row">
+      <input type="text" id="ni-${esc(s.id)}" placeholder="${isA?'Add note...':'Add query for admin...'}" maxlength="300">
+      <button class="btn btn-xs ${isA?'btn-amber':'btn-primary'}" onclick="addNote('${esc(s.id)}','ni-${esc(s.id)}','${isA?'note':'query'}')">
+        ${isA?'Note':'Query'}
+      </button>
+    </div>`;
     return `<tr>
-      <td>${i+1}</td>
+      <td style="color:var(--muted);font-size:12px">${i+1}</td>
       <td><b>${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
-      <td>${esc(s.doa||'')}</td>
+      <td style="white-space:nowrap;font-size:12px">${esc(s.doa||'')}</td>
       <td style="font-size:11px;color:var(--muted)">${esc(s.bill_number||'')}</td>
       ${isA?`<td>${esc(s.agents?.name||'—')}</td>`:''}
-      <td>₹${(s.total_fee||0).toLocaleString('en-IN')}</td>
-      <td>₹${(s.advance_paid||0).toLocaleString('en-IN')}</td>
-      <td>₹${(s.balance||0).toLocaleString('en-IN')}</td>
+      <td>Rs.${(s.total_fee||0).toLocaleString('en-IN')}</td>
+      <td>Rs.${(s.advance_paid||0).toLocaleString('en-IN')}</td>
+      <td>Rs.${(s.balance||0).toLocaleString('en-IN')}</td>
       <td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td>
-      <td>₹${(s.referral_amount||0).toLocaleString('en-IN')}<br><span style="font-size:11px;color:${s.referral_paid?'var(--green)':'var(--amber)'}">${s.referral_paid?'Paid':'Unpaid'}</span></td>
-      <td style="min-width:180px">${notes}${ni}</td>
-      ${isA?`<td><div style="display:flex;gap:4px">
-        <button class="btn btn-sm btn-amber" onclick="openStuModal('${esc(s.id)}')">Edit</button>
-        <button class="btn btn-sm btn-red" onclick="delStu('${esc(s.id)}')">Del</button>
+      <td>Rs.${(s.referral_amount||0).toLocaleString('en-IN')}<br>
+        <span style="font-size:11px;color:${s.referral_paid?'var(--g700)':'var(--amber)'}">${s.referral_paid?'Paid':'Unpaid'}</span>
+      </td>
+      <td style="min-width:190px">${notes}${queries}${noteInput}</td>
+      ${isA?`<td><div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="btn btn-xs btn-outline" onclick="openStuModal('${esc(s.id)}')">Edit</button>
+        <button class="btn btn-xs btn-red" onclick="delStu('${esc(s.id)}')">Del</button>
       </div></td>`:''}
     </tr>`;
   }).join('');
 }
 
-// ── AGENTS ──────────────────────────────────────────────────────
+// ── AGENTS ───────────────────────────────────────────────────────
 function renderAgents(){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
   document.getElementById('sec-agents').innerHTML=`
     <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
-      <button class="btn btn-primary" onclick="openAgModal()">+ Add agent</button>
+      <button class="btn btn-primary" onclick="openAgModal()">Add Agent</button>
     </div>
     <div class="ag-grid" id="agList"></div>`;
   const al=document.getElementById('agList');
@@ -874,139 +1271,152 @@ function renderAgents(){
     const aa=as.reduce((a,s)=>a+(s.advance_paid||0),0);
     const ar=as.reduce((a,s)=>a+(s.referral_amount||0),0);
     const rp=as.filter(s=>s.referral_paid).reduce((a,s)=>a+(s.referral_amount||0),0);
+    const agLedger=allLedger.filter(e=>e.agent_id===ag.id).reduce((a,e)=>a+(e.amount||0),0);
     return `<div class="ag-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
         <div class="ag-av">${esc(ag.name[0].toUpperCase())}</div>
         <div style="display:flex;gap:4px">
-          <button class="btn btn-sm btn-amber" onclick="openAgModal('${esc(ag.id)}')">Edit</button>
-          <button class="btn btn-sm btn-red" onclick="delAgent('${esc(ag.id)}')">Remove</button>
+          <button class="btn btn-xs btn-outline" onclick="openAgModal('${esc(ag.id)}')">Edit</button>
+          <button class="btn btn-xs btn-red" onclick="delAgent('${esc(ag.id)}')">Remove</button>
         </div>
       </div>
-      <div style="font-size:14px;font-weight:600">${esc(ag.name)}</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${esc(ag.email)}${ag.phone?' · '+esc(ag.phone):''}</div>
+      <div style="font-size:14px;font-weight:700">${esc(ag.name)}</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${esc(ag.email)}${ag.phone?' &middot; '+esc(ag.phone):''}</div>
       <div class="ag-stats">
         <div class="ag-stat"><div class="ag-sl">Students</div><div class="ag-sv">${as.length}</div></div>
-        <div class="ag-stat"><div class="ag-sl">Advance</div><div class="ag-sv">₹${aa.toLocaleString('en-IN')}</div></div>
-        <div class="ag-stat"><div class="ag-sl">Ref due</div><div class="ag-sv">₹${ar.toLocaleString('en-IN')}</div></div>
-        <div class="ag-stat"><div class="ag-sl">Ref paid</div><div class="ag-sv">₹${rp.toLocaleString('en-IN')}</div></div>
+        <div class="ag-stat"><div class="ag-sl">Advance</div><div class="ag-sv" style="font-size:13px">Rs.${aa.toLocaleString('en-IN')}</div></div>
+        <div class="ag-stat"><div class="ag-sl">Ref Due</div><div class="ag-sv" style="font-size:13px">Rs.${ar.toLocaleString('en-IN')}</div></div>
+        <div class="ag-stat"><div class="ag-sl">Cash In</div><div class="ag-sv" style="font-size:13px">Rs.${agLedger.toLocaleString('en-IN')}</div></div>
       </div></div>`;
   }).join('');
 }
 
-// ── REPORTS ─────────────────────────────────────────────────────
+// ── REPORTS ──────────────────────────────────────────────────────
 function renderReports(){
   const sts=myStudents();
   const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
   document.getElementById('sec-reports').innerHTML=`
-    <div class="card"><div class="card-title">Monthly enrollments</div>
-      <div class="legend"><span><span class="ldot" style="background:#2563eb"></span>Students</span></div>
-      <div class="cw" style="height:240px"><canvas id="rc1" role="img" aria-label="Monthly">Monthly</canvas></div></div>
-    <div class="card"><div class="card-title">Monthly advance collection (₹)</div>
-      <div class="legend"><span><span class="ldot" style="background:#d97706"></span>Advance ₹</span></div>
-      <div class="cw" style="height:240px"><canvas id="rc2" role="img" aria-label="Advance">Advance</canvas></div></div>`;
-  mkChart('rc1','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#2563eb',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Monthly Enrollments</div></div>
+      <div class="cw" style="height:240px"><canvas id="rc1"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><div class="card-title">Monthly Advance Collection (Rs.)</div></div>
+      <div class="cw" style="height:240px"><canvas id="rc2"></canvas></div>
+    </div>`;
+  mkChart('rc1','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#16a34a',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
   mkChart('rc2','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).reduce((a,s)=>a+(s.advance_paid||0),0)),backgroundColor:'#d97706',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
 }
 
-// ── SECURITY LOG ────────────────────────────────────────────────
+// ── SECURITY LOG ─────────────────────────────────────────────────
 async function renderSecurity(){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
   document.getElementById('sec-security').innerHTML=`
     <div class="card">
       <div class="card-hdr">
-        <div class="card-title">Login attempts — last 100</div>
+        <div class="card-title">Login Attempts (last 100)</div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm" onclick="renderSecurity()">Refresh</button>
-          <button class="btn btn-sm btn-red" onclick="clearSecLog()">Clear log</button>
+          <button class="btn btn-ghost btn-sm" onclick="renderSecurity()">Refresh</button>
+          <button class="btn btn-red btn-sm" onclick="clearSecLog()">Clear Log</button>
         </div>
       </div>
-      <div class="warn-box">🚨 Failed logins trigger a real-time alert. IP address, GPS location, and device info are captured on every failed attempt.</div>
+      <div class="warn-box">Failed logins trigger a real-time alert. IP address, GPS location, and device info are captured on every attempt.</div>
       <div style="margin-top:16px" id="logList"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
     </div>`;
-
   const {data}=await sb.rpc('get_login_attempts');
   const ll=document.getElementById('logList');
   if(!data||!data.length){ll.innerHTML='<p style="color:var(--muted);font-size:13px">No login attempts recorded yet.</p>';return;}
-
   const failed=data.filter(r=>!r.success).length;
   ll.innerHTML=`
-    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-      <div style="background:var(--red-bg);border:1px solid var(--red-light);border-radius:var(--r);padding:10px 16px;font-size:13px">
-        <span style="font-weight:600;color:var(--red)">${failed}</span> <span style="color:var(--muted)">failed attempts</span>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="background:var(--red-bg);border:1.5px solid var(--red-light);border-radius:var(--r);padding:9px 14px;font-size:13px">
+        <span style="font-weight:700;color:var(--red)">${failed}</span> <span style="color:var(--muted)">failed attempts</span>
       </div>
-      <div style="background:var(--green-bg);border:1px solid var(--green-light);border-radius:var(--r);padding:10px 16px;font-size:13px">
-        <span style="font-weight:600;color:var(--green)">${data.length-failed}</span> <span style="color:var(--muted)">successful logins</span>
+      <div style="background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:9px 14px;font-size:13px">
+        <span style="font-weight:700;color:var(--g700)">${data.length-failed}</span> <span style="color:var(--muted)">successful logins</span>
       </div>
     </div>
     <div class="tscroll">
     <table><thead><tr>
-      <th>Time</th><th>Email</th><th>Result</th>
-      <th>IP Address</th><th>Location</th><th>GPS</th><th>Device</th><th>Detail</th>
+      <th>Time</th><th>Email</th><th>Result</th><th>IP</th><th>Location</th><th>GPS</th><th>Device</th><th>Detail</th>
     </tr></thead><tbody>
       ${data.map(r=>{
         const loc=`${r.city||'?'}, ${r.region||'?'}, ${r.country||'?'}`;
-        const gps=r.latitude&&r.longitude?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--blue);font-size:11px">📍 View map</a>`:'<span style="color:var(--faint);font-size:11px">No GPS</span>';
+        const gps=r.latitude&&r.longitude
+          ?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--g700);font-size:11px">View Map</a>`
+          :'<span style="color:var(--faint);font-size:11px">None</span>';
         return `<tr style="${!r.success?'background:#fff8f8':''}">
           <td style="font-size:11px;white-space:nowrap">${new Date(r.attempted_at).toLocaleString('en-IN')}</td>
           <td style="font-size:12px">${esc(r.email||'—')}</td>
-          <td><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'✓ Success':'✗ Failed'}</span></td>
-          <td style="font-size:12px;font-family:monospace">${esc(r.ip_address||'unknown')}</td>
+          <td><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'Success':'Failed'}</span></td>
+          <td style="font-size:11px;font-family:monospace">${esc(r.ip_address||'unknown')}</td>
           <td style="font-size:11px">${esc(loc)}</td>
           <td>${gps}</td>
           <td style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${esc((r.device_browser||'').slice(0,40))}</td>
-          <td><button class="btn btn-sm" onclick='showAttemptDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>View</button></td>
+          <td><button class="btn btn-xs btn-ghost" onclick='showAttemptDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>View</button></td>
         </tr>`;
       }).join('')}
     </tbody></table></div>`;
 }
 
 function showAttemptDetail(r){
-  const gpsLink=r.latitude&&r.longitude?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--blue)">📍 Open in Google Maps</a>`:'Not available';
+  const gpsLink=r.latitude&&r.longitude
+    ?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--g700)">Open in Google Maps</a>`
+    :'Not available';
   document.getElementById('alertDetail').innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">TIME</div><div style="font-size:13px">${new Date(r.attempted_at).toLocaleString('en-IN')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">EMAIL TRIED</div><div style="font-size:13px">${esc(r.email||'—')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">RESULT</div><div><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'Success':'Failed'}</span></div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">IP ADDRESS</div><div style="font-size:13px;font-family:monospace">${esc(r.ip_address||'unknown')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">CITY</div><div style="font-size:13px">${esc(r.city||'?')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">REGION</div><div style="font-size:13px">${esc(r.region||'?')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">COUNTRY</div><div style="font-size:13px">${esc(r.country||'?')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">GPS</div><div style="font-size:13px">${gpsLink}</div></div>
-      <div style="grid-column:1/-1"><div style="font-size:11px;color:var(--muted);font-weight:600">BROWSER / DEVICE</div><div style="font-size:12px;word-break:break-all">${esc(r.device_browser||'unknown')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">OS</div><div style="font-size:13px">${esc(r.device_os||'unknown')}</div></div>
-      <div><div style="font-size:11px;color:var(--muted);font-weight:600">SCREEN</div><div style="font-size:13px">${esc(r.device_screen||'unknown')}</div></div>
-      <div style="grid-column:1/-1"><div style="font-size:11px;color:var(--muted);font-weight:600">DEVICE FINGERPRINT</div><div style="font-size:12px;font-family:monospace">${esc(r.device_finger||'—')}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Time</div><div style="font-size:13px">${new Date(r.attempted_at).toLocaleString('en-IN')}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Email</div><div style="font-size:13px">${esc(r.email||'—')}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Result</div><div><span class="pill ${r.success?'pill-success':'pill-fail'}">${r.success?'Success':'Failed'}</span></div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">IP Address</div><div style="font-size:13px;font-family:monospace">${esc(r.ip_address||'unknown')}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">City</div><div style="font-size:13px">${esc(r.city||'?')}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Country</div><div style="font-size:13px">${esc(r.country||'?')}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">GPS</div><div style="font-size:13px">${gpsLink}</div></div>
+      <div><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Screen</div><div style="font-size:13px">${esc(r.device_screen||'unknown')}</div></div>
+      <div style="grid-column:1/-1"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Browser / Device</div><div style="font-size:12px;word-break:break-all">${esc(r.device_browser||'unknown')}</div></div>
+      <div style="grid-column:1/-1"><div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Fingerprint</div><div style="font-size:12px;font-family:monospace">${esc(r.device_finger||'—')}</div></div>
     </div>`;
   openM('alertModal');
 }
 
 async function clearSecLog(){
-  if(!confirm('Clear all login attempt records?')) return;
-  await sb.rpc('clear_login_attempts');
+  // H3: enforce admin role check on client (SQL also enforces this server-side via p_admin_id)
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  if(!currentUser?.id){notify('Session error. Please sign in again.','err');return;}
+  if(!confirm('Clear ALL login attempt records? This cannot be undone.')) return;
+  if(!confirm('Are you sure? This will permanently delete all security logs.')) return;
+  // Pass admin ID — server validates this UUID is actually an admin account
+  const {data:res,error}=await sb.rpc('clear_login_attempts',{p_admin_id:currentUser.id});
+  if(error||!res?.success){notify('Could not clear log. Admin verification failed.','err');return;}
   notify('Security log cleared.','ok');
   renderSecurity();
 }
 
-// ── PROFILE ─────────────────────────────────────────────────────
+// ── PROFILE ──────────────────────────────────────────────────────
 function renderProfile(){
   document.getElementById('sec-profile').innerHTML=`
-    <div class="card">
-      <div class="card-title">My account</div>
-      <table style="font-size:13px;width:auto;margin-top:8px">
-        <tr><td style="color:var(--muted);padding:6px 20px 6px 0">Name</td><td><b>${esc(currentUser.name)}</b></td></tr>
-        <tr><td style="color:var(--muted);padding:6px 20px 6px 0">Email</td><td>${esc(currentUser.email)}</td></tr>
-        <tr><td style="color:var(--muted);padding:6px 20px 6px 0">Role</td><td><span class="pill ${currentRole==='admin'?'pill-paid':'pill-partial'}">${esc(currentRole)}</span></td></tr>
+    <div class="card" style="max-width:480px">
+      <div class="card-hdr"><div class="card-title">My Account</div></div>
+      <table style="font-size:13px;width:100%;margin-bottom:16px">
+        <tr><td style="color:var(--muted);padding:7px 20px 7px 0;font-weight:500;width:100px">Name</td><td><b>${esc(currentUser.name)}</b></td></tr>
+        <tr><td style="color:var(--muted);padding:7px 20px 7px 0;font-weight:500">Email</td><td>${esc(currentUser.email)}</td></tr>
+        <tr><td style="color:var(--muted);padding:7px 20px 7px 0;font-weight:500">Role</td><td><span class="pill ${currentRole==='admin'?'pill-admin':'pill-agent'}">${esc(currentRole)}</span></td></tr>
       </table>
-      <div style="margin-top:20px">
-        <button class="btn btn-primary" onclick="openM('pwModal')">Change my password</button>
-      </div>
+      <button class="btn btn-primary" onclick="openM('pwModal')">Change My Password</button>
     </div>`;
 }
 
+// N2: per-session cooldown on password change (5s between attempts)
+let _pwdChangeCooldown=0;
 async function savePwd(){
+  if(!currentUser?.id){notify('Session error. Please sign in again.','err');return;}
+  if(Date.now()<_pwdChangeCooldown){
+    const wait=Math.ceil((_pwdChangeCooldown-Date.now())/1000);
+    notify('Please wait '+wait+'s before trying again.','err');return;
+  }
   const cur=document.getElementById('pwCur').value;
-  const nw =document.getElementById('pwNew').value;
+  const nw=document.getElementById('pwNew').value;
   const nw2=document.getElementById('pwNew2').value;
   const errEl=document.getElementById('pwErr');
   errEl.style.display='none';
@@ -1014,11 +1424,19 @@ async function savePwd(){
   if(nw.length<8){errEl.textContent='New password must be at least 8 characters.';errEl.style.display='block';return;}
   if(nw!==nw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
   if(nw===cur){errEl.textContent='New password must be different.';errEl.style.display='block';return;}
+  // H2 fix: always use session user ID — never trust any DOM/external value
+  const safeId=String(currentUser.id||'');
+  if(!safeId){errEl.textContent='Session error. Please sign in again.';errEl.style.display='block';return;}
+  _pwdChangeCooldown=Date.now()+5000; // 5s cooldown regardless of outcome
   const curHash=await hashPwd(cur);
   const newHash=await hashPwd(nw);
-  const {data:res,error}=await sb.rpc('update_agent_password',{p_id:currentUser.id,p_current_hash:curHash,p_new_hash:newHash});
+  const {data:res,error}=await sb.rpc('update_agent_password',{
+    p_id:safeId,          // always from verified session, never from DOM
+    p_current_hash:curHash,
+    p_new_hash:newHash
+  });
   if(error||!res?.success){
-    errEl.textContent=res?.error==='wrong_password'?'Current password incorrect.':'Update failed. Try again.';
+    errEl.textContent=res?.error==='wrong_password'?'Current password is incorrect.':'Update failed. Please try again.';
     errEl.style.display='block';return;
   }
   notify('Password updated successfully!','ok');
@@ -1029,63 +1447,80 @@ async function savePwd(){
 // ── STUDENT CRUD ─────────────────────────────────────────────────
 function openStuModal(id){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  document.getElementById('stuModalTitle').textContent=id?'Edit student':'Add student';
+  document.getElementById('stuModalTitle').textContent=id?'Edit Student':'Add Student';
   document.getElementById('stuId').value=id||'';
-  document.getElementById('sAgent').innerHTML='<option value="">-- Select --</option>'+
+  document.getElementById('stuModalErr').style.display='none';
+  document.getElementById('sAgent').innerHTML='<option value="">-- Select Agent --</option>'+
     allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
   if(id){
     const s=allStudents.find(x=>x.id===id); if(!s) return;
-    document.getElementById('sName').value  =s.student_name||'';
-    document.getElementById('sDOA').value   =s.doa||'';
-    document.getElementById('sBill').value  =s.bill_number||'';
+    document.getElementById('sName').value=s.student_name||'';
+    document.getElementById('sDOA').value=s.doa||'';
+    document.getElementById('sBill').value=s.bill_number||'';
     document.getElementById('sCourse').value=s.course||'';
-    document.getElementById('sFee').value   =s.total_fee||'';
-    document.getElementById('sAdv').value   =s.advance_paid||'';
-    document.getElementById('sStat').value  =s.fee_status||'pending';
-    document.getElementById('sAgent').value =s.agent_id||'';
-    document.getElementById('sRef').value   =s.referral_amount||'';
+    document.getElementById('sFee').value=s.total_fee||'';
+    document.getElementById('sAdv').value=s.advance_paid||'';
+    document.getElementById('sStat').value=s.fee_status||'pending';
+    document.getElementById('sAgent').value=s.agent_id||'';
+    document.getElementById('sRef').value=s.referral_amount||'';
     document.getElementById('sRefPaid').value=s.referral_paid?'true':'false';
   } else {
     ['sName','sDOA','sBill','sCourse','sFee','sAdv','sRef'].forEach(i=>document.getElementById(i).value='');
-    document.getElementById('sStat').value='pending'; document.getElementById('sRefPaid').value='false';
+    document.getElementById('sStat').value='pending';
+    document.getElementById('sRefPaid').value='false';
   }
   openM('stuModal');
 }
 
 async function saveStu(){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  const id    =document.getElementById('stuId').value;
-  const name  =clean(document.getElementById('sName').value,100);
-  const doa   =clean(document.getElementById('sDOA').value,20);
-  const bill  =clean(document.getElementById('sBill').value,50);
+  const id=document.getElementById('stuId').value;
+  const name=clean(document.getElementById('sName').value,100);
+  const doa=clean(document.getElementById('sDOA').value,20);
+  const bill=clean(document.getElementById('sBill').value,50);
   const course=clean(document.getElementById('sCourse').value,50);
-  const fee   =Math.max(0,parseFloat(document.getElementById('sFee').value)||0);
-  const adv   =Math.max(0,parseFloat(document.getElementById('sAdv').value)||0);
-  const stat  =['paid','pending','partial'].includes(document.getElementById('sStat').value)?document.getElementById('sStat').value:'pending';
-  const agId  =document.getElementById('sAgent').value||null;
-  const ref   =Math.max(0,parseFloat(document.getElementById('sRef').value)||0);
-  const refP  =document.getElementById('sRefPaid').value==='true';
-  if(!name||!doa||!bill){notify('Name, date and bill number required.','err');return;}
-  if(adv>fee){notify('Advance cannot exceed total fee.','err');return;}
+  const fee=Math.max(0,parseFloat(document.getElementById('sFee').value)||0);
+  const adv=Math.max(0,parseFloat(document.getElementById('sAdv').value)||0);
+  const stat=['paid','pending','partial'].includes(document.getElementById('sStat').value)?document.getElementById('sStat').value:'pending';
+  // Fix #13: validate agent_id actually exists in our loaded agents list
+  const agIdRaw=document.getElementById('sAgent').value||null;
+  const agId=agIdRaw&&allAgents.some(a=>a.id===agIdRaw)?agIdRaw:null;
+  const ref=Math.max(0,parseFloat(document.getElementById('sRef').value)||0);
+  const refP=document.getElementById('sRefPaid').value==='true';
+  const errEl=document.getElementById('stuModalErr');
+  errEl.style.display='none';
+  if(!name||!doa||!bill){errEl.textContent='Name, date and bill number are required.';errEl.style.display='block';return;}
+  if(adv>fee){errEl.textContent='Advance cannot exceed total fee.';errEl.style.display='block';return;}
+  // Fix #10 IDOR: on update, verify this student_id exists in our loaded data (admin has all)
+  if(id&&!allStudents.some(s=>s.id===id)){notify('Invalid student record.','err');return;}
   const p={student_name:name,doa,bill_number:bill,course,total_fee:fee,advance_paid:adv,fee_status:stat,agent_id:agId,referral_amount:ref,referral_paid:refP,updated_at:new Date().toISOString()};
   const {error}=id?await sb.from('students').update(p).eq('id',id):await sb.from('students').insert([p]);
-  if(error){notify('Save failed. '+(error.code==='23505'?'Bill number already exists.':'Try again.'),'err');return;}
+  if(error){const msg=error.code==='23505'?'Bill number already exists. Please use a unique bill number.':'Could not save student. Please try again.';errEl.textContent=msg;errEl.style.display='block';return;}
   notify(id?'Student updated!':'Student added!','ok');
   closeM('stuModal'); await loadData(); filterStu();
 }
 
 async function delStu(id){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  // Fix #10 IDOR: verify the student_id exists in our data before sending delete
+  if(!id||!allStudents.some(s=>s.id===id)){notify('Invalid record.','err');return;}
   if(!confirm('Delete this student? This cannot be undone.')) return;
   const {error}=await sb.from('students').delete().eq('id',id);
-  if(error){notify('Delete failed.','err');return;}
+  if(error){notify('Could not delete student. Please try again.','err');return;}
   notify('Student deleted.','ok'); await loadData(); filterStu();
 }
 
-async function addNote(stuId,inputId){
+async function addNote(stuId,inputId,noteType){
   const inp=document.getElementById(inputId);
   const text=clean(inp.value,300); if(!text) return;
-  const {error}=await sb.from('notes').insert([{student_id:stuId,agent_id:currentAgent?.id||null,note_text:text}]);
+  const agentName=currentUser?.name||'';
+  const {error}=await sb.from('notes').insert([{
+    student_id:stuId,
+    agent_id:currentAgent?.id||null,
+    note_text:text,
+    note_type:noteType||'note',
+    agent_name:agentName,
+  }]);
   if(error){notify('Could not save note.','err');return;}
   inp.value=''; await loadData(); filterStu();
 }
@@ -1099,16 +1534,17 @@ async function delNote(id){
 // ── AGENT CRUD ───────────────────────────────────────────────────
 function openAgModal(id){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  document.getElementById('agModalTitle').textContent=id?'Edit agent':'Add agent';
+  document.getElementById('agModalTitle').textContent=id?'Edit Agent':'Add Agent';
   document.getElementById('agId').value=id||'';
   document.getElementById('agErr').style.display='none';
-  document.getElementById('agPwLabel').textContent=id?'New password (blank = keep current)':'Password * (min 8 chars)';
+  document.getElementById('agPwLabel').textContent=id?'New Password (blank = keep current)':'Password * (min 8 chars)';
   if(id){
     const ag=allAgents.find(a=>a.id===id); if(!ag) return;
-    document.getElementById('agName').value =ag.name||'';
+    document.getElementById('agName').value=ag.name||'';
     document.getElementById('agEmail').value=ag.email||'';
     document.getElementById('agPhone').value=ag.phone||'';
-    document.getElementById('agPw').value=''; document.getElementById('agPw2').value='';
+    document.getElementById('agPw').value='';
+    document.getElementById('agPw2').value='';
   } else {
     ['agName','agEmail','agPhone','agPw','agPw2'].forEach(i=>document.getElementById(i).value='');
   }
@@ -1117,26 +1553,22 @@ function openAgModal(id){
 
 async function saveAgent(){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  const id   =document.getElementById('agId').value;
-  const name =clean(document.getElementById('agName').value,60);
+  const id=document.getElementById('agId').value;
+  const name=clean(document.getElementById('agName').value,60);
   const email=clean(document.getElementById('agEmail').value,100).toLowerCase();
   const phone=clean(document.getElementById('agPhone').value,15);
-  const pw   =document.getElementById('agPw').value;
-  const pw2  =document.getElementById('agPw2').value;
+  const pw=document.getElementById('agPw').value;
+  const pw2=document.getElementById('agPw2').value;
   const errEl=document.getElementById('agErr'); errEl.style.display='none';
-  if(!name||!email){errEl.textContent='Name and email required.';errEl.style.display='block';return;}
-  if(!validEmail(email)){errEl.textContent='Enter a valid email.';errEl.style.display='block';return;}
-  if(!id&&!pw){errEl.textContent='Password required for new agents.';errEl.style.display='block';return;}
+  if(!name||!email){errEl.textContent='Name and email are required.';errEl.style.display='block';return;}
+  if(!validEmail(email)){errEl.textContent='Enter a valid email address.';errEl.style.display='block';return;}
+  if(!id&&!pw){errEl.textContent='Password is required for new agents.';errEl.style.display='block';return;}
   if(pw&&pw.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.style.display='block';return;}
   if(pw&&pw!==pw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
   const payload={
-    p_id: id||null,
-    p_name: name,
-    p_email: email,
-    p_phone: phone,
-    p_role: 'agent',
-    p_is_active: true,
-    p_password_hash: pw ? await hashPwd(pw) : null
+    p_id:id||null,p_name:name,p_email:email,p_phone:phone,
+    p_role:'agent',p_is_active:true,
+    p_password_hash:pw?await hashPwd(pw):null
   };
   const {data:res,error}=await sb.rpc('admin_save_agent',payload);
   if(error||!res?.success){
@@ -1149,359 +1581,165 @@ async function saveAgent(){
 
 async function delAgent(id){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  if(!confirm('Remove this agent?')) return;
-  const {data:res,error}=await sb.rpc('admin_delete_agent',{p_id:id});
-  if(error||!res?.success){notify('Could not remove agent.','err');return;}
-  notify('Agent removed.','ok'); await loadData(); renderAgents();
-}
-
-// ── CHART HELPER ─────────────────────────────────────────────────
-function mkChart(id,type,labels,datasets,opts){
-  if(charts[id]){charts[id].destroy();delete charts[id];}
-  const c=document.getElementById(id); if(!c) return;
-  charts[id]=new Chart(c,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,...opts}});
-}
-
-// ── UTILS ─────────────────────────────────────────────────────────
-function openM(id){document.getElementById(id).classList.add('open');}
-function closeM(id){document.getElementById(id).classList.remove('open');}
-function notify(msg,type){
-  const n=document.getElementById('notif');
-  n.className='notif '+(type==='err'?'notif-err':'notif-ok');
-  n.textContent=msg; n.style.display='block';
-  setTimeout(()=>n.style.display='none',type==='err'?5000:3000);
-}
-// ── BULK UPLOAD ───────────────────────────────────────────────────
-let bulkRows = [];
-
-function downloadTemplate(){
-  const csv = [
-    'date_of_admission,bill_number,student_name,course,total_fee,advance_paid,fee_status,referral_amount,referral_paid,agent_email',
-    '2026-01-26,VTUEEE2026B06737,Sample Student Name,B.Tech CSE,50000,10000,pending,2000,false,lakshman@mhedutech.com',
-    '2026-02-10,VTUEEE2026B06800,Another Student,MBA,40000,5000,partial,1500,false,ravi@mhedutech.com',
-  ].join('\n');
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='students_template.csv';
-  a.click();
-}
-
-document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('bulkFile').click());
-
-function handleDrop(e){
-  e.preventDefault();
-  document.getElementById('dropZone').style.borderColor='var(--border2)';
-  document.getElementById('dropZone').style.background='';
-  const file=e.dataTransfer.files[0];
-  if(file) processFile(file);
-}
-
-function handleFileSelect(input){
-  if(input.files[0]) processFile(input.files[0]);
-}
-
-async function processFile(file){
-  const name=file.name.toLowerCase();
-  if(!name.endsWith('.csv')&&!name.endsWith('.xlsx')&&!name.endsWith('.xls')){
-    alert('Please upload a CSV or Excel (.xlsx/.xls) file only.');return;
-  }
-  document.getElementById('dropZone').innerHTML=`<div style="font-size:28px">✅</div><div style="font-size:13px;font-weight:600">${esc(file.name)}</div><div style="font-size:12px;color:var(--muted);margin-top:4px">File loaded — preview below</div>`;
-
-  let rows=[];
-  if(name.endsWith('.csv')){
-    const text=await file.text();
-    rows=parseCSV(text);
+  // Fix #6: Check for students belonging to this agent before deleting
+  const orphans=allStudents.filter(s=>s.agent_id===id);
+  const ag=allAgents.find(a=>a.id===id);
+  const agName=ag?ag.name:'this agent';
+  if(orphans.length>0){
+    const choice=window.confirm(
+      `Warning: ${agName} has ${orphans.length} student(s) assigned.\n\n`+
+      `Click OK to remove the agent and unassign those students (they will show as unassigned).\n`+
+      `Click Cancel to go back.`
+    );
+    if(!choice) return;
+    // Unassign students first — set agent_id to null
+    const {error:unassignErr}=await sb.from('students').update({agent_id:null,updated_at:new Date().toISOString()}).eq('agent_id',id);
+    if(unassignErr){notify('Could not unassign students. Agent not removed.','err');return;}
   } else {
-    rows=await parseExcel(file);
+    if(!confirm(`Remove agent "${agName}"? This cannot be undone.`)) return;
   }
-  previewBulk(rows);
+  const {data:res,error}=await sb.rpc('admin_delete_agent',{p_id:id});
+  if(error||!res?.success){notify('Could not remove agent. Please try again.','err');return;}
+  notify(orphans.length>0?`Agent removed. ${orphans.length} student(s) unassigned.`:'Agent removed.','ok');
+  await loadData(); renderAgents();
 }
 
-function parseCSV(text){
-  const lines=text.trim().split('\n').map(l=>l.trim()).filter(Boolean);
-  if(!lines.length) return [];
-  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/\s+/g,'_').replace(/['"]/g,''));
-  return lines.slice(1).map(line=>{
-    const vals=line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g)||[];
-    const obj={};
-    headers.forEach((h,i)=>obj[h]=(vals[i]||'').replace(/^"|"$/g,'').trim());
-    return obj;
-  });
-}
-
-async function parseExcel(file){
-  // Load SheetJS from CDN dynamically
-  if(!window.XLSX){
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
-      s.src='https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
-      s.onload=res; s.onerror=rej;
-      document.head.appendChild(s);
-    });
-  }
-  const buf=await file.arrayBuffer();
-  const wb=XLSX.read(buf,{type:'array'});
-  const ws=wb.Sheets[wb.SheetNames[0]];
-  const data=XLSX.utils.sheet_to_json(ws,{defval:''});
-  // Normalize headers
-  return data.map(row=>{
-    const obj={};
-    Object.keys(row).forEach(k=>{
-      obj[k.trim().toLowerCase().replace(/\s+/g,'_')]=String(row[k]).trim();
-    });
-    return obj;
-  });
-}
-
-function previewBulk(rows){
-  bulkRows=[];
-  const errors=[];
-  const agentEmails=allAgents.map(a=>a.email.toLowerCase());
-  const adminEmail='mheduservice@gmail.com';
-
-  const validRows=rows.map((r,i)=>{
-    const rowNum=i+2;
-    const name=(r.student_name||r.name||'').trim();
-    const bill=(r.bill_number||r.bill||'').trim().toUpperCase();
-    const doa =(r.date_of_admission||r.doa||r.date||'').trim();
-    const course=(r.course||'').trim();
-    const fee=parseFloat(r.total_fee||0)||0;
-    const adv=parseFloat(r.advance_paid||0)||0;
-    const stat=['paid','pending','partial'].includes((r.fee_status||'pending').toLowerCase())?(r.fee_status||'pending').toLowerCase():'pending';
-    const ref=parseFloat(r.referral_amount||0)||0;
-    const refP=(r.referral_paid||'false').toLowerCase()==='true';
-    const agentEmail=(r.agent_email||'').trim().toLowerCase();
-
-    if(!name){errors.push(`Row ${rowNum}: student_name is required`);return null;}
-    if(!bill){errors.push(`Row ${rowNum}: bill_number is required`);return null;}
-    if(!doa){errors.push(`Row ${rowNum}: date_of_admission is required`);return null;}
-
-    // Parse date — support DD-MM-YYYY and YYYY-MM-DD
-    let parsedDate=doa;
-    if(/^\d{2}-\d{2}-\d{4}$/.test(doa)){
-      const [d,m,y]=doa.split('-');
-      parsedDate=`${y}-${m}-${d}`;
-    } else if(/^\d{2}\/\d{2}\/\d{4}$/.test(doa)){
-      const [d,m,y]=doa.split('/');
-      parsedDate=`${y}-${m}-${d}`;
-    }
-    if(isNaN(new Date(parsedDate).getTime())){errors.push(`Row ${rowNum}: invalid date "${doa}"`);return null;}
-
-    // Find agent
-    let agentId=null;
-    if(agentEmail && agentEmail!==adminEmail){
-      const ag=allAgents.find(a=>a.email.toLowerCase()===agentEmail);
-      if(!ag){errors.push(`Row ${rowNum}: agent email "${agentEmail}" not found`);return null;}
-      agentId=ag.id;
-    }
-
-    if(adv>fee && fee>0){errors.push(`Row ${rowNum}: advance (${adv}) > total fee (${fee})`);return null;}
-
-    return {student_name:name,bill_number:bill,doa:parsedDate,course,total_fee:fee,advance_paid:adv,fee_status:stat,referral_amount:ref,referral_paid:refP,agent_id:agentId};
-  }).filter(Boolean);
-
-  bulkRows=validRows;
-
-  // Show preview
-  const preview=document.getElementById('bulkPreview');
-  preview.style.display='block';
-  document.getElementById('bulkPreviewLabel').textContent=`✅ ${validRows.length} students ready to upload${errors.length?` — ⚠️ ${errors.length} rows skipped (see errors below)`:''}`;
-
-  const tbl=document.getElementById('bulkPreviewTable');
-  tbl.innerHTML=`<thead><tr><th>#</th><th>Name</th><th>Bill No</th><th>Date</th><th>Course</th><th>Fee</th><th>Status</th><th>Agent</th></tr></thead>
-  <tbody>${validRows.slice(0,10).map((r,i)=>`<tr>
-    <td>${i+1}</td>
-    <td>${esc(r.student_name)}</td>
-    <td style="font-size:11px">${esc(r.bill_number)}</td>
-    <td>${esc(r.doa)}</td>
-    <td>${esc(r.course||'—')}</td>
-    <td>₹${r.total_fee.toLocaleString('en-IN')}</td>
-    <td><span class="pill pill-${r.fee_status}">${r.fee_status}</span></td>
-    <td style="font-size:11px">${esc(allAgents.find(a=>a.id===r.agent_id)?.name||'—')}</td>
-  </tr>`).join('')}
-  ${validRows.length>10?`<tr><td colspan="8" style="text-align:center;color:var(--muted);font-size:11px">...and ${validRows.length-10} more rows</td></tr>`:''}
-  </tbody>`;
-
-  if(errors.length){
-    const errDiv=document.getElementById('bulkErrors');
-    errDiv.style.display='block';
-    errDiv.innerHTML='<b>⚠️ Skipped rows:</b><br>'+errors.map(e=>`• ${esc(e)}`).join('<br>');
-  }
-
-  document.getElementById('bulkUploadBtn').disabled=validRows.length===0;
-}
-
-async function startBulkUpload(){
-  if(!bulkRows.length) return;
-  const btn=document.getElementById('bulkUploadBtn');
-  btn.disabled=true;
-  document.getElementById('bulkProgress').style.display='block';
-
-  let done=0;
-  const total=bulkRows.length;
-  const BATCH=20; // insert 20 at a time
-  const failed=[];
-
-  for(let i=0;i<total;i+=BATCH){
-    const batch=bulkRows.slice(i,i+BATCH);
-    const {error}=await sb.from('students').insert(batch);
-    if(error){
-      // Try one by one to identify duplicates
-      for(const row of batch){
-        const {error:e2}=await sb.from('students').insert([row]);
-        if(e2) failed.push(`${row.bill_number}: ${e2.code==='23505'?'Bill number already exists':'Insert failed'}`);
-        else done++;
-      }
-    } else {
-      done+=batch.length;
-    }
-    const pct=Math.round((Math.min(i+BATCH,total)/total)*100);
-    document.getElementById('bulkBar').style.width=pct+'%';
-    document.getElementById('bulkProgressText').textContent=`Uploading... ${Math.min(i+BATCH,total)} of ${total}`;
-  }
-
-  document.getElementById('bulkProgressText').textContent=`✅ Done! ${done} uploaded${failed.length?`, ${failed.length} failed`:''}`;
-  document.getElementById('bulkBar').style.background=failed.length?'var(--amber)':'var(--green)';
-
-  if(failed.length){
-    const errDiv=document.getElementById('bulkErrors');
-    errDiv.style.display='block';
-    errDiv.innerHTML='<b>Failed rows:</b><br>'+failed.map(e=>`• ${esc(e)}`).join('<br>');
-  }
-
-  await loadData();
-  filterStu();
-  btn.disabled=false;
-}
-
-function closeBulkModal(){
-  closeM('bulkModal');
-  bulkRows=[];
-  document.getElementById('bulkPreview').style.display='none';
-  document.getElementById('bulkProgress').style.display='none';
-  document.getElementById('bulkErrors').style.display='none';
-  document.getElementById('bulkBar').style.width='0%';
-  document.getElementById('dropZone').innerHTML=`<div style="font-size:28px;margin-bottom:8px">📂</div><div style="font-size:13px;font-weight:600;color:var(--text)">Drag & drop CSV or Excel file here</div><div style="font-size:12px;color:var(--muted);margin-top:4px">or click to browse</div><input type="file" id="bulkFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(this)">`;
-  document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('bulkFile').click());
-  document.getElementById('bulkUploadBtn').disabled=true;
-}
-
-function openBulkModal(){ openM('bulkModal'); }
-
-window.downloadTemplate  = downloadTemplate;
-window.openBulkModal     = openBulkModal;
-window.handleDrop        = handleDrop;
-window.handleFileSelect  = handleFileSelect;
-window.startBulkUpload   = startBulkUpload;
-window.closeBulkModal    = closeBulkModal;
-
-// ── CASH LEDGER ─────────────────────────────────────────────────
+// ── CASH LEDGER ──────────────────────────────────────────────────
+let allLedger=[];
 let ledgerFilter='all';
 
-async function renderLedger(){
+function renderLedger(){
   const isA=currentRole==='admin';
-  const el=document.getElementById('sec-ledger');
-  el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--muted)">Loading ledger...</div>`;
+  const entries=myLedger();
+  const filtered=ledgerFilter==='all'?entries:entries.filter(e=>e.agent_id===ledgerFilter);
+  const total=filtered.reduce((a,e)=>a+(e.amount||0),0);
+  const cashTotal=filtered.filter(e=>e.mode==='cash').reduce((a,e)=>a+(e.amount||0),0);
+  const upiTotal=filtered.filter(e=>e.mode==='upi').reduce((a,e)=>a+(e.amount||0),0);
+  const todayStr=new Date().toISOString().slice(0,10);
+  const todayTotal=filtered.filter(e=>e.entry_date===todayStr).reduce((a,e)=>a+(e.amount||0),0);
 
-  const {data,error}=await sb.from('cash_ledger')
-    .select('*').order('entry_date',{ascending:false}).order('created_at',{ascending:false});
+  let agentFilterHtml='';
+  if(isA){
+    agentFilterHtml=`<div class="ledger-filter-row">
+      <button class="agent-filter-btn ${ledgerFilter==='all'?'active':''}" onclick="setLedgerFilter('all')">All Agents</button>
+      ${allAgents.map(a=>`<button class="agent-filter-btn ${ledgerFilter===a.id?'active':''}" onclick="setLedgerFilter('${esc(a.id)}')">${esc(a.name)}</button>`).join('')}
+    </div>`;
+  }
 
-  if(error){el.innerHTML=`<div class="card" style="color:var(--red)">Error loading ledger. Make sure you ran the latest SQL file.</div>`;return;}
-
-  const entries=data||[];
-  // Filter by agent for agent role
-  const myEntries=isA ? entries : entries.filter(e=>e.agent_id===currentUser.id);
-
-  // Agent filter buttons (admin only)
-  const agentTotals={};
-  myEntries.forEach(e=>{
-    if(!agentTotals[e.agent_id]) agentTotals[e.agent_id]={name:e.agent_name||'Unknown',total:0,count:0};
-    agentTotals[e.agent_id].total+=(e.amount||0);
-    agentTotals[e.agent_id].count++;
-  });
-
-  const filtered=ledgerFilter==='all'?myEntries:myEntries.filter(e=>e.agent_id===ledgerFilter);
-  const totalAmt=filtered.reduce((a,e)=>a+(e.amount||0),0);
-  const cashAmt=filtered.filter(e=>e.mode==='cash').reduce((a,e)=>a+(e.amount||0),0);
-  const upiAmt=filtered.filter(e=>e.mode==='upi').reduce((a,e)=>a+(e.amount||0),0);
-
-  el.innerHTML=`
-    ${isA?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div></div>
-      <button class="btn btn-primary" onclick="openLedgerModal(null)" style="background:var(--green);border-color:var(--green)">+ Add Cash Entry</button>
-    </div>`:''}
-
+  document.getElementById('sec-ledger').innerHTML=`
     <div class="ledger-summary">
       <div class="ledger-stat">
         <div class="ledger-stat-label">Total Collected</div>
-        <div class="ledger-stat-value green">₹${totalAmt.toLocaleString('en-IN')}</div>
+        <div class="ledger-stat-value">Rs.${total.toLocaleString('en-IN')}</div>
       </div>
       <div class="ledger-stat">
         <div class="ledger-stat-label">Cash</div>
-        <div class="ledger-stat-value">₹${cashAmt.toLocaleString('en-IN')}</div>
+        <div class="ledger-stat-value">Rs.${cashTotal.toLocaleString('en-IN')}</div>
       </div>
       <div class="ledger-stat">
-        <div class="ledger-stat-label">UPI / Bank</div>
-        <div class="ledger-stat-value">₹${upiAmt.toLocaleString('en-IN')}</div>
+        <div class="ledger-stat-label">UPI / Online</div>
+        <div class="ledger-stat-value">Rs.${upiTotal.toLocaleString('en-IN')}</div>
       </div>
       <div class="ledger-stat">
-        <div class="ledger-stat-label">Entries</div>
-        <div class="ledger-stat-value">${filtered.length}</div>
+        <div class="ledger-stat-label">Today</div>
+        <div class="ledger-stat-value">Rs.${todayTotal.toLocaleString('en-IN')}</div>
       </div>
     </div>
-
-    ${isA?`<div class="ledger-agent-filter">
-      <button class="ledger-agent-btn${ledgerFilter==='all'?' active':''}" onclick="setLedgerFilter('all')">All Agents</button>
-      ${Object.entries(agentTotals).map(([id,a])=>`<button class="ledger-agent-btn${ledgerFilter===id?' active':''}" onclick="setLedgerFilter('${id}')">${esc(a.name)} (₹${a.total.toLocaleString('en-IN')})</button>`).join('')}
-    </div>`:''}
-
-    <div class="ledger-body">
-      <div class="ledger-row ledger-head">
-        <span>Date</span>
-        ${isA?'<span>Agent</span>':'<span>Ref/Student</span>'}
-        <span>Amount</span>
-        <span>Mode</span>
-        <span>Note</span>
-        ${isA?'<span>Actions</span>':'<span></span>'}
-      </div>
-      ${filtered.length===0?`<div style="padding:40px;text-align:center;color:var(--muted)">No entries yet.</div>`:''}
-      ${filtered.map(e=>`
-        <div class="ledger-row">
-          <span style="font-weight:500">${new Date(e.entry_date+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span>
-          <span style="font-weight:600">${esc(isA?(e.agent_name||'—'):(e.note||'—'))}</span>
-          <span style="font-weight:700;color:var(--green)">₹${(e.amount||0).toLocaleString('en-IN')}</span>
-          <span><span class="mode-badge mode-${e.mode||'other'}">${(e.mode||'other').toUpperCase()}</span></span>
-          <span class="ledger-note" title="${esc(e.note||'')}">
-            ${e.note?`<span style="color:var(--muted)">${esc(e.note.slice(0,50))}${e.note.length>50?'…':''}</span>`:'<span style="color:var(--faint)">—</span>'}
-          </span>
-          <span style="display:flex;gap:4px">
-            ${isA?`<button class="btn btn-sm btn-amber" onclick="editLedger(${JSON.stringify(e).replace(/'/g,'&#39;')})">Edit</button>
-            <button class="btn btn-sm btn-red" onclick="delLedger('${esc(e.id)}')">Del</button>`
-            :''}
-          </span>
+    ${agentFilterHtml}
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-title">${isA?'All Cash Entries':'My Cash Entries'}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="openLedgerModal(null)">Add Entry</button>
         </div>
-      `).join('')}
+      </div>
+      <div class="ledger-list" id="ledgerList"></div>
     </div>`;
+
+  const ll=document.getElementById('ledgerList');
+  if(!filtered.length){
+    ll.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">No entries yet. Add a cash entry to get started.</div>';
+    return;
+  }
+
+  ll.innerHTML=filtered.map(e=>{
+    const dateStr=new Date(e.entry_date+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const agentInit=(e.agent_name||'?')[0].toUpperCase();
+    const hasNote=e.note&&e.note.trim();
+    const hasAdminNote=e.admin_note&&e.admin_note.trim();
+    return `<div class="ledger-item">
+      <div class="ledger-item-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="ledger-agent-av">${esc(agentInit)}</div>
+          <div>
+            <div class="ledger-agent-name">${esc(isA?(e.agent_name||'Unknown'):(e.note||'Entry'))}</div>
+            <div class="ledger-date">${dateStr} &middot; recorded by ${esc(e.recorded_by_name||'Admin')}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="mode-badge mode-${esc(e.mode||'other')}">${(e.mode||'other').toUpperCase()}</span>
+          <span class="ledger-amount">Rs.${(e.amount||0).toLocaleString('en-IN')}</span>
+          ${isA?`<div style="display:flex;gap:4px">
+            <button class="btn btn-xs btn-outline" onclick='editLedger(${JSON.stringify(e).replace(/'/g,"&#39;")})'>Edit</button>
+            <button class="btn btn-xs btn-red" onclick="delLedger('${esc(e.id)}')">Del</button>
+          </div>`:`<button class="btn btn-xs btn-amber" onclick="openQueryModal('${esc(e.id)}')">Query</button>`}
+        </div>
+      </div>
+      ${hasNote?`<div class="ledger-note-text">Note: ${esc(e.note)}</div>`:''}
+      ${hasAdminNote?`<div class="ledger-admin-note">
+        <div class="admin-note-label">Admin Note</div>
+        <div>${esc(e.admin_note)}</div>
+      </div>`:''}
+      ${isA&&e.agent_query?`<div class="query-note-box">
+        <div class="qn-header"><span class="qn-label">Agent Query</span></div>
+        <div class="qn-text">${esc(e.agent_query)}</div>
+      </div>`:''}
+    </div>`;
+  }).join('')+`<div class="ledger-total-bar">
+    <span>Total shown</span>
+    <span style="color:var(--g700)">Rs.${total.toLocaleString('en-IN')}</span>
+  </div>`;
 }
 
 function setLedgerFilter(id){
   ledgerFilter=id;
   renderLedger();
 }
-window.setLedgerFilter=setLedgerFilter;
 
 function openLedgerModal(entry){
+  const isA=currentRole==='admin';
   document.getElementById('ledgerId').value=entry?entry.id:'';
   document.getElementById('ledgerModalTitle').textContent=entry?'Edit Cash Entry':'Add Cash Entry';
   document.getElementById('lDate').value=entry?entry.entry_date:new Date().toISOString().slice(0,10);
   document.getElementById('lAmount').value=entry?entry.amount:'';
-  document.getElementById('lMode').value=entry?entry.mode:'cash';
-  document.getElementById('lNote').value=entry?entry.note||'':'';
+  document.getElementById('lMode').value=entry?(entry.mode||'cash'):'cash';
+  document.getElementById('lNote').value=entry?(entry.note||''):'';
   document.getElementById('ledgerErr').style.display='none';
-  // Populate agent dropdown
+
+  // Admin note field — only show for admin
+  const anWrap=document.getElementById('lAdminNoteWrap');
+  const anInput=document.getElementById('lAdminNote');
+  if(isA){
+    anWrap.style.display='block';
+    anInput.value=entry?(entry.admin_note||''):'';
+  } else {
+    anWrap.style.display='none';
+    anInput.value='';
+  }
+
+  // Agent dropdown — only for admin
   const sel=document.getElementById('lAgent');
   sel.innerHTML=allAgents.map(a=>`<option value="${esc(a.id)}" data-name="${esc(a.name)}">${esc(a.name)}</option>`).join('');
-  if(entry) sel.value=entry.agent_id;
+  if(entry&&entry.agent_id){
+    sel.value=entry.agent_id;
+  } else if(!isA&&currentAgent){
+    sel.innerHTML=`<option value="${esc(currentAgent.id)}">${esc(currentAgent.name)}</option>`;
+    sel.value=currentAgent.id;
+  }
+
+  // Disable agent select for non-admin
+  sel.disabled=!isA;
+
   openM('ledgerModal');
 }
 
@@ -1509,20 +1747,25 @@ async function saveLedger(){
   const id=document.getElementById('ledgerId').value;
   const agSel=document.getElementById('lAgent');
   const agent_id=agSel.value;
-  const agent_name=agSel.options[agSel.selectedIndex]?.text||'';
+  const agent_name=agSel.options[agSel.selectedIndex]?.dataset?.name||agSel.options[agSel.selectedIndex]?.text||'';
   const entry_date=document.getElementById('lDate').value;
   const amount=parseFloat(document.getElementById('lAmount').value)||0;
   const mode=document.getElementById('lMode').value;
-  const note=document.getElementById('lNote').value.trim();
+  const note=clean(document.getElementById('lNote').value,300);
+  const admin_note=clean(document.getElementById('lAdminNote').value,300);
   const errEl=document.getElementById('ledgerErr');
   errEl.style.display='none';
-
   if(!entry_date){errEl.textContent='Date is required.';errEl.style.display='block';return;}
   if(!amount||amount<=0){errEl.textContent='Enter a valid amount.';errEl.style.display='block';return;}
   if(!agent_id){errEl.textContent='Select an agent.';errEl.style.display='block';return;}
 
-  const payload={agent_id,agent_name,entry_date,amount,mode,note,
-    recorded_by:currentUser.id, recorded_by_name:currentUser.name};
+  const payload={
+    agent_id,agent_name,entry_date,amount,mode,note,
+    admin_note:currentRole==='admin'?admin_note:undefined,
+    recorded_by:currentUser.id,recorded_by_name:currentUser.name
+  };
+  // Remove undefined keys
+  Object.keys(payload).forEach(k=>payload[k]===undefined&&delete payload[k]);
 
   let error;
   if(id){
@@ -1533,14 +1776,21 @@ async function saveLedger(){
   if(error){errEl.textContent='Save failed. Try again.';errEl.style.display='block';return;}
   closeM('ledgerModal');
   notify(id?'Entry updated.':'Entry added.','ok');
+  const r=await sb.from('cash_ledger').select('*').order('entry_date',{ascending:false});
+  allLedger=r.data||[];
   renderLedger();
 }
 
 async function delLedger(id){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  // Fix #10: verify ID exists in loaded data before sending delete
+  if(!id||!allLedger.some(e=>e.id===id)){notify('Invalid record.','err');return;}
   if(!confirm('Delete this cash entry?')) return;
   const {error}=await sb.from('cash_ledger').delete().eq('id',id);
-  if(error){notify('Delete failed.','err');return;}
+  if(error){notify('Could not delete entry. Please try again.','err');return;}
   notify('Entry deleted.','ok');
+  const r=await sb.from('cash_ledger').select('*').order('entry_date',{ascending:false});
+  allLedger=r.data||[];
   renderLedger();
 }
 
@@ -1548,37 +1798,231 @@ function editLedger(entry){
   openLedgerModal(entry);
 }
 
-window.openLedgerModal = openLedgerModal;
-window.saveLedger      = saveLedger;
-window.delLedger       = delLedger;
-window.editLedger      = editLedger;
+// ── QUERY NOTE (Agent queries on ledger entries) ──────────────────
+function openQueryModal(ledgerId){
+  document.getElementById('queryLedgerId').value=ledgerId;
+  document.getElementById('queryText').value='';
+  document.getElementById('queryErr').style.display='none';
+  openM('queryModal');
+}
+
+async function saveQueryNote(){
+  const ledgerId=document.getElementById('queryLedgerId').value;
+  const text=clean(document.getElementById('queryText').value,500);
+  const errEl=document.getElementById('queryErr');
+  errEl.style.display='none';
+  if(!text){errEl.textContent='Please enter your query.';errEl.style.display='block';return;}
+  const {error}=await sb.from('cash_ledger').update({
+    agent_query:text,
+    agent_query_by:currentUser.name,
+    agent_query_at:new Date().toISOString()
+  }).eq('id',ledgerId);
+  if(error){errEl.textContent='Could not save query. Try again.';errEl.style.display='block';return;}
+  notify('Query submitted. Admin will review it.','ok');
+  closeM('queryModal');
+  const r=await sb.from('cash_ledger').select('*').order('entry_date',{ascending:false});
+  allLedger=r.data||[];
+  renderLedger();
+}
+window.openQueryModal=openQueryModal;
+window.saveQueryNote=saveQueryNote;
+
+// ── CHART HELPER ─────────────────────────────────────────────────
+function mkChart(id,type,labels,datasets,opts){
+  if(charts[id]){charts[id].destroy();delete charts[id];}
+  const c=document.getElementById(id); if(!c) return;
+  charts[id]=new Chart(c,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,...opts}});
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+function notify(msg,type){
+  const n=document.getElementById('notif');
+  n.className='notif '+(type==='err'?'notif-err':'notif-ok');
+  n.textContent=msg;
+  n.style.display='flex';
+  n.classList.add('show');
+  setTimeout(()=>{n.style.display='none';n.classList.remove('show');},type==='err'?5000:3000);
+}
+
+// ── BULK UPLOAD ───────────────────────────────────────────────────
+let bulkRows=[];
+function downloadTemplate(){
+  const csv=['date_of_admission,bill_number,student_name,course,total_fee,advance_paid,fee_status,referral_amount,referral_paid,agent_email',
+    '2026-01-26,VTU2026B001,Sample Student,B.Tech CSE,50000,10000,pending,2000,false,lakshman@mhedutech.com',
+  ].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='students_template.csv'; a.click();
+}
+document.getElementById('dropZone').addEventListener('click',()=>document.getElementById('bulkFile').click());
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor='var(--border2)';
+  document.getElementById('dropZone').style.background='';
+  const file=e.dataTransfer.files[0];
+  if(file) processFile(file);
+}
+function handleFileSelect(input){if(input.files[0]) processFile(input.files[0]);}
+function processFile(file){
+  const name=file.name.toLowerCase();
+  if(name.endsWith('.csv')){
+    const reader=new FileReader();
+    reader.onload=e=>parseCSV(e.target.result);
+    reader.readAsText(file);
+  } else if(name.endsWith('.xlsx')||name.endsWith('.xls')){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const csv=XLSX.utils.sheet_to_csv(ws);
+        parseCSV(csv);
+      }catch(err){notify('Could not read Excel file.','err');}
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    notify('Please upload a CSV or Excel file.','err');
+  }
+}
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  if(lines.length<2){notify('File is empty or has no data rows.','err');return;}
+  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z_]/g,''));
+  const required=['date_of_admission','bill_number','student_name'];
+  const missing=required.filter(r=>!headers.includes(r));
+  if(missing.length){notify('Missing required columns: '+missing.join(', '),'err');return;}
+  const rows=[];const errors=[];
+  for(let i=1;i<lines.length;i++){
+    const vals=lines[i].split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+    const row={};
+    headers.forEach((h,j)=>row[h]=vals[j]||'');
+    if(!row.student_name||!row.bill_number||!row.date_of_admission){
+      errors.push(`Row ${i+1}: Missing required fields`);continue;
+    }
+    // Fix #15: only match role==='agent', never assign to admin accounts
+    const ag=allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===(row.agent_email||'').toLowerCase());
+    // L1: WHITELIST — only these exact columns can be set via bulk upload
+    // Any extra CSV columns (e.g. is_admin, verified) are silently ignored
+    rows.push({
+      student_name: clean(row.student_name,100),
+      doa:          row.date_of_admission,
+      bill_number:  clean(row.bill_number,50),
+      course:       clean(row.course||'',50),
+      total_fee:    Math.max(0,parseFloat(row.total_fee)||0),
+      advance_paid: Math.max(0,parseFloat(row.advance_paid)||0),
+      fee_status:   ['paid','pending','partial'].includes(row.fee_status)?row.fee_status:'pending',
+      referral_amount: Math.max(0,parseFloat(row.referral_amount)||0),
+      referral_paid:   row.referral_paid==='true',
+      agent_id:        ag?ag.id:null,
+      // Explicitly NOT included: id, created_at, updated_at, balance (computed), any other columns
+    });
+  }
+  bulkRows=rows;
+  const preview=document.getElementById('bulkPreview');
+  const label=document.getElementById('bulkPreviewLabel');
+  const table=document.getElementById('bulkPreviewTable');
+  const errs=document.getElementById('bulkErrors');
+  preview.style.display='block';
+  label.textContent=`${rows.length} valid rows found${errors.length?' ('+errors.length+' skipped)':''}`;
+  table.innerHTML=`<thead><tr><th>#</th><th>Name</th><th>Bill No</th><th>DOA</th><th>Course</th><th>Fee</th><th>Status</th></tr></thead><tbody>
+    ${rows.slice(0,10).map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.student_name)}</td><td>${esc(r.bill_number)}</td><td>${esc(r.doa)}</td><td>${esc(r.course)}</td><td>Rs.${r.total_fee.toLocaleString('en-IN')}</td><td>${esc(r.fee_status)}</td></tr>`).join('')}
+    ${rows.length>10?`<tr><td colspan="7" style="text-align:center;color:var(--muted)">...and ${rows.length-10} more</td></tr>`:''}</tbody>`;
+  if(errors.length){errs.style.display='block';errs.innerHTML=errors.slice(0,10).map(e=>`<div>${e}</div>`).join('');}
+  else {errs.style.display='none';}
+  document.getElementById('bulkUploadBtn').disabled=rows.length===0;
+}
+async function startBulkUpload(){
+  if(!bulkRows.length) return;
+  const btn=document.getElementById('bulkUploadBtn');
+  btn.disabled=true;
+  const prog=document.getElementById('bulkProgress');
+  const bar=document.getElementById('bulkBar');
+  const txt=document.getElementById('bulkProgressText');
+  prog.style.display='block';
+  txt.textContent='Preparing upload...';
+
+  // Fix #8: batch insert in groups of 20 rows to reduce partial-data risk
+  // Each batch is atomic — if a batch fails, rows in that batch are rolled back
+  const BATCH=20;
+  let done=0,failed=0,failedRows=[];
+
+  for(let i=0;i<bulkRows.length;i+=BATCH){
+    const batch=bulkRows.slice(i,i+BATCH);
+    const {error}=await sb.from('students').insert(batch);
+    if(error){
+      // Batch failed — fall back to row-by-row for this batch to find bad rows
+      for(const row of batch){
+        const {error:rowErr}=await sb.from('students').insert([row]);
+        if(rowErr){failed++;failedRows.push(row.student_name||row.bill_number||'unknown');}
+        else done++;
+        bar.style.width=Math.round(((done+failed)/bulkRows.length)*100)+'%';
+        txt.textContent=`Uploading... ${done+failed} / ${bulkRows.length}`;
+      }
+    } else {
+      done+=batch.length;
+      bar.style.width=Math.round(((done+failed)/bulkRows.length)*100)+'%';
+      txt.textContent=`Uploading... ${done+failed} / ${bulkRows.length}`;
+    }
+  }
+
+  bar.style.width='100%';
+  if(failed===0){
+    txt.textContent=`All ${done} students uploaded successfully!`;
+  } else if(done===0){
+    txt.textContent=`Upload failed — 0 added, ${failed} errors. Check your data.`;
+    bar.style.background='var(--red)';
+  } else {
+    // Partial upload — clearly warn admin
+    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial upload: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedRows.slice(0,5).map(r=>String(r).slice(0,30)).join(', ')}${failedRows.length>5?'...':''}</span>`;
+  }
+  await loadData();
+  setTimeout(()=>closeBulkModal(),failed>0?4000:2000);
+}
+function openBulkModal(){
+  bulkRows=[];
+  document.getElementById('bulkPreview').style.display='none';
+  document.getElementById('bulkProgress').style.display='none';
+  document.getElementById('bulkUploadBtn').disabled=true;
+  document.getElementById('bulkFile').value='';
+  openM('bulkModal');
+}
+function closeBulkModal(){closeM('bulkModal');}
 
 // ── WINDOW ASSIGNMENTS ──────────────────────────────────────────
-window.doLogin      = doLogin;
-window.doLogout     = doLogout;
-window.showSec      = showSec;
-window.openM        = openM;
-window.closeM       = closeM;
-window.openStuModal = openStuModal;
-window.saveStu      = saveStu;
-window.delStu       = delStu;
-window.addNote      = addNote;
-window.delNote      = delNote;
-window.openAgModal  = openAgModal;
-window.saveAgent    = saveAgent;
-window.delAgent     = delAgent;
-window.savePwd      = savePwd;
-window.filterStu    = filterStu;
-window.renderSecurity    = renderSecurity;
-window.clearSecLog       = clearSecLog;
-window.showAttemptDetail = showAttemptDetail;
-window.openLedgerModal   = openLedgerModal;
-window.saveLedger        = saveLedger;
-window.delLedger         = delLedger;
-window.editLedger        = editLedger;
+window.doLogin=doLogin;
+window.doLogout=doLogout;
+window.showSec=showSec;
+window.openM=openM;
+window.closeM=closeM;
+window.openStuModal=openStuModal;
+window.saveStu=saveStu;
+window.delStu=delStu;
+window.addNote=addNote;
+window.delNote=delNote;
+window.openAgModal=openAgModal;
+window.saveAgent=saveAgent;
+window.delAgent=delAgent;
+window.savePwd=savePwd;
+window.filterStu=filterStu;
+window.renderSecurity=renderSecurity;
+window.clearSecLog=clearSecLog;
+window.showAttemptDetail=showAttemptDetail;
+window.openLedgerModal=openLedgerModal;
+window.saveLedger=saveLedger;
+window.delLedger=delLedger;
+window.editLedger=editLedger;
+window.setLedgerFilter=setLedgerFilter;
+window.downloadTemplate=downloadTemplate;
+window.handleDrop=handleDrop;
+window.handleFileSelect=handleFileSelect;
+window.openBulkModal=openBulkModal;
+window.closeBulkModal=closeBulkModal;
+window.startBulkUpload=startBulkUpload;
 
-// ── AUTO RESTORE SESSION ON REFRESH ─────────────────────────────
-if(loadSession()){ startApp(); }
+// ── AUTO RESTORE SESSION ────────────────────────────────────────
+if(loadSession()){startApp();}
 
 })();
 </script>
