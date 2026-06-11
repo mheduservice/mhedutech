@@ -273,6 +273,49 @@ tr:hover td{background:var(--g50)}
 #dropZone{border:2px dashed var(--border2);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px}
 #dropZone:hover{border-color:var(--g600);background:var(--g50)}
 
+/* ── AGENT COLOUR PALETTE (unique per agent index) ─── */
+:root{
+  --ac0-bg:#dcfce7;--ac0-text:#166534;--ac0-border:#86efac;--ac0-dark:#16a34a;
+  --ac1-bg:#dbeafe;--ac1-text:#1e40af;--ac1-border:#93c5fd;--ac1-dark:#2563eb;
+  --ac2-bg:#ede9fe;--ac2-text:#5b21b6;--ac2-border:#c4b5fd;--ac2-dark:#7c3aed;
+  --ac3-bg:#fef9c3;--ac3-text:#854d0e;--ac3-border:#fde047;--ac3-dark:#d97706;
+  --ac4-bg:#fce7f3;--ac4-text:#9d174d;--ac4-border:#f9a8d4;--ac4-dark:#db2777;
+  --ac5-bg:#ccfbf1;--ac5-text:#065f46;--ac5-border:#5eead4;--ac5-dark:#0d9488;
+}
+.ac0{background:var(--ac0-bg);color:var(--ac0-text);border-color:var(--ac0-border)}
+.ac1{background:var(--ac1-bg);color:var(--ac1-text);border-color:var(--ac1-border)}
+.ac2{background:var(--ac2-bg);color:var(--ac2-text);border-color:var(--ac2-border)}
+.ac3{background:var(--ac3-bg);color:var(--ac3-text);border-color:var(--ac3-border)}
+.ac4{background:var(--ac4-bg);color:var(--ac4-text);border-color:var(--ac4-border)}
+.ac5{background:var(--ac5-bg);color:var(--ac5-text);border-color:var(--ac5-border)}
+
+/* ── TOGGLE SWITCH ──────────────────────────────── */
+.toggle-wrap{display:flex;align-items:center;gap:8px;cursor:pointer}
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:#d1d5db;border-radius:20px;transition:.25s;cursor:pointer}
+.toggle-slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked+.toggle-slider{background:var(--g600)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px)}
+.toggle-label{font-size:12px;font-weight:600;color:var(--muted)}
+
+/* ── SEM FEE PILLS ──────────────────────────────── */
+.pill-sem-paid{background:#dcfce7;color:#166534}
+.pill-sem-token{background:#fef9c3;color:#854d0e}
+.pill-sem-none{background:#f1f5f9;color:#475569}
+
+/* ── LEDGER AGENT NOTE (agent adds note on entry) ── */
+.ledger-agent-note{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:var(--r);padding:7px 10px;font-size:12px;margin-top:6px;color:#1e40af}
+.agent-note-label{font-size:10px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.ledger-admin-note-alert{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:var(--r);padding:8px 12px;font-size:12px;margin-top:6px;color:#991b1b;font-weight:600}
+.admin-alert-label{font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+
+/* ── SORT BAR ───────────────────────────────────── */
+.sort-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.sort-btn{padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:#fff;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif;transition:.15s}
+.sort-btn:hover{border-color:var(--g600);color:var(--g700);background:var(--g50)}
+.sort-btn.active{background:var(--g600);color:#fff;border-color:var(--g600)}
+
 /* ── MOBILE HAMBURGER AREA ────────────────────── */
 @media(max-width:768px){
   .hamburger{display:flex}
@@ -477,18 +520,24 @@ tr:hover td{background:var(--g50)}
       <div class="fg"><label>Course</label><input type="text" id="sCourse" maxlength="50" placeholder="e.g. B.Tech CSE"></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Total Fee (Rs.)</label><input type="number" id="sFee" min="0" max="9999999" placeholder="0"></div>
-      <div class="fg"><label>Advance Paid (Rs.)</label><input type="number" id="sAdv" min="0" max="9999999" placeholder="0"></div>
+      <div class="fg"><label>Student Mobile</label><input type="tel" id="sStudentMobile" maxlength="15" placeholder="10-digit mobile"></div>
+      <div class="fg"><label>Father Mobile</label><input type="tel" id="sFatherMobile" maxlength="15" placeholder="10-digit mobile"></div>
     </div>
     <div class="fr">
+      <div class="fg"><label>Advance Paid (Rs.)</label><input type="number" id="sAdv" min="0" max="9999999" placeholder="0"></div>
       <div class="fg"><label>Fee Status</label>
         <select id="sStat"><option value="pending">Pending</option><option value="partial">Partial</option><option value="paid">Paid</option></select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Sem Fee Status</label>
+        <select id="sSemFee"><option value="">Not Set</option><option value="paid">Paid</option><option value="token">Token Only Paid</option></select>
       </div>
       <div class="fg"><label>Assign to Agent</label><select id="sAgent"><option value="">-- Select Agent --</option></select></div>
     </div>
     <div class="fr">
       <div class="fg"><label>Referral Amount (Rs.)</label><input type="number" id="sRef" min="0" max="999999" placeholder="0"></div>
-      <div class="fg"><label>Referral Paid?</label><select id="sRefPaid"><option value="false">No</option><option value="true">Yes</option></select></div>
+      <div class="fg"><label>Total Fee (Rs.)</label><input type="number" id="sFee" min="0" max="9999999" placeholder="0"></div>
     </div>
     <div id="stuModalErr" class="auth-err" style="margin-top:6px"></div>
     <div class="modal-foot">
@@ -634,6 +683,40 @@ tr:hover td{background:var(--g50)}
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('queryModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveQueryNote()">Submit Query</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ AGENT LEDGER NOTE MODAL ═══ -->
+<div class="mbg" id="agentNoteModal">
+  <div class="modal">
+    <div class="modal-title">Add Note on Entry</div>
+    <div class="modal-sub">Add your note about this transaction (visible to admin)</div>
+    <input type="hidden" id="agentNoteLedgerId">
+    <div class="fg"><label>Your Note *</label>
+      <textarea id="agentNoteText" maxlength="300" rows="3" placeholder="e.g. 10k taken by me, 10k given to company..."></textarea>
+    </div>
+    <div id="agentNoteErr" class="auth-err"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('agentNoteModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAgentLedgerNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADMIN LEDGER NOTE MODAL ═══ -->
+<div class="mbg" id="adminNoteModal">
+  <div class="modal">
+    <div class="modal-title">Add Admin Note</div>
+    <div class="modal-sub">This message will be shown to the agent on this entry</div>
+    <input type="hidden" id="adminNoteLedgerId">
+    <div class="fg"><label>Admin Note / Message *</label>
+      <textarea id="adminNoteText" maxlength="300" rows="3" placeholder="e.g. Not approved. Please clarify amount..."></textarea>
+    </div>
+    <div id="adminNoteErr" class="auth-err"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeM('adminNoteModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAdminLedgerNote()">Save Note</button>
     </div>
   </div>
 </div>
@@ -1167,13 +1250,31 @@ function renderDash(){
   </tbody></table>`;
 }
 
+// ── AGENT COLOUR HELPER ──────────────────────────────────────────
+const AGENT_COLOURS=['ac0','ac1','ac2','ac3','ac4','ac5'];
+let _agentColourMap={};
+function agentColour(agentId){
+  if(!agentId) return 'ac0';
+  if(!_agentColourMap[agentId]){
+    const keys=Object.keys(_agentColourMap);
+    _agentColourMap[agentId]=AGENT_COLOURS[keys.length%AGENT_COLOURS.length];
+  }
+  return _agentColourMap[agentId];
+}
+function semFeePill(v){
+  if(v==='paid') return '<span class="pill pill-sem-paid">Sem Paid</span>';
+  if(v==='token') return '<span class="pill pill-sem-token">Token Paid</span>';
+  return '<span class="pill pill-sem-none">Sem —</span>';
+}
+
 // ── STUDENTS ─────────────────────────────────────────────────────
+let stuSort='doa_desc';
 function renderStudents(){
   const isA=currentRole==='admin';
   document.getElementById('sec-students').innerHTML=`
     <div class="card" style="margin-bottom:12px">
       <div class="sr">
-        <input type="text" id="q" placeholder="Search name or bill number..." oninput="filterStu()" maxlength="80">
+        <input type="text" id="q" placeholder="Search name, mobile or bill no..." oninput="filterStu()" maxlength="80">
         <select id="sf" onchange="filterStu()">
           <option value="">All Status</option>
           <option value="paid">Paid</option>
@@ -1184,36 +1285,59 @@ function renderStudents(){
         ${isA?'<button class="btn btn-primary btn-sm" onclick="openStuModal()">Add Student</button>':''}
         ${isA?'<button class="btn btn-outline btn-sm" onclick="openBulkModal()">Bulk Upload</button>':''}
       </div>
+      <div class="sort-bar" style="margin-top:10px">
+        <span style="font-size:11px;font-weight:600;color:var(--muted)">Sort:</span>
+        <button class="sort-btn ${stuSort==='doa_desc'?'active':''}" onclick="setStuSort('doa_desc')">Newest First</button>
+        <button class="sort-btn ${stuSort==='doa_asc'?'active':''}" onclick="setStuSort('doa_asc')">Oldest First</button>
+        <button class="sort-btn ${stuSort==='name'?'active':''}" onclick="setStuSort('name')">Name A-Z</button>
+        <button class="sort-btn ${stuSort==='status'?'active':''}" onclick="setStuSort('status')">By Status</button>
+        <button class="sort-btn ${stuSort==='sem'?'active':''}" onclick="setStuSort('sem')">Sem Fee</button>
+      </div>
     </div>
     <div class="card">
       <div class="tscroll">
         <table><thead><tr>
           <th>#</th><th>Name</th><th>DOA</th><th>Bill No</th>
           ${isA?'<th>Agent</th>':''}
-          <th>Total Fee</th><th>Advance</th><th>Balance</th><th>Status</th><th>Referral</th>
+          <th>Student Mob</th><th>Father Mob</th>
+          <th>Advance</th><th>Fee Status</th><th>Sem Fee</th>
           <th>Notes${!isA?' / Query':''}</th>
-          ${isA?'<th>Actions</th>':''}
+          ${isA?'<th>Sem Toggle</th><th>Actions</th>':''}
         </tr></thead><tbody id="stuBody"></tbody></table>
       </div>
     </div>`;
   filterStu();
 }
 
+function setStuSort(s){stuSort=s;filterStu();}
+window.setStuSort=setStuSort;
+
 function filterStu(){
   const q=clean(document.getElementById('q')?.value||'',80).toLowerCase();
   const sf=document.getElementById('sf')?.value||'';
   const af=document.getElementById('af')?.value||'';
   const isA=currentRole==='admin';
-  const list=myStudents().filter(s=>
-    (!q||s.student_name.toLowerCase().includes(q)||(s.bill_number||'').toLowerCase().includes(q))&&
+  let list=myStudents().filter(s=>
+    (!q||s.student_name.toLowerCase().includes(q)||
+      (s.bill_number||'').toLowerCase().includes(q)||
+      (s.student_mobile||'').includes(q)||
+      (s.father_mobile||'').includes(q))&&
     (!sf||s.fee_status===sf)&&(!af||s.agent_id===af)
   );
+  // Sort
+  if(stuSort==='doa_desc') list=[...list].sort((a,b)=>(b.doa||'').localeCompare(a.doa||''));
+  else if(stuSort==='doa_asc') list=[...list].sort((a,b)=>(a.doa||'').localeCompare(b.doa||''));
+  else if(stuSort==='name') list=[...list].sort((a,b)=>a.student_name.localeCompare(b.student_name));
+  else if(stuSort==='status') list=[...list].sort((a,b)=>a.fee_status.localeCompare(b.fee_status));
+  else if(stuSort==='sem') list=[...list].sort((a,b)=>(a.sem_fee_status||'').localeCompare(b.sem_fee_status||''));
+
   const tb=document.getElementById('stuBody'); if(!tb) return;
   if(!list.length){
-    tb.innerHTML=`<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:28px">No students found</td></tr>`;
+    tb.innerHTML=`<tr><td colspan="14" style="text-align:center;color:var(--muted);padding:28px">No students found</td></tr>`;
     return;
   }
   tb.innerHTML=list.map((s,i)=>{
+    const ac=agentColour(s.agent_id);
     const notes=(s.notes||[]).filter(n=>n.note_type!=='query').map(n=>`
       <div class="note-box">
         <span class="note-text">${esc(n.note_text)}</span>
@@ -1221,34 +1345,38 @@ function filterStu(){
       </div>`).join('');
     const queries=(s.notes||[]).filter(n=>n.note_type==='query').map(n=>`
       <div class="query-note-box">
-        <div class="qn-header">
-          <span class="qn-label">Agent Query</span>
-          ${isA?`<button class="btn btn-red btn-xs" onclick="delNote('${esc(n.id)}')">x</button>`:''}
-        </div>
+        <div class="qn-header"><span class="qn-label">Agent Query</span>${isA?`<button class="btn btn-red btn-xs" onclick="delNote('${esc(n.id)}')">x</button>`:''}</div>
         <div class="qn-text">${esc(n.note_text)}</div>
         <div class="qn-meta">by ${esc(n.agent_name||'Agent')}</div>
       </div>`).join('');
     const noteInput=`<div class="note-row">
-      <input type="text" id="ni-${esc(s.id)}" placeholder="${isA?'Add note...':'Add query for admin...'}" maxlength="300">
-      <button class="btn btn-xs ${isA?'btn-amber':'btn-primary'}" onclick="addNote('${esc(s.id)}','ni-${esc(s.id)}','${isA?'note':'query'}')">
-        ${isA?'Note':'Query'}
-      </button>
+      <input type="text" id="ni-${esc(s.id)}" placeholder="${isA?'Add note...':'Write query for admin...'}" maxlength="300">
+      <button class="btn btn-xs ${isA?'btn-amber':'btn-primary'}" onclick="addNote('${esc(s.id)}','ni-${esc(s.id)}','${isA?'note':'query'}')">${isA?'Note':'Query'}</button>
     </div>`;
+    const semChecked=s.sem_fee_status==='paid'?'checked':'';
+    const agentName=isA?`<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid" class="${ac}">${esc(s.agents?.name||'—')}</span></td>`:'';
     return `<tr>
       <td style="color:var(--muted);font-size:12px">${i+1}</td>
       <td><b>${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
       <td style="white-space:nowrap;font-size:12px">${esc(s.doa||'')}</td>
       <td style="font-size:11px;color:var(--muted)">${esc(s.bill_number||'')}</td>
-      ${isA?`<td>${esc(s.agents?.name||'—')}</td>`:''}
-      <td>Rs.${(s.total_fee||0).toLocaleString('en-IN')}</td>
-      <td>Rs.${(s.advance_paid||0).toLocaleString('en-IN')}</td>
-      <td>Rs.${(s.balance||0).toLocaleString('en-IN')}</td>
+      ${agentName}
+      <td style="font-size:12px">${esc(s.student_mobile||'—')}</td>
+      <td style="font-size:12px">${esc(s.father_mobile||'—')}</td>
+      <td style="font-weight:600">Rs.${(s.advance_paid||0).toLocaleString('en-IN')}</td>
       <td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td>
-      <td>Rs.${(s.referral_amount||0).toLocaleString('en-IN')}<br>
-        <span style="font-size:11px;color:${s.referral_paid?'var(--g700)':'var(--amber)'}">${s.referral_paid?'Paid':'Unpaid'}</span>
+      <td>${semFeePill(s.sem_fee_status)}</td>
+      <td style="min-width:200px">${notes}${queries}${noteInput}</td>
+      ${isA?`<td>
+        <label class="toggle-wrap" title="Toggle sem fee paid">
+          <span class="toggle">
+            <input type="checkbox" ${semChecked} onchange="toggleSemFee('${esc(s.id)}',this.checked)">
+            <span class="toggle-slider"></span>
+          </span>
+          <span class="toggle-label" id="semLbl-${esc(s.id)}">${s.sem_fee_status==='paid'?'Paid':'Off'}</span>
+        </label>
       </td>
-      <td style="min-width:190px">${notes}${queries}${noteInput}</td>
-      ${isA?`<td><div style="display:flex;gap:4px;flex-wrap:wrap">
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap">
         <button class="btn btn-xs btn-outline" onclick="openStuModal('${esc(s.id)}')">Edit</button>
         <button class="btn btn-xs btn-red" onclick="delStu('${esc(s.id)}')">Del</button>
       </div></td>`:''}
@@ -1294,19 +1422,106 @@ function renderAgents(){
 // ── REPORTS ──────────────────────────────────────────────────────
 function renderReports(){
   const sts=myStudents();
+  const isA=currentRole==='admin';
   const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
+  // Multi-colour bar per month — gradient palette
+  const barColours=['#16a34a','#2563eb','#7c3aed','#d97706','#db2777','#0d9488','#dc2626','#ca8a04','#059669','#8b5cf6','#f97316','#0ea5e9'];
+
+  const paid=sts.filter(s=>s.fee_status==='paid').length;
+  const pend=sts.filter(s=>s.fee_status==='pending').length;
+  const part=sts.filter(s=>s.fee_status==='partial').length;
+  const semPaid=sts.filter(s=>s.sem_fee_status==='paid').length;
+  const semToken=sts.filter(s=>s.sem_fee_status==='token').length;
+  const semNone=sts.length-semPaid-semToken;
+
   document.getElementById('sec-reports').innerHTML=`
+    <div class="chart-row">
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Fee Status</div></div>
+        <div class="legend">
+          <span><span class="ldot" style="background:#16a34a"></span>Paid (${paid})</span>
+          <span><span class="ldot" style="background:#2563eb"></span>Partial (${part})</span>
+          <span><span class="ldot" style="background:#d97706"></span>Pending (${pend})</span>
+        </div>
+        <div class="cw" style="height:220px"><canvas id="rc1"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Sem Fee Status</div></div>
+        <div class="legend">
+          <span><span class="ldot" style="background:#16a34a"></span>Paid (${semPaid})</span>
+          <span><span class="ldot" style="background:#d97706"></span>Token (${semToken})</span>
+          <span><span class="ldot" style="background:#94a3b8"></span>Not Set (${semNone})</span>
+        </div>
+        <div class="cw" style="height:220px"><canvas id="rc4"></canvas></div>
+      </div>
+    </div>
     <div class="card">
       <div class="card-hdr"><div class="card-title">Monthly Enrollments</div></div>
-      <div class="cw" style="height:240px"><canvas id="rc1"></canvas></div>
+      <div class="legend"><span><span class="ldot" style="background:#16a34a"></span>Students enrolled</span></div>
+      <div class="cw" style="height:260px"><canvas id="rc2"></canvas></div>
     </div>
     <div class="card">
       <div class="card-hdr"><div class="card-title">Monthly Advance Collection (Rs.)</div></div>
-      <div class="cw" style="height:240px"><canvas id="rc2"></canvas></div>
-    </div>`;
-  mkChart('rc1','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#16a34a',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
-  mkChart('rc2','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).reduce((a,s)=>a+(s.advance_paid||0),0)),backgroundColor:'#d97706',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
+      <div class="legend"><span><span class="ldot" style="background:#7c3aed"></span>Advance collected</span></div>
+      <div class="cw" style="height:260px"><canvas id="rc3"></canvas></div>
+    </div>
+    ${isA?`<div class="card">
+      <div class="card-hdr"><div class="card-title">Students Per Agent</div></div>
+      <div class="cw" style="height:260px"><canvas id="rc5"></canvas></div>
+    </div>`:''}
+  `;
+
+  const monthCounts=ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length);
+  const monthAdv=ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).reduce((a,s)=>a+(s.advance_paid||0),0));
+
+  mkChart('rc1','doughnut',ml,[{data:[paid,part,pend],backgroundColor:['#16a34a','#2563eb','#d97706'],borderWidth:2,borderColor:'#fff',hoverOffset:8}],{plugins:{legend:{display:false}},cutout:'60%'});
+  mkChart('rc4','doughnut',ml,[{data:[semPaid,semToken,semNone],backgroundColor:['#16a34a','#d97706','#94a3b8'],borderWidth:2,borderColor:'#fff',hoverOffset:8}],{plugins:{legend:{display:false}},cutout:'60%'});
+  mkChart('rc2','bar',ml,[{
+    data:monthCounts,
+    backgroundColor:barColours,
+    borderRadius:6,
+    borderSkipped:false
+  }],{
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' students'}}},
+    scales:{
+      x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,font:{size:11}}},
+      y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{stepSize:1}}
+    },
+    animation:{duration:800,easing:'easeOutQuart'}
+  });
+  mkChart('rc3','bar',ml,[{
+    data:monthAdv,
+    backgroundColor:['#7c3aed','#8b5cf6','#a78bfa','#7c3aed','#8b5cf6','#a78bfa','#7c3aed','#8b5cf6','#a78bfa','#7c3aed','#8b5cf6','#a78bfa'],
+    borderRadius:6,
+    borderSkipped:false
+  }],{
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Rs.'+ctx.parsed.y.toLocaleString('en-IN')}}},
+    scales:{
+      x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:0,font:{size:11}}},
+      y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:v=>'Rs.'+Number(v).toLocaleString('en-IN')}}
+    },
+    animation:{duration:800,easing:'easeOutQuart'}
+  });
+
+  if(isA&&allAgents.length){
+    const agLabels=allAgents.map(a=>a.name);
+    const agCounts=allAgents.map(a=>allStudents.filter(s=>s.agent_id===a.id).length);
+    const acDarks=['#16a34a','#2563eb','#7c3aed','#d97706','#db2777','#0d9488'];
+    mkChart('rc5','bar',agLabels,[{
+      data:agCounts,
+      backgroundColor:allAgents.map((_,i)=>acDarks[i%acDarks.length]),
+      borderRadius:8,
+      borderSkipped:false
+    }],{
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' students'}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:12,weight:'600'}}},
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.05)'},ticks:{stepSize:1}}
+      },
+      animation:{duration:900,easing:'easeOutBounce'}
+    });
+  }
 }
 
 // ── SECURITY LOG ─────────────────────────────────────────────────
@@ -1463,14 +1678,30 @@ function openStuModal(id){
     document.getElementById('sStat').value=s.fee_status||'pending';
     document.getElementById('sAgent').value=s.agent_id||'';
     document.getElementById('sRef').value=s.referral_amount||'';
-    document.getElementById('sRefPaid').value=s.referral_paid?'true':'false';
+    document.getElementById('sStudentMobile').value=s.student_mobile||'';
+    document.getElementById('sFatherMobile').value=s.father_mobile||'';
+    document.getElementById('sSemFee').value=s.sem_fee_status||'';
   } else {
-    ['sName','sDOA','sBill','sCourse','sFee','sAdv','sRef'].forEach(i=>document.getElementById(i).value='');
+    ['sName','sDOA','sBill','sCourse','sFee','sAdv','sRef','sStudentMobile','sFatherMobile'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('sStat').value='pending';
-    document.getElementById('sRefPaid').value='false';
+    document.getElementById('sSemFee').value='';
   }
   openM('stuModal');
 }
+
+async function toggleSemFee(stuId,isPaid){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  const val=isPaid?'paid':'';
+  const {error}=await sb.from('students').update({sem_fee_status:val,updated_at:new Date().toISOString()}).eq('id',stuId);
+  if(error){notify('Could not update sem fee status.','err');return;}
+  const lbl=document.getElementById('semLbl-'+stuId);
+  if(lbl) lbl.textContent=isPaid?'Paid':'Off';
+  // Update local data without full reload for instant feedback
+  const s=allStudents.find(x=>x.id===stuId);
+  if(s) s.sem_fee_status=val;
+  notify(isPaid?'Sem fee marked as Paid.':'Sem fee cleared.','ok');
+}
+window.toggleSemFee=toggleSemFee;
 
 async function saveStu(){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
@@ -1482,18 +1713,22 @@ async function saveStu(){
   const fee=Math.max(0,parseFloat(document.getElementById('sFee').value)||0);
   const adv=Math.max(0,parseFloat(document.getElementById('sAdv').value)||0);
   const stat=['paid','pending','partial'].includes(document.getElementById('sStat').value)?document.getElementById('sStat').value:'pending';
-  // Fix #13: validate agent_id actually exists in our loaded agents list
   const agIdRaw=document.getElementById('sAgent').value||null;
   const agId=agIdRaw&&allAgents.some(a=>a.id===agIdRaw)?agIdRaw:null;
   const ref=Math.max(0,parseFloat(document.getElementById('sRef').value)||0);
-  const refP=document.getElementById('sRefPaid').value==='true';
+  const studentMobile=clean(document.getElementById('sStudentMobile').value,15);
+  const fatherMobile=clean(document.getElementById('sFatherMobile').value,15);
+  const semFee=document.getElementById('sSemFee').value||'';
   const errEl=document.getElementById('stuModalErr');
   errEl.style.display='none';
   if(!name||!doa||!bill){errEl.textContent='Name, date and bill number are required.';errEl.style.display='block';return;}
-  if(adv>fee){errEl.textContent='Advance cannot exceed total fee.';errEl.style.display='block';return;}
-  // Fix #10 IDOR: on update, verify this student_id exists in our loaded data (admin has all)
   if(id&&!allStudents.some(s=>s.id===id)){notify('Invalid student record.','err');return;}
-  const p={student_name:name,doa,bill_number:bill,course,total_fee:fee,advance_paid:adv,fee_status:stat,agent_id:agId,referral_amount:ref,referral_paid:refP,updated_at:new Date().toISOString()};
+  const p={
+    student_name:name,doa,bill_number:bill,course,total_fee:fee,advance_paid:adv,
+    fee_status:stat,agent_id:agId,referral_amount:ref,
+    student_mobile:studentMobile,father_mobile:fatherMobile,
+    sem_fee_status:semFee,updated_at:new Date().toISOString()
+  };
   const {error}=id?await sb.from('students').update(p).eq('id',id):await sb.from('students').insert([p]);
   if(error){const msg=error.code==='23505'?'Bill number already exists. Please use a unique bill number.':'Could not save student. Please try again.';errEl.textContent=msg;errEl.style.display='block';return;}
   notify(id?'Student updated!':'Student added!','ok');
@@ -1649,9 +1884,8 @@ function renderLedger(){
     <div class="card">
       <div class="card-hdr">
         <div class="card-title">${isA?'All Cash Entries':'My Cash Entries'}</div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary btn-sm" onclick="openLedgerModal(null)">Add Entry</button>
-        </div>
+        ${isA?'<button class="btn btn-primary btn-sm" onclick="openLedgerModal(null)">Add Entry</button>':
+          '<span style="font-size:12px;color:var(--muted)">Admin adds entries. You can add notes on each.</span>'}
       </div>
       <div class="ledger-list" id="ledgerList"></div>
     </div>`;
@@ -1665,34 +1899,43 @@ function renderLedger(){
   ll.innerHTML=filtered.map(e=>{
     const dateStr=new Date(e.entry_date+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
     const agentInit=(e.agent_name||'?')[0].toUpperCase();
+    const ac=agentColour(e.agent_id);
     const hasNote=e.note&&e.note.trim();
     const hasAdminNote=e.admin_note&&e.admin_note.trim();
+    const hasAgentNote=e.agent_note&&e.agent_note.trim();
+    const eJson=JSON.stringify(e).replace(/'/g,"&#39;");
     return `<div class="ledger-item">
       <div class="ledger-item-header">
         <div style="display:flex;align-items:center;gap:10px">
-          <div class="ledger-agent-av">${esc(agentInit)}</div>
+          <div class="ledger-agent-av ${ac}">${esc(agentInit)}</div>
           <div>
-            <div class="ledger-agent-name">${esc(isA?(e.agent_name||'Unknown'):(e.note||'Entry'))}</div>
-            <div class="ledger-date">${dateStr} &middot; recorded by ${esc(e.recorded_by_name||'Admin')}</div>
+            <div class="ledger-agent-name">${esc(e.agent_name||'Unknown')}</div>
+            <div class="ledger-date">${dateStr} &middot; by ${esc(e.recorded_by_name||'Admin')}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="mode-badge mode-${esc(e.mode||'other')}">${(e.mode||'other').toUpperCase()}</span>
           <span class="ledger-amount">Rs.${(e.amount||0).toLocaleString('en-IN')}</span>
           ${isA?`<div style="display:flex;gap:4px">
-            <button class="btn btn-xs btn-outline" onclick='editLedger(${JSON.stringify(e).replace(/'/g,"&#39;")})'>Edit</button>
+            <button class="btn btn-xs btn-outline" onclick='editLedger(${eJson})'>Edit</button>
+            <button class="btn btn-xs btn-ghost" onclick="openAdminNoteModal('${esc(e.id)}','${esc(e.admin_note||'')}')">Note</button>
             <button class="btn btn-xs btn-red" onclick="delLedger('${esc(e.id)}')">Del</button>
-          </div>`:`<button class="btn btn-xs btn-amber" onclick="openQueryModal('${esc(e.id)}')">Query</button>`}
+          </div>`:`<button class="btn btn-xs btn-primary" onclick="openAgentNoteModal('${esc(e.id)}','${esc(e.agent_note||'')}')">Add Note</button>`}
         </div>
       </div>
-      ${hasNote?`<div class="ledger-note-text">Note: ${esc(e.note)}</div>`:''}
-      ${hasAdminNote?`<div class="ledger-admin-note">
-        <div class="admin-note-label">Admin Note</div>
+      ${hasNote?`<div class="ledger-note-text">Entry note: ${esc(e.note)}</div>`:''}
+      ${hasAgentNote?`<div class="ledger-agent-note">
+        <div class="agent-note-label">My Note</div>
+        <div>${esc(e.agent_note)}</div>
+      </div>`:''}
+      ${hasAdminNote?`<div class="${isA?'ledger-admin-note':'ledger-admin-note-alert'}">
+        <div class="${isA?'admin-note-label':'admin-alert-label'}">${isA?'Admin Note':'&#9888; Admin Message'}</div>
         <div>${esc(e.admin_note)}</div>
       </div>`:''}
       ${isA&&e.agent_query?`<div class="query-note-box">
         <div class="qn-header"><span class="qn-label">Agent Query</span></div>
         <div class="qn-text">${esc(e.agent_query)}</div>
+        ${e.agent_query_by?`<div class="qn-meta">by ${esc(e.agent_query_by)}</div>`:''}
       </div>`:''}
     </div>`;
   }).join('')+`<div class="ledger-total-bar">
@@ -1990,6 +2233,56 @@ function openBulkModal(){
 }
 function closeBulkModal(){closeM('bulkModal');}
 
+// ── AGENT LEDGER NOTE ────────────────────────────────────────────
+function openAgentNoteModal(ledgerId,existing){
+  document.getElementById('agentNoteLedgerId').value=ledgerId;
+  document.getElementById('agentNoteText').value=decodeURIComponent(existing||'');
+  document.getElementById('agentNoteErr').style.display='none';
+  openM('agentNoteModal');
+}
+async function saveAgentLedgerNote(){
+  const ledgerId=document.getElementById('agentNoteLedgerId').value;
+  const text=clean(document.getElementById('agentNoteText').value,300);
+  const errEl=document.getElementById('agentNoteErr');
+  errEl.style.display='none';
+  if(!text){errEl.textContent='Please enter a note.';errEl.style.display='block';return;}
+  const {error}=await sb.from('cash_ledger').update({
+    agent_note:text,agent_note_by:currentUser.name,agent_note_at:new Date().toISOString()
+  }).eq('id',ledgerId);
+  if(error){errEl.textContent='Could not save note. Try again.';errEl.style.display='block';return;}
+  notify('Note saved.','ok');
+  closeM('agentNoteModal');
+  const r=await sb.from('cash_ledger').select('*').order('entry_date',{ascending:false});
+  allLedger=r.data||[]; renderLedger();
+}
+window.openAgentNoteModal=openAgentNoteModal;
+window.saveAgentLedgerNote=saveAgentLedgerNote;
+
+// ── ADMIN LEDGER NOTE ─────────────────────────────────────────────
+function openAdminNoteModal(ledgerId,existing){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  document.getElementById('adminNoteLedgerId').value=ledgerId;
+  document.getElementById('adminNoteText').value=decodeURIComponent(existing||'');
+  document.getElementById('adminNoteErr').style.display='none';
+  openM('adminNoteModal');
+}
+async function saveAdminLedgerNote(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
+  const ledgerId=document.getElementById('adminNoteLedgerId').value;
+  const text=clean(document.getElementById('adminNoteText').value,300);
+  const errEl=document.getElementById('adminNoteErr');
+  errEl.style.display='none';
+  if(!text){errEl.textContent='Please enter a note.';errEl.style.display='block';return;}
+  const {error}=await sb.from('cash_ledger').update({admin_note:text}).eq('id',ledgerId);
+  if(error){errEl.textContent='Could not save note. Try again.';errEl.style.display='block';return;}
+  notify('Admin note saved. Agent will see this.','ok');
+  closeM('adminNoteModal');
+  const r=await sb.from('cash_ledger').select('*').order('entry_date',{ascending:false});
+  allLedger=r.data||[]; renderLedger();
+}
+window.openAdminNoteModal=openAdminNoteModal;
+window.saveAdminLedgerNote=saveAdminLedgerNote;
+
 // ── WINDOW ASSIGNMENTS ──────────────────────────────────────────
 window.doLogin=doLogin;
 window.doLogout=doLogout;
@@ -2020,6 +2313,8 @@ window.handleFileSelect=handleFileSelect;
 window.openBulkModal=openBulkModal;
 window.closeBulkModal=closeBulkModal;
 window.startBulkUpload=startBulkUpload;
+window.setStuSort=setStuSort;
+window.toggleSemFee=toggleSemFee;
 
 // ── AUTO RESTORE SESSION ────────────────────────────────────────
 if(loadSession()){startApp();}
