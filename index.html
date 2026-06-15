@@ -234,88 +234,71 @@ tr:hover td{background:var(--g50)}
 .ag-sl{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .ag-sv{font-size:16px;font-weight:700;margin-top:2px;color:var(--g800)}
 
-/* ── CASH LEDGER ──────────────────────────────── */
-.ledger-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-.ledger-stat{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:14px 16px}
-.ledger-stat-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-.ledger-stat-value{font-size:22px;font-weight:800;color:var(--g700)}
-.ledger-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.agent-filter-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted);font-family:'Inter',sans-serif}
+/* ── CASH LEDGER — LIGHT THEME ──────────────────── */
+.ledger-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.ledger-stat{border-radius:10px;padding:14px 16px;border:1.5px solid}
+.ledger-stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.ledger-stat-value{font-size:20px;font-weight:800}
+.ledger-stat.ls-green{background:#f0fdf4;border-color:#bbf7d0}
+.ledger-stat.ls-green .ledger-stat-label{color:#4b7a62}
+.ledger-stat.ls-green .ledger-stat-value{color:#14532d}
+.ledger-stat.ls-blue{background:#eff6ff;border-color:#bfdbfe}
+.ledger-stat.ls-blue .ledger-stat-label{color:#1e40af}
+.ledger-stat.ls-blue .ledger-stat-value{color:#1e3a8a}
+.ledger-stat.ls-purple{background:#faf5ff;border-color:#e9d5ff}
+.ledger-stat.ls-purple .ledger-stat-label{color:#6b21a8}
+.ledger-stat.ls-purple .ledger-stat-value{color:#4c1d95}
+.ledger-stat.ls-amber{background:#fffbeb;border-color:#fde68a}
+.ledger-stat.ls-amber .ledger-stat-label{color:#92400e}
+.ledger-stat.ls-amber .ledger-stat-value{color:#78350f}
+/* agent summary cards */
+.ledger-agent-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:14px}
+.ledger-agent-card{background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px}
+.lac-top{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.lac-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.lac-name{font-size:13px;font-weight:700;color:var(--text)}
+.lac-email{font-size:10px;color:var(--muted)}
+.lac-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.lac-s{background:var(--g50);border-radius:6px;padding:7px 9px;border:1px solid var(--border)}
+.lac-sl{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.lac-sv{font-size:13px;font-weight:700;margin-top:2px;color:var(--g800)}
+/* filters */
+.ledger-filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.agent-filter-btn{padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted);font-family:'Inter',sans-serif}
 .agent-filter-btn:hover{border-color:var(--g600);color:var(--g700);background:var(--g50)}
 .agent-filter-btn.active{background:var(--g600);color:#fff;border-color:var(--g600)}
-.ledger-list{border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;background:var(--white)}
-.ledger-item{display:grid;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:start;transition:.12s}
+.date-filter-btn{padding:4px 12px;border-radius:20px;border:1.5px solid var(--border2);background:var(--white);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;color:var(--muted);font-family:'Inter',sans-serif}
+.date-filter-btn:hover{border-color:var(--blue);color:var(--blue)}
+.date-filter-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+/* ledger card */
+.ledger-card{background:var(--white);border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.ledger-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1.5px solid var(--border);flex-wrap:wrap;gap:8px}
+.ledger-card-title{font-size:11px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px}
+.ledger-list{border:none}
+.ledger-item{padding:12px 14px;border-bottom:1px solid var(--border);transition:.12s}
 .ledger-item:last-child{border-bottom:none}
-.ledger-item:hover{background:var(--g50)}
+.ledger-item:hover{background:#fafffe}
 .ledger-item-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
-.ledger-agent-av{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--g400),var(--g700));color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ledger-agent-av{width:34px;height:34px;border-radius:9px;color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .ledger-agent-name{font-size:13px;font-weight:700;color:var(--text)}
 .ledger-date{font-size:11px;color:var(--muted)}
-.ledger-amount{font-size:16px;font-weight:800;color:var(--g700)}
-.ledger-note-text{font-size:12px;color:var(--muted);margin-top:4px;font-style:italic}
+.ledger-amount{font-size:15px;font-weight:800;color:#14532d}
+.ledger-note-text{font-size:11px;color:var(--muted);margin-top:5px;font-style:italic;padding-left:43px}
 .mode-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.mode-cash{background:var(--g100);color:var(--g800)}
-.mode-upi{background:var(--blue-light);color:#1e40af}
+.mode-cash{background:#dcfce7;color:#166534}
+.mode-upi{background:#dbeafe;color:#1e40af}
 .mode-bank{background:#ede9fe;color:#5b21b6}
 .mode-cheque{background:#fef9c3;color:#854d0e}
 .mode-other{background:#f1f5f9;color:#475569}
-.ledger-head-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--g50);border-bottom:1.5px solid var(--border)}
-/* ── ADMIN LEDGER NOTE (old rule removed — see indigo theme block below) ── */
-
-/* ── CASH LEDGER — DEEP INDIGO THEME ─────────────── */
-:root{
-  --ld-bg:#1e1b4b;--ld-bg2:#312e81;--ld-surface:#f5f3ff;
-  --ld-border:#c4b5fd;--ld-border2:#a78bfa;
-  --ld-accent:#7c3aed;--ld-accent2:#6d28d9;--ld-accent3:#5b21b6;
-  --ld-text:#1e1b4b;--ld-muted:#5b21b6;--ld-faint:#8b5cf6;
-  --ld-card:#ffffff;--ld-stat-bg:#ede9fe;
-  --ld-cash:#065f46;--ld-cash-bg:#d1fae5;
-  --ld-upi:#1e40af;--ld-upi-bg:#dbeafe;
-  --ld-bank:#5b21b6;--ld-bank-bg:#ede9fe;
-  --ld-cheque:#854d0e;--ld-cheque-bg:#fef9c3;
-  --ld-total-bg:#1e1b4b;--ld-total-text:#e9d5ff;
-}
-.ledger-section-wrap{background:var(--ld-surface);border-radius:var(--rxl);padding:20px;margin-bottom:2px}
-.ledger-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-.ledger-stat{background:var(--ld-stat-bg);border:2px solid var(--ld-border);border-radius:var(--rl);padding:14px 16px;position:relative;overflow:hidden}
-.ledger-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--ld-accent),var(--ld-faint))}
-.ledger-stat-label{font-size:10px;color:var(--ld-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-.ledger-stat-value{font-size:22px;font-weight:800;color:var(--ld-accent3)}
-.ledger-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.agent-filter-btn{padding:5px 14px;border-radius:20px;border:2px solid var(--ld-border);background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--ld-muted);font-family:'Inter',sans-serif}
-.agent-filter-btn:hover{border-color:var(--ld-accent);color:var(--ld-accent2);background:var(--ld-stat-bg)}
-.agent-filter-btn.active{background:var(--ld-accent);color:#fff;border-color:var(--ld-accent)}
-.ledger-card{background:var(--ld-card);border:2px solid var(--ld-border);border-radius:var(--rl);overflow:hidden;box-shadow:0 4px 20px rgba(124,58,237,.1)}
-.ledger-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--ld-bg);flex-wrap:wrap;gap:8px}
-.ledger-card-title{font-size:12px;font-weight:700;color:#e9d5ff;text-transform:uppercase;letter-spacing:.6px}
-.ledger-list{border:none}
-.ledger-item{display:grid;gap:10px;padding:14px 18px;border-bottom:1.5px solid #ede9fe;align-items:start;transition:.12s}
-.ledger-item:last-child{border-bottom:none}
-.ledger-item:hover{background:#faf5ff}
-.ledger-item-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
-.ledger-agent-av{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--ld-accent),var(--ld-accent3));color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(124,58,237,.3)}
-.ledger-agent-name{font-size:13px;font-weight:700;color:var(--ld-text)}
-.ledger-date{font-size:11px;color:var(--ld-faint)}
-.ledger-amount{font-size:18px;font-weight:800;color:var(--ld-accent3);letter-spacing:-.3px}
-.ledger-note-text{font-size:12px;color:var(--ld-muted);margin-top:4px;font-style:italic}
-.mode-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;border:1.5px solid}
-.mode-cash{background:var(--ld-cash-bg);color:var(--ld-cash);border-color:#6ee7b7}
-.mode-upi{background:var(--ld-upi-bg);color:var(--ld-upi);border-color:#93c5fd}
-.mode-bank{background:var(--ld-bank-bg);color:var(--ld-bank);border-color:#c4b5fd}
-.mode-cheque{background:var(--ld-cheque-bg);color:var(--ld-cheque);border-color:#fde047}
-.mode-other{background:#f1f5f9;color:#475569;border-color:#cbd5e1}
-.ledger-head-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--ld-stat-bg);border-bottom:1.5px solid var(--ld-border)}
-.ledger-total-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--ld-total-bg);font-weight:700}
-.ledger-total-bar span:first-child{color:#c4b5fd;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
-.ledger-total-bar span:last-child{color:#e9d5ff;font-size:18px;font-weight:800}
-
-/* ── LEDGER NOTES — INDIGO THEME ─────────────────── */
-.ledger-admin-note{background:var(--ld-stat-bg);border:1.5px solid var(--ld-border2);border-radius:var(--r);padding:8px 11px;font-size:12px;margin-top:6px;color:var(--ld-text)}
-.admin-note-label{font-size:10px;font-weight:700;color:var(--ld-accent2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
-.ledger-agent-note{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:var(--r);padding:7px 10px;font-size:12px;margin-top:6px;color:#1e40af}
-.agent-note-label{font-size:10px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
-.ledger-admin-note-alert{background:#fdf4ff;border:1.5px solid var(--ld-border2);border-radius:var(--r);padding:8px 12px;font-size:12px;margin-top:6px;color:var(--ld-accent3);font-weight:600}
-.admin-alert-label{font-size:10px;font-weight:700;color:var(--ld-accent);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.ledger-head-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--g50);border-bottom:1.5px solid var(--border)}
+/* note boxes — left border style */
+.ledger-admin-note{background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 10px;font-size:12px;margin-top:6px;margin-left:43px;color:#166534}
+.admin-note-label{font-size:9px;font-weight:700;color:#4b7a62;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.ledger-agent-note{background:#eff6ff;border-left:3px solid #2563eb;border-radius:0 6px 6px 0;padding:6px 10px;font-size:12px;margin-top:6px;margin-left:43px;color:#1e40af}
+.agent-note-label{font-size:9px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.ledger-admin-note-alert{background:#fef2f2;border-left:3px solid #dc2626;border-radius:0 6px 6px 0;padding:7px 10px;font-size:12px;margin-top:6px;margin-left:43px;color:#991b1b;font-weight:600}
+.admin-alert-label{font-size:9px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;display:flex;align-items:center;gap:4px}
+.ledger-total-bar{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#f0fdf4;border-top:1.5px solid var(--border);font-weight:700;border-radius:0 0 10px 10px;color:#14532d}
 
 /* ── CANCELLATION TAB ─────────────────────────────── */
 .pill-cancelled{background:#fef2f2;color:#991b1b;border:1.5px solid #fca5a5}
@@ -331,6 +314,12 @@ tr.row-cancelled:hover td{background:#fee2e2 !important}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
 .legend span{display:flex;align-items:center;gap:5px}
 .ldot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* ── CALL BUTTON ──────────────────────────────── */
+.call-btn{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;border:1.5px solid #bbf7d0;background:#f0fdf4;font-size:11px;font-weight:600;color:#166534;cursor:pointer;text-decoration:none;transition:.15s;margin-top:3px;white-space:nowrap;font-family:'Inter',sans-serif}
+.call-btn:hover{background:#dcfce7;border-color:#86efac;color:#14532d}
+.call-btn:active{transform:scale(.97)}
+.copyable{user-select:text;-webkit-user-select:text;cursor:text}
 
 /* ── BULK UPLOAD ──────────────────────────────── */
 #dropZone{border:2px dashed var(--border2);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px}
@@ -558,7 +547,7 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
       </div>
       <div id="lockTimer" style="font-size:12px;color:var(--red);margin-bottom:10px;display:none;text-align:center;font-weight:600;background:var(--red-bg);padding:8px 12px;border-radius:var(--r)"></div>
       <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">Sign In</button>
-      <p style="font-size:11px;color:var(--faint);text-align:center;margin-top:18px;line-height:1.7">Authorised users only. All access is monitored and logged.<br>Login events capture IP address, device info, and location data for security purposes.</p>
+      <p style="font-size:11px;color:var(--faint);text-align:center;margin-top:18px">MH EDUTECH &copy; 2026</p>
       <div style="margin-top:20px;padding-top:18px;border-top:1.5px solid var(--border);text-align:center">
         <span style="font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.3px">MH EDUTECH &copy; 2026</span>
       </div>
@@ -612,6 +601,7 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
       <div id="sec-dashboard" class="section"></div>
       <div id="sec-students"  class="section"></div>
       <div id="sec-cancelled" class="section"></div>
+      <div id="sec-sempending" class="section"></div>
       <div id="sec-agents"    class="section"></div>
       <div id="sec-reports"   class="section"></div>
       <div id="sec-security"  class="section"></div>
@@ -828,8 +818,8 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
 <!-- ═══════════════ CASH LEDGER MODAL ═══════════ -->
 <div class="mbg" id="ledgerModal">
   <div class="modal">
-    <div class="modal-title" id="ledgerModalTitle">Add Cash Entry</div>
-    <div class="modal-sub">Record a payment received from agent</div>
+    <div class="modal-title" id="ledgerModalTitle">Add Investment Entry</div>
+    <div class="modal-sub">Record money given to agent for admission work</div>
     <input type="hidden" id="ledgerId">
     <div class="fr">
       <div class="fg"><label>Date *</label><input type="date" id="lDate"></div>
@@ -847,7 +837,7 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
         </select>
       </div>
     </div>
-    <div class="fg"><label>Note / Remarks</label><textarea id="lNote" maxlength="300" rows="3" placeholder="Add any notes or remarks here..."></textarea></div>
+    <div class="fg"><label>Purpose / Note <span style="font-size:10px;color:var(--faint);font-weight:400;text-transform:none">(optional — can add later)</span></label><textarea id="lNote" maxlength="300" rows="2" placeholder="e.g. For Priya Sharma VTU college admission fees... (leave blank if not sure yet)"></textarea></div>
     <div class="fg" id="lAdminNoteWrap" style="display:none"><label>Admin Note (visible to agent)</label><textarea id="lAdminNote" maxlength="300" rows="2" placeholder="Admin note or correction message..."></textarea></div>
     <div id="ledgerErr" class="auth-err"></div>
     <div class="modal-foot">
@@ -1291,12 +1281,14 @@ function buildSidebar(){
     ledger:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
     reports:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`,
     security:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-    profile:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`
+    profile:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    sempending:`<svg class="ni-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`
   };
   const adminItems=[
     {id:'dashboard',lb:'Dashboard'},
     {id:'students',lb:'All Students'},
     {id:'cancelled',lb:'Cancellations'},
+    {id:'sempending',lb:'Sem Fee Pending'},
     {id:'agents',lb:'Agents'},
     {id:'ledger',lb:'Cash Ledger'},
     {id:'reports',lb:'Reports'},
@@ -1307,6 +1299,7 @@ function buildSidebar(){
     {id:'dashboard',lb:'My Dashboard'},
     {id:'students',lb:'My Students'},
     {id:'cancelled',lb:'Cancellations'},
+    {id:'sempending',lb:'Sem Fee Pending'},
     {id:'ledger',lb:'Cash Ledger'},
     {id:'reports',lb:'My Reports'},
     {id:'profile',lb:'My Profile'}
@@ -1317,6 +1310,7 @@ function buildSidebar(){
       <span class="ni-dot"></span>
       ${SVG[it.id]||SVG.profile}
       <span>${it.lb}</span>
+      ${it.id==='sempending'?`<span id="nav-sempending-badge" style="background:#d97706;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;margin-left:auto;min-width:16px;text-align:center">0</span>`:''}
     </button>`).join('');
 }
 
@@ -1373,8 +1367,8 @@ function showSecAlert(attempt){
 let curSec='dashboard';
 function refreshSec(){showSec(curSec);}
 
-const ADMIN_SEC=['dashboard','students','cancelled','agents','reports','security','ledger','profile'];
-const AGENT_SEC=['dashboard','students','cancelled','reports','ledger','profile'];
+const ADMIN_SEC=['dashboard','students','cancelled','sempending','agents','reports','security','ledger','profile'];
+const AGENT_SEC=['dashboard','students','cancelled','sempending','reports','ledger','profile'];
 
 function showSec(id){
   const allowed=currentRole==='admin'?ADMIN_SEC:AGENT_SEC;
@@ -1396,6 +1390,14 @@ function showSec(id){
   document.getElementById('pageTitle').textContent=titles[id]||id;
   if(id==='dashboard') renderDash();
   if(id==='students')  renderStudents();
+  if(id==='sempending') renderSemPending();
+  // Always refresh pending badge count on navigation
+  setTimeout(()=>{
+    const pend=(currentRole==='admin'?allStudents:allStudents.filter(s=>s.agent_id===currentAgent?.id))
+      .filter(s=>!s.is_cancelled&&s.sem_fee_status!=='paid').length;
+    const b=document.getElementById('nav-sempending-badge');
+    if(b) b.textContent=pend;
+  },100);
   if(id==='cancelled') renderCancelled();
   if(id==='agents'&&currentRole==='admin') renderAgents();
   if(id==='reports')   renderReports();
@@ -1628,12 +1630,24 @@ function filterStu(){
     const agentName=isA?`<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid" class="${ac}">${esc(s.agents?.name||'—')}</span></td>`:'';
     return `<tr class="${semOn?'sem-cleared':''}">
       <td style="color:var(--muted);font-size:12px">${i+1}</td>
-      <td><b>${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
+      <td><b class="copyable">${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
       <td style="white-space:nowrap;font-size:12px">${esc(s.doa||'')}</td>
-      <td style="font-size:11px;color:var(--muted)">${esc(s.bill_number||'')}</td>
+      <td class="copyable" style="font-size:11px;color:var(--muted)">${esc(s.bill_number||'')}</td>
       ${agentName}
-      <td style="font-size:12px">${esc(s.student_mobile||'—')}</td>
-      <td style="font-size:12px">${esc(s.father_mobile||'—')}</td>
+      <td style="font-size:12px">
+        <span class="copyable">${esc(s.student_mobile||'')}</span>
+        ${s.student_mobile?`<a href="tel:${esc(s.student_mobile)}" class="call-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 3.07 11 19.79 19.79 0 0 1 .14 2.38 2 2 0 0 1 2.11 0h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L6.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Call
+        </a>`:'—'}
+      </td>
+      <td style="font-size:12px">
+        <span class="copyable">${esc(s.father_mobile||'')}</span>
+        ${s.father_mobile?`<a href="tel:${esc(s.father_mobile)}" class="call-btn">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 3.07 11 19.79 19.79 0 0 1 .14 2.38 2 2 0 0 1 2.11 0h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L6.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Call
+        </a>`:'—'}
+      </td>
       <td style="font-weight:600">Rs.${(s.advance_paid||0).toLocaleString('en-IN')}</td>
       <td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td>
       <td style="min-width:200px">${notes}${queries}${noteInput}</td>
@@ -1826,7 +1840,7 @@ async function renderSecurity(){
       <th>Time</th><th>Email</th><th>Result</th><th>IP</th><th>Location</th><th>GPS</th><th>Device</th><th>Detail</th>
     </tr></thead><tbody>
       ${data.map(r=>{
-        const loc=`${r.city||'?'}, ${r.region||'?'}, ${r.country||'?'}`;
+        const loc=`${esc(r.city||'?')}, ${esc(r.region||'?')}, ${esc(r.country||'?')}`;
         const gps=r.latitude&&r.longitude
           ?`<a href="https://maps.google.com/?q=${esc(r.latitude)},${esc(r.longitude)}" target="_blank" style="color:var(--g700);font-size:11px">View Map</a>`
           :'<span style="color:var(--faint);font-size:11px">None</span>';
@@ -2004,6 +2018,11 @@ async function toggleSemFee(stuId,isPaid){
     stuRecord.sem_fee_status=isPaid?'paid':null;
     stuRecord.fee_status=isPaid?'paid':restoredStatus;
   }
+  // Update pending badge count instantly
+  const pendCount=(currentRole==='admin'?allStudents:allStudents.filter(s=>s.agent_id===currentAgent?.id))
+    .filter(s=>!s.is_cancelled&&s.sem_fee_status!=='paid').length;
+  const badge=document.getElementById('nav-sempending-badge');
+  if(badge) badge.textContent=pendCount;
   notify(isPaid?'Sem cleared — marked as Successful Admission.':'Sem cleared removed.','ok');
 }
 window.toggleSemFee=toggleSemFee;
@@ -2164,6 +2183,33 @@ function renderLedger(){
   const todayStr=new Date().toISOString().slice(0,10);
   const todayTotal=filtered.filter(e=>e.entry_date===todayStr).reduce((a,e)=>a+(e.amount||0),0);
 
+  // Agent summary cards (admin only)
+  let agentCardsHtml='';
+  if(isA&&allAgents.length){
+    agentCardsHtml=`<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Amount given per agent</div>
+    <div class="ledger-agent-cards">
+      ${allAgents.map(ag=>{
+        const ac=agentColour(ag.id);
+        const agTotal=allLedger.filter(e=>e.agent_id===ag.id).reduce((a,e)=>a+(e.amount||0),0);
+        const agCount=allLedger.filter(e=>e.agent_id===ag.id).length;
+        return `<div class="ledger-agent-card">
+          <div class="lac-top">
+            <div class="lac-av ${ac}">${esc(ag.name[0].toUpperCase())}</div>
+            <div>
+              <div class="lac-name">${esc(ag.name)}</div>
+              <div class="lac-email">${esc(ag.email)}</div>
+            </div>
+          </div>
+          <div class="lac-stats">
+            <div class="lac-s"><div class="lac-sl">Total Given</div><div class="lac-sv">Rs.${agTotal.toLocaleString('en-IN')}</div></div>
+            <div class="lac-s"><div class="lac-sl">Entries</div><div class="lac-sv">${agCount}</div></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // Agent filter (admin only)
   let agentFilterHtml='';
   if(isA){
     agentFilterHtml=`<div class="ledger-filter-row">
@@ -2173,44 +2219,50 @@ function renderLedger(){
   }
 
   document.getElementById('sec-ledger').innerHTML=`
-    <div class="ledger-section-wrap">
     <div class="ledger-summary">
-      <div class="ledger-stat">
-        <div class="ledger-stat-label">Total Collected</div>
+      <div class="ledger-stat ls-green">
+        <div class="ledger-stat-label">${isA?'Total Invested':'Total Received'}</div>
         <div class="ledger-stat-value">Rs.${total.toLocaleString('en-IN')}</div>
       </div>
-      <div class="ledger-stat">
+      <div class="ledger-stat ls-blue">
         <div class="ledger-stat-label">Cash</div>
         <div class="ledger-stat-value">Rs.${cashTotal.toLocaleString('en-IN')}</div>
       </div>
-      <div class="ledger-stat">
+      <div class="ledger-stat ls-purple">
         <div class="ledger-stat-label">UPI / Online</div>
         <div class="ledger-stat-value">Rs.${upiTotal.toLocaleString('en-IN')}</div>
       </div>
-      <div class="ledger-stat">
+      <div class="ledger-stat ls-amber">
         <div class="ledger-stat-label">Today</div>
         <div class="ledger-stat-value">Rs.${todayTotal.toLocaleString('en-IN')}</div>
       </div>
     </div>
+    ${agentCardsHtml}
     ${agentFilterHtml}
     <div class="ledger-card">
       <div class="ledger-card-hdr">
-        <div class="ledger-card-title">${isA?'💰 All Cash Entries':'💰 My Cash Entries'}</div>
-        ${isA?'<button class="btn btn-primary btn-sm" onclick="openLedgerModal(null)">+ Add Entry</button>':
-          '<span style="font-size:12px;color:#c4b5fd">Admin adds entries. You can add notes on each.</span>'}
+        <div class="ledger-card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          ${isA?'All Investment Entries':'Money Received from Admin'}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${isA?`<span style="font-size:11px;color:var(--muted)">${filtered.length} entries</span>`:''}
+          ${isA?'<button class="btn btn-primary btn-sm" onclick="openLedgerModal(null)">+ Add Entry</button>':
+            `<span style="font-size:11px;background:var(--g50);color:var(--muted);padding:3px 10px;border-radius:20px;border:1px solid var(--border)">Read only — Admin adds entries</span>`}
+        </div>
       </div>
       <div class="ledger-list" id="ledgerList"></div>
-    </div>
     </div>`;
 
   const ll=document.getElementById('ledgerList');
   if(!filtered.length){
-    ll.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">No entries yet. Add a cash entry to get started.</div>';
+    ll.innerHTML=`<div style="padding:40px;text-align:center;color:var(--muted);font-size:13px">
+      ${isA?'No entries yet. Click <b>+ Add Entry</b> to record an investment.':'No entries yet. Admin will add entries here.'}
+    </div>`;
     return;
   }
 
   ll.innerHTML=filtered.map(e=>{
-    // Use UTC parsing to avoid date shifting on negative UTC offset timezones
     const [dy,dm,dd]=(e.entry_date||'').split('-').map(Number);
     const dateStr=(!dy||!dm||!dd)?'—':new Date(Date.UTC(dy,dm-1,dd)).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'});
     const agentInit=(e.agent_name||'?')[0].toUpperCase();
@@ -2221,14 +2273,14 @@ function renderLedger(){
     const eJson=JSON.stringify(e).replace(/'/g,"&#39;");
     return `<div class="ledger-item">
       <div class="ledger-item-header">
-        <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:9px">
           <div class="ledger-agent-av ${ac}">${esc(agentInit)}</div>
           <div>
-            <div class="ledger-agent-name">${esc(e.agent_name||'Unknown')}</div>
+            <div class="ledger-agent-name">${esc(isA?(e.agent_name||'Unknown'):'Received from Admin')}</div>
             <div class="ledger-date">${dateStr} &middot; by ${esc(e.recorded_by_name||'Admin')}</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span class="mode-badge mode-${esc(e.mode||'other')}">${(e.mode||'other').toUpperCase()}</span>
           <span class="ledger-amount">Rs.${(e.amount||0).toLocaleString('en-IN')}</span>
           ${isA?`<div style="display:flex;gap:4px">
@@ -2238,14 +2290,14 @@ function renderLedger(){
           </div>`:`<button class="btn btn-xs btn-primary" onclick="openAgentNoteModal('${esc(e.id)}','${esc(e.agent_note||'')}')">Add Note</button>`}
         </div>
       </div>
-      ${hasNote?`<div class="ledger-note-text">Entry note: ${esc(e.note)}</div>`:''}
-      ${hasAgentNote?`<div class="ledger-agent-note">
-        <div class="agent-note-label">My Note</div>
-        <div>${esc(e.agent_note)}</div>
-      </div>`:''}
-      ${hasAdminNote?`<div class="${isA?'ledger-admin-note':'ledger-admin-note-alert'}">
-        <div class="${isA?'admin-note-label':'admin-alert-label'}">${isA?'Admin Note':'&#9888; Admin Message'}</div>
+      ${hasNote?`<div class="ledger-note-text">Purpose: ${esc(e.note)}</div>`:''}
+      ${hasAdminNote?`<div class="ledger-admin-note">
+        <div class="admin-note-label">Admin Note</div>
         <div>${esc(e.admin_note)}</div>
+      </div>`:''}
+      ${hasAgentNote?`<div class="ledger-agent-note">
+        <div class="agent-note-label">${isA?'Agent Note':'My Note'}</div>
+        <div>${esc(e.agent_note)}</div>
       </div>`:''}
       ${isA&&e.agent_query?`<div class="query-note-box">
         <div class="qn-header"><span class="qn-label">Agent Query</span></div>
@@ -2254,8 +2306,8 @@ function renderLedger(){
       </div>`:''}
     </div>`;
   }).join('')+`<div class="ledger-total-bar">
-    <span>Total shown</span>
-    <span>Rs.${total.toLocaleString('en-IN')}</span>
+    <span style="font-size:11px;font-weight:700;color:#4b7a62">${isA?'Total invested shown':'Total received'}</span>
+    <span style="font-size:15px;font-weight:800;color:#14532d">Rs.${total.toLocaleString('en-IN')}</span>
   </div>`;
 }
 
@@ -2314,8 +2366,9 @@ async function saveLedger(){
   const errEl=document.getElementById('ledgerErr');
   errEl.style.display='none';
   if(!entry_date){errEl.textContent='Date is required.';errEl.style.display='block';return;}
-  if(!amount||amount<=0){errEl.textContent='Enter a valid amount.';errEl.style.display='block';return;}
-  if(!agent_id){errEl.textContent='Select an agent.';errEl.style.display='block';return;}
+  if(!amount||amount<=0){errEl.textContent='Enter a valid amount (greater than 0).';errEl.style.display='block';return;}
+  if(!agent_id){errEl.textContent='Please select an agent.';errEl.style.display='block';return;}
+  // Note is OPTIONAL — admin can save without it and edit later
 
   const payload={
     agent_id,agent_name,entry_date,amount,mode,note,
@@ -2596,7 +2649,7 @@ async function startBulkUpload(){
     bar.style.background='var(--red)';
   } else {
     // Partial upload — clearly warn admin
-    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial upload: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedRows.slice(0,5).map(r=>String(r).slice(0,30)).join(', ')}${failedRows.length>5?'...':''}</span>`;
+    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial upload: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedRows.slice(0,5).map(r=>esc(String(r).slice(0,30))).join(', ')}${failedRows.length>5?'...':''}</span>`;
   }
   _bulkUploading=false;
   await loadData();
@@ -2722,9 +2775,63 @@ async function restoreStudent(stuId){
   renderCancelled();
 }
 
-function renderCancelled(){
+// ── SEM FEE PENDING ──────────────────────────────────────────────
+function renderSemPending(){
   const isA=currentRole==='admin';
-  const cancelled=allStudents.filter(s=>s.is_cancelled===true||s.is_cancelled==='true');
+  const list=myStudents().filter(s=>
+    !(s.is_cancelled===true||s.is_cancelled==='true')&&s.sem_fee_status!=='paid'
+  ).sort((a,b)=>(b.doa||'').localeCompare(a.doa||''));
+  const badge=document.getElementById('nav-sempending-badge');
+  if(badge) badge.textContent=list.length;
+  const wrap=document.getElementById('sec-sempending');
+  if(!wrap) return;
+  const phoneIcon=`<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 3.07 11 19.79 19.79 0 0 1 .14 2.38 2 2 0 0 1 2.11 0h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L6.09 7.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+  wrap.innerHTML=`
+    <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:var(--rl);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="background:#d97706;color:#fff;font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px">${list.length}</span>
+        <span style="font-size:13px;font-weight:600;color:#92400e">Students with sem fee not yet paid</span>
+      </div>
+      <span style="font-size:11px;color:var(--muted)">Toggle ON → student leaves this list instantly. Still in All Students.</span>
+    </div>
+    <div class="card">
+      <div class="tscroll">
+        <table><thead><tr>
+          <th>#</th><th>Name</th><th>DOA</th><th>Bill No</th>
+          ${isA?'<th>Agent</th>':''}
+          <th>Student Mobile</th><th>Father Mobile</th>
+          <th>Fee Status</th><th>Sem Status</th>
+          ${isA?'<th>Mark Paid</th>':''}
+        </tr></thead><tbody id="semPendBody"></tbody></table>
+      </div>
+    </div>`;
+  const tb=document.getElementById('semPendBody');
+  if(!list.length){
+    tb.innerHTML=`<tr><td colspan="${isA?10:8}" style="text-align:center;color:var(--g700);padding:32px;font-size:14px;font-weight:600">🎉 All students have paid sem fee!</td></tr>`;
+    return;
+  }
+  tb.innerHTML=list.map((s,i)=>{
+    const ac=agentColour(s.agent_id);
+    const semVal=s.sem_fee_status||'';
+    const semLabel=semVal==='token'?'Token Only':'Not Set';
+    const agCell=isA?`<td><span style="padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid" class="${ac}">${esc(s.agents?.name||'—')}</span></td>`:'';
+    return `<tr>
+      <td style="color:var(--muted);font-size:12px">${i+1}</td>
+      <td><b class="copyable">${esc(s.student_name)}</b><br><span style="font-size:11px;color:var(--muted)">${esc(s.course||'')}</span></td>
+      <td style="font-size:12px;white-space:nowrap">${esc(s.doa||'')}</td>
+      <td class="copyable" style="font-size:11px;color:var(--muted)">${esc(s.bill_number||'')}</td>
+      ${agCell}
+      <td style="font-size:12px"><span class="copyable">${esc(s.student_mobile||'—')}</span>${s.student_mobile?`<br><a href="tel:${esc(s.student_mobile)}" class="call-btn">${phoneIcon} Call</a>`:''}</td>
+      <td style="font-size:12px"><span class="copyable">${esc(s.father_mobile||'—')}</span>${s.father_mobile?`<br><a href="tel:${esc(s.father_mobile)}" class="call-btn">${phoneIcon} Call</a>`:''}</td>
+      <td><span class="pill pill-${esc(s.fee_status)}">${esc(s.fee_status)}</span></td>
+      <td><span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700">⏳ ${esc(semLabel)}</span></td>
+      ${isA?`<td><label class="toggle-wrap"><span class="toggle"><input type="checkbox" onchange="toggleSemFee('${esc(s.id)}',this.checked);setTimeout(renderSemPending,400)"><span class="toggle-slider"></span></span><span class="toggle-label">Mark Paid</span></label></td>`:''}
+    </tr>`;
+  }).join('');
+}
+window.renderSemPending=renderSemPending;
+
+function renderCancelled(){
   document.getElementById('sec-cancelled').innerHTML=`
     <div class="card" style="margin-bottom:12px;background:#fff5f5;border-color:#fca5a5">
       <div style="display:flex;align-items:center;gap:10px">
@@ -2872,7 +2979,7 @@ async function startPasteUpload(){
     txt.innerHTML=`<span style="color:var(--red);font-weight:700">Upload failed — check for duplicate bill numbers.</span>`;
     bar.style.background='var(--red)';
   } else {
-    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedNames.slice(0,5).join(', ')}${failedNames.length>5?'...':''}</span>`;
+    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedNames.slice(0,5).map(n=>esc(String(n).slice(0,30))).join(', ')}${failedNames.length>5?'...':''}</span>`;
   }
   _pasteUploading=false;
   await loadData();
@@ -2924,6 +3031,53 @@ window.toggleDoaSort=toggleDoaSort;
 // Show lock timer immediately on page load if still locked from previous session
 if(isLocked()){startLockUI();}
 if(loadSession()){startApp();}
+
+/* ── COPY PROTECTION ─────────────────────────────────────────── */
+(function(){
+  // 1. Console DevTools warning
+  function _warn(){
+    console.warn('⛔ STOP — MH EduTech Private System');
+    console.warn('Unauthorised access is monitored and logged.');
+    console.warn('If you are not an authorised user, close this window.');
+  }
+  _warn();
+  setInterval(_warn,15000);
+
+  // 2. Disable right-click (blocks "View Page Source")
+  document.addEventListener('contextmenu',e=>{e.preventDefault();},true);
+
+  // 3. Disable Ctrl+U (view source) and Ctrl+S (save page)
+  document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&['u','s'].includes(e.key.toLowerCase())){
+      e.preventDefault();e.stopPropagation();return false;
+    }
+  },true);
+
+  // 4. Clipboard corruption on Ctrl+A then Ctrl+C
+  // EXCEPTION: .copyable elements (student name, bill no, phone) are always allowed
+  let _allSel=false;
+  document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='a') _allSel=true;
+    else if(!(e.ctrlKey||e.metaKey)) _allSel=false;
+  });
+  document.addEventListener('copy',e=>{
+    const sel=window.getSelection();
+    if(!sel||!sel.rangeCount) return;
+    const node=sel.getRangeAt(0).commonAncestorContainer;
+    const el=node.nodeType===3?node.parentElement:node;
+    // Allow copy if inside .copyable (name, bill, phone)
+    if(el&&(el.closest('.copyable')||el.classList.contains('copyable'))) return;
+    // Corrupt clipboard if Ctrl+A was used
+    if(_allSel){
+      e.preventDefault();
+      const junk='MH EDUTECH — UNAUTHORISED COPY '+
+        Array.from({length:32},()=>Math.random().toString(36)[2]).join('')+
+        ' — LOGGED '+new Date().toISOString();
+      try{e.clipboardData.setData('text/plain',junk);}catch(err){}
+      _allSel=false;
+    }
+  });
+})();
 
 /* ── ANIMATED FAVICON ─────────────────── */
 (function(){
