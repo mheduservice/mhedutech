@@ -325,6 +325,19 @@ tr.row-cancelled:hover td{background:#fee2e2 !important}
 #dropZone{border:2px dashed var(--border2);border-radius:var(--rl);padding:32px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:14px}
 #dropZone:hover{border-color:var(--g600);background:var(--g50)}
 
+/* ── DUPLICATE DETECTION ──────────────────────── */
+.dup-warn-box{background:#fffbeb;border:1.5px solid #fde68a;border-radius:var(--r);padding:10px 14px;margin-bottom:10px}
+.dup-warn-title{font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.dup-item{font-size:11px;color:#92400e;padding:3px 0;border-bottom:0.5px solid #fde68a;display:flex;align-items:center;gap:8px}
+.dup-item:last-child{border-bottom:none}
+.dup-bill{font-weight:700;font-family:monospace;background:#fef9c3;padding:1px 6px;border-radius:4px}
+.dup-name{color:#78350f}
+.new-item{font-size:11px;color:var(--g800);padding:3px 0;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:8px}
+.new-item:last-child{border-bottom:none}
+.new-bill{font-weight:700;font-family:monospace;background:var(--g100);padding:1px 6px;border-radius:4px;color:var(--g800)}
+.dup-action-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+#dupCheckStatus{font-size:12px;color:var(--muted);font-style:italic;margin:6px 0}
+
 /* ── PASTE TABLE ─────────────────────────────── */
 .paste-hint{font-size:12px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .paste-hint kbd{display:inline-block;padding:2px 7px;background:var(--g50);border:1.5px solid var(--border2);border-radius:4px;font-size:11px;font-weight:700;color:var(--g800);font-family:monospace}
@@ -739,6 +752,8 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
         <table id="bulkPreviewTable" style="font-size:12px"></table>
       </div>
       <div id="bulkErrors" style="display:none;background:var(--red-bg);border:1.5px solid var(--red-light);border-radius:var(--r);padding:10px;font-size:12px;color:var(--red);margin-top:10px;max-height:100px;overflow-y:auto"></div>
+      <div id="dupCheckStatus" style="display:none"></div>
+      <div id="dupResults" style="display:none;margin-top:10px;max-height:240px;overflow-y:auto"></div>
     </div>
     <div id="bulkProgress" style="display:none;margin-top:12px">
       <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden">
@@ -748,6 +763,7 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+      <button class="btn btn-outline" id="bulkCheckBtn" onclick="checkDuplicates()" disabled style="display:none">Check Duplicates</button>
       <button class="btn btn-primary" id="bulkUploadBtn" onclick="startBulkUpload()" disabled>Upload Students</button>
     </div>
   </div>
@@ -2507,35 +2523,141 @@ function processFile(file){
     notify('Please upload a CSV or Excel file.','err');
   }
 }
-// ── DATE FORMAT CONVERTER ────────────────────────────────────
+// ── DATE FORMAT CONVERTER ──────────────────────────────────────
 function convertDate(d){
   if(!d) return '';
-  d=d.trim();
-  // Already YYYY-MM-DD
-  if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
-  // DD-MM-YYYY or DD/MM/YYYY
-  const m1=d.match(/^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{4})$/);
+  d=String(d).trim();
+  if(!d) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(d)) return d; // Already YYYY-MM-DD
+  const m1=d.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
   if(m1) return `${m1[3]}-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
-  // MM-DD-YYYY or MM/DD/YYYY
-  const m2=d.match(/^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{2,4})$/);
+  const m2=d.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{2,4})$/);
   if(m2){const yr=m2[3].length===2?'20'+m2[3]:m2[3];return `${yr}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`;}
-  return d; // return as-is if unknown
+  return d;
+}
+
+// ── PHONE CONVERTER ─────────────────────────────────────────────
+// Handles Excel scientific notation (9.18094E+11), 12-digit with country code,
+// normal 10-digit, and plain text numbers
+function convertPhone(v){
+  if(!v) return '';
+  v=String(v).trim();
+  if(!v||v==='-'||v.toLowerCase()==='n/a') return '';
+  // Excel scientific notation: 9.18094E+11
+  if(/\d+\.?\d*[eE][+\-]\d+/.test(v)){
+    try{
+      // Use toPrecision to preserve digits as much as possible
+      const f=parseFloat(v);
+      let s=Math.round(f).toString();
+      // Remove country code 91 if 12 digits
+      if(s.length===12&&s.startsWith('91')) s=s.slice(2);
+      if(s.length===10) return s;
+      return s; // return whatever we have
+    }catch(e){return '';}
+  }
+  // Strip all non-digits
+  let digits=v.replace(/\D/g,'');
+  // Remove country code 91 prefix if 12 digits
+  if(digits.length===12&&digits.startsWith('91')) digits=digits.slice(2);
+  if(digits.length===10) return digits;
+  return digits||'';
+}
+
+// ── CRM COLUMN DETECTOR ─────────────────────────────────────────
+// Detects whether CSV is our standard format or the CRM export format
+function detectCsvFormat(headers){
+  const h=headers.map(x=>x.toLowerCase().trim());
+  // CRM format has 'app no', 'student name', 'fee status', 'agent' columns
+  if(h.includes('app no')&&h.includes('student name')&&h.includes('agent')) return 'crm';
+  // Standard format has 'date_of_admission', 'bill_number'
+  if(h.includes('date_of_admission')||h.includes('bill_number')) return 'standard';
+  return 'unknown';
+}
+
+// ── CRM ROW PARSER ──────────────────────────────────────────────
+function parseCRMRow(row,allAgents){
+  // CRM columns: App No, Student Name, Phone, DOB, Email, Aadhaar, Caste,
+  // Father Name, Father Phone, Occupation, Course, Address, College,
+  // College Address, Hall Ticket, Board, Agent, Fee Status, Status, Date, Cancelled Date
+
+  const bill=(row['App No']||'').trim().toUpperCase(); // normalise to uppercase
+  const name=(row['Student Name']||'').trim()
+    .replace(/^["']/,'').replace(/["']$/,'') // strip outer quotes
+    .replace(/^Mr\.\s*,\s*/i,'') // strip "Mr., " prefix
+    .replace(/^Ms\.\s*,\s*/i,'')
+    .trim();
+  const phone=convertPhone(row['Phone']);
+  const fatherPhone=convertPhone(row['Father Phone']);
+  const fatherName=(row['Father Name']||'').trim()
+    .replace(/^["']/,'').replace(/["']$/,'')
+    .replace(/^Mr\.\s*,\s*/i,'').trim();
+  const course=(row['Course']||'').trim().toLowerCase();
+  const doa=convertDate(row['Date']);
+  const college=(row['College']||'').trim();
+
+  // Fee status mapping: full→paid, token→partial, pending→pending
+  const feeRaw=(row['Fee Status']||'').toLowerCase().trim();
+  const feeMap={'full':'paid','token':'partial','pending':'pending','paid':'paid','partial':'partial'};
+  const feeStatus=feeMap[feeRaw]||'pending';
+
+  // Sem fee: token means only sem token paid
+  const semFeeStatus=feeRaw==='token'?'token':'';
+
+  // Cancelled: check Status column and Cancelled Date
+  const status=(row['Status']||'').toLowerCase().trim();
+  const cancelledDate=(row['Cancelled Date']||'').trim();
+  const isCancelled=status==='cancelled'||Boolean(cancelledDate);
+  const cancelReason=isCancelled?`Cancelled on ${cancelledDate||'unknown date'}`:'';
+
+  // Agent matching: CRM uses names like "MH_vamsi", "MH_lakshman"
+  // Try to match against agents table by: exact name, contains name part, email prefix
+  const agentRaw=(row['Agent']||'').trim();
+  let agentId=null;
+  if(agentRaw&&allAgents&&allAgents.length){
+    const agLower=agentRaw.toLowerCase();
+    // Try exact match on name
+    let ag=allAgents.find(a=>a.name.toLowerCase()===agLower);
+    if(!ag){
+      // Try: CRM name "MH_lakshman" matches agent name "Lakshman"
+      const agPart=agLower.replace(/^mh_/,'').replace(/_/g,' ').trim();
+      ag=allAgents.find(a=>a.name.toLowerCase().includes(agPart)||agPart.includes(a.name.toLowerCase()));
+    }
+    if(!ag){
+      // Try email prefix match: MH_vamsi matches vamsi@mhedutech.com
+      const agPart=agLower.replace(/^mh_/,'');
+      ag=allAgents.find(a=>(a.email||'').toLowerCase().includes(agPart));
+    }
+    if(ag) agentId=ag.id;
+  }
+
+  return {
+    bill_number:bill,
+    student_name:name,
+    student_mobile:phone,
+    father_mobile:fatherPhone,
+    course,
+    doa,
+    fee_status:feeStatus,
+    sem_fee_status:semFeeStatus,
+    advance_paid:0, // CRM doesn't track advance
+    referral_amount:0,
+    agent_id:agentId,
+    _agent_raw:agentRaw, // for display in preview
+    _is_cancelled:isCancelled,
+    _cancel_reason:cancelReason,
+    _college:college,
+    _father_name:fatherName,
+  };
 }
 
 function parseCSV(text){
-  // Strip BOM (﻿) that Excel adds to UTF-8 CSV files
+  // Strip BOM
   text=text.replace(/^\uFEFF/,'').replace(/^\xEF\xBB\xBF/,'');
-  // Normalise line endings (Windows \r\n, Mac \r, Unix \n)
+  // Normalise line endings
   const lines=text.trim().replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
   if(lines.length<2){notify('File is empty or has no data rows.','err');return;}
-  // Strip BOM from first header too
-  const headers=lines[0].replace(/^\uFEFF/,'').split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z_]/g,''));
-  const required=['date_of_admission','bill_number','student_name'];
-  const missing=required.filter(r=>!headers.includes(r));
-  if(missing.length){notify('Missing required columns: '+missing.join(', '),'err');return;}
-  const rows=[];const errors=[];
+
   function splitCSVLine(line){
-    // Handle quoted fields with commas inside (standard Excel CSV)
     const result=[];let cur='';let inQ=false;
     for(let ci=0;ci<line.length;ci++){
       const ch=line[ci];
@@ -2546,11 +2668,73 @@ function parseCSV(text){
     result.push(cur.trim());
     return result.map(v=>v.replace(/^"|"$/g,'').trim());
   }
-  for(let i=1;i<lines.length;i++){
-    if(!lines[i].trim()) continue; // skip empty lines
-    const vals=splitCSVLine(lines[i]);
-    const row={};
-    headers.forEach((h,j)=>row[h]=vals[j]||'');
+
+  // Parse raw headers (preserve original for CRM detection)
+  const rawHeaders=splitCSVLine(lines[0].replace(/^﻿/,''));
+  const fmt=detectCsvFormat(rawHeaders);
+
+  const rows=[];const errors=[];
+
+  if(fmt==='crm'){
+    // ── CRM FORMAT (App No, Student Name, Agent, Fee Status, etc.) ──
+    for(let i=1;i<lines.length;i++){
+      if(!lines[i].trim()) continue;
+      const vals=splitCSVLine(lines[i]);
+      const row={};
+      rawHeaders.forEach((h,j)=>row[h]=vals[j]||'');
+
+      const parsed=parseCRMRow(row,allAgents);
+
+      // Validate minimum fields
+      if(!parsed.bill_number||!parsed.student_name){
+        errors.push(`Row ${i}: Missing App No or Student Name — skipped`);
+        continue;
+      }
+      if(!parsed.doa){
+        errors.push(`Row ${i} (${parsed.bill_number}): Missing or invalid date — skipped`);
+        continue;
+      }
+
+      // Build final DB row (exclude private _fields, handle cancelled separately)
+      rows.push({
+        _bill:parsed.bill_number,        // for duplicate check display
+        _name:parsed.student_name,       // for preview
+        _agent_raw:parsed._agent_raw,    // for preview
+        _is_cancelled:parsed._is_cancelled,
+        _cancel_reason:parsed._cancel_reason,
+        // DB fields:
+        bill_number:    parsed.bill_number,
+        student_name:   parsed.student_name,
+        doa:            parsed.doa,
+        course:         parsed.course,
+        fee_status:     parsed.fee_status,
+        sem_fee_status: parsed.sem_fee_status,
+        student_mobile: parsed.student_mobile,
+        father_mobile:  parsed.father_mobile,
+        advance_paid:   0,
+        referral_amount:0,
+        agent_id:       parsed.agent_id,
+        is_cancelled:   parsed._is_cancelled,
+        cancel_reason:  parsed._cancel_reason||null,
+        cancelled_at:   parsed._is_cancelled?new Date().toISOString():null,
+      });
+    }
+
+    _isCrmUpload=true;
+    _showCrmPhoneWarning=true;
+
+  } else if(fmt==='standard'){
+    // ── STANDARD FORMAT (date_of_admission, bill_number, student_name) ──
+    const headers=rawHeaders.map(h=>h.toLowerCase().replace(/[^a-z_]/g,''));
+    const required=['date_of_admission','bill_number','student_name'];
+    const missing=required.filter(r=>!headers.includes(r));
+    if(missing.length){notify('Missing required columns: '+missing.join(', '),'err');return;}
+
+    for(let i=1;i<lines.length;i++){
+      if(!lines[i].trim()) continue;
+      const vals=splitCSVLine(lines[i]);
+      const row={};
+      headers.forEach((h,j)=>row[h]=vals[j]||'');
     if(!row.student_name||!row.bill_number||!row.date_of_admission){
       errors.push(`Row ${i+1}: Missing required fields`);continue;
     }
@@ -2558,79 +2742,270 @@ function parseCSV(text){
     const ag=allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===(row.agent_email||'').toLowerCase());
     // L1: WHITELIST — only these exact columns can be set via bulk upload
     // Any extra CSV columns (e.g. is_admin, verified) are silently ignored
-    // WHITELIST — only these exact DB columns allowed, extra CSV cols ignored
+    // Standard format — whitelist columns only
+    if(!row.student_name||!row.bill_number||!row.date_of_admission){
+      errors.push(`Row ${i}: Missing required fields — skipped`);
+      continue;
+    }
+    const agEmail2=(row.agent_email||'').toLowerCase().trim();
+    const ag2=agEmail2?allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===agEmail2):null;
     rows.push({
+      _bill:    clean(row.bill_number,50),
+      _name:    clean(row.student_name,100),
+      _agent_raw: agEmail2,
+      _is_cancelled: false,
+      _cancel_reason: '',
+      // DB fields:
       student_name:    clean(row.student_name,100),
-      doa:             convertDate(row.date_of_admission), // auto-converts DD-MM-YYYY → YYYY-MM-DD
-      bill_number:     clean(row.bill_number,50),
+      doa:             convertDate(row.date_of_admission),
+      bill_number:     clean(row.bill_number,50).toUpperCase(),
       course:          clean(row.course||'',50),
       advance_paid:    Math.max(0,parseFloat(row.advance_paid)||0),
       fee_status:      ['paid','pending','partial'].includes(row.fee_status)?row.fee_status:'pending',
-      student_mobile:  clean(row.student_mobile||'',15),
-      father_mobile:   clean(row.father_mobile||'',15),
+      student_mobile:  convertPhone(row.student_mobile||''),
+      father_mobile:   convertPhone(row.father_mobile||''),
       sem_fee_status:  ['paid','token'].includes(row.sem_fee_status)?row.sem_fee_status:'',
       referral_amount: Math.max(0,parseFloat(row.referral_amount)||0),
-      agent_id:        ag?ag.id:null,
+      agent_id:        ag2?ag2.id:null,
     });
   }
   bulkRows=rows;
+  } else {
+    // Unknown format
+    notify('Could not detect CSV format. Please use the Download Template CSV button for the correct format.','err');
+    return;
+  }
+
+  // ── COMMON: update preview for both formats ──
   const preview=document.getElementById('bulkPreview');
   const label=document.getElementById('bulkPreviewLabel');
   const table=document.getElementById('bulkPreviewTable');
   const errs=document.getElementById('bulkErrors');
   preview.style.display='block';
-  label.textContent=`${rows.length} valid rows found${errors.length?' ('+errors.length+' skipped)':''}`;
-  table.innerHTML=`<thead><tr>
-      <th>#</th><th>Name</th><th>Bill No</th><th>DOA</th><th>Course</th>
-      <th>Advance</th><th>Status</th><th>Sem Fee</th>
-      <th>Student Mob</th><th>Father Mob</th><th>Agent</th>
-    </tr></thead><tbody>
-    ${rows.slice(0,10).map((r,i)=>`<tr>
-      <td>${i+1}</td>
-      <td><b>${esc(r.student_name)}</b></td>
-      <td style="font-size:11px;color:var(--muted)">${esc(r.bill_number)}</td>
-      <td style="font-size:11px">${esc(r.doa)}</td>
-      <td style="font-size:11px">${esc(r.course||'—')}</td>
-      <td>Rs.${(r.advance_paid||0).toLocaleString('en-IN')}</td>
-      <td><span class="pill pill-${esc(r.fee_status)}">${esc(r.fee_status)}</span></td>
-      <td style="font-size:11px">${esc(r.sem_fee_status||'—')}</td>
-      <td style="font-size:11px">${esc(r.student_mobile||'—')}</td>
-      <td style="font-size:11px">${esc(r.father_mobile||'—')}</td>
-      <td style="font-size:11px;color:${r.agent_id?'var(--g700)':'var(--amber)'}">
-        ${r.agent_id?'✓ Matched':'⚠ No agent'}
-      </td>
-    </tr>`).join('')}
-    ${rows.length>10?`<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:8px">...and ${rows.length-10} more rows</td></tr>`:''}</tbody>`;
-  if(errors.length){errs.style.display='block';errs.innerHTML=errors.slice(0,10).map(e=>`<div>${e}</div>`).join('');}
+  label.textContent=`${rows.length} valid rows found${errors.length?' ('+errors.length+' skipped)':''}${_isCrmUpload?' — CRM format detected':''}`;
+
+  // CRM phone warning
+  const phoneWarn=_isCrmUpload?`<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;color:#92400e"><b>⚠ Phone Note:</b> Excel saves phone numbers in scientific notation which may lose last digits. Format phone columns as <b>Text</b> in Excel before export to get full numbers. All other data uploads correctly.</div>`:'';
+  const cancelledCount=rows.filter(r=>r._is_cancelled).length;
+  const crmSummary=_isCrmUpload?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+    <span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600">✓ ${rows.filter(r=>!r._is_cancelled).length} active</span>
+    ${cancelledCount?`<span style="background:#fee2e2;color:#991b1b;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600">🚫 ${cancelledCount} cancelled</span>`:''}
+    <span style="background:#eff6ff;color:#1e40af;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600">${rows.filter(r=>!r.agent_id).length} without agent</span>
+  </div>`:'';
+
+  table.innerHTML=phoneWarn+crmSummary+`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);white-space:nowrap">#</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Bill No</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Name</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">DOA</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Course</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Fee</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Student Mob</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Father Mob</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Agent</th>
+    <th style="text-align:left;padding:6px 8px;background:var(--g50);border-bottom:1px solid var(--border);font-size:10px;color:var(--muted)">Status</th>
+  </tr></thead><tbody>
+  ${rows.slice(0,15).map((r,i)=>`<tr style="border-bottom:0.5px solid var(--border);${r._is_cancelled?'opacity:.65;background:#fff5f5':''}">
+    <td style="padding:5px 8px;color:var(--muted);font-size:11px">${i+1}</td>
+    <td style="padding:5px 8px;font-size:11px;font-family:monospace;white-space:nowrap">${esc(r.bill_number)}</td>
+    <td style="padding:5px 8px"><b style="font-size:12px">${esc(r.student_name)}</b></td>
+    <td style="padding:5px 8px;font-size:11px;white-space:nowrap">${esc(r.doa||'—')}</td>
+    <td style="padding:5px 8px;font-size:11px">${esc(r.course||'—')}</td>
+    <td style="padding:5px 8px"><span class="pill pill-${esc(r.fee_status)}">${esc(r.fee_status)}</span></td>
+    <td style="padding:5px 8px;font-size:11px;color:var(--muted)">${esc(r.student_mobile||'—')}</td>
+    <td style="padding:5px 8px;font-size:11px;color:var(--muted)">${esc(r.father_mobile||'—')}</td>
+    <td style="padding:5px 8px;font-size:11px;color:${r.agent_id?'var(--g700)':'var(--amber)'}">
+      ${r.agent_id?`✓ ${esc(r._agent_raw||'')}`:r._agent_raw?`⚠ ${esc(r._agent_raw||'')}`:'-'}
+    </td>
+    <td style="padding:5px 8px;font-size:11px">${r._is_cancelled?'<span style="color:#991b1b;font-weight:600">🚫 Cancelled</span>':'<span style="color:#16a34a">Active</span>'}</td>
+  </tr>`).join('')}
+  ${rows.length>15?`<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:10px;font-style:italic">...and ${rows.length-15} more rows</td></tr>`:''}</tbody></table>`;
+
+  if(errors.length){errs.style.display='block';errs.innerHTML=errors.slice(0,10).map(e=>`<div>${esc(e)}</div>`).join('');}
   else {errs.style.display='none';}
-  document.getElementById('bulkUploadBtn').disabled=rows.length===0;
+  document.getElementById('bulkUploadBtn').disabled=true; // Disabled until duplicate check passes
+  const checkBtn=document.getElementById('bulkCheckBtn');
+  if(checkBtn){
+    checkBtn.style.display=rows.length>0?'inline-flex':'none';
+    checkBtn.disabled=rows.length===0;
+  }
+  // Reset duplicate results
+  document.getElementById('dupResults').style.display='none';
+  document.getElementById('dupCheckStatus').style.display='none';
 }
-let _bulkUploading=false; // lock to prevent double-submit
+let _bulkUploading=false;
+let _bulkNewRows=[];
+let _bulkDupRows=[];
+let _dupCheckDone=false;
+let _dupSkipBills=new Set();
+let _isCrmUpload=false;
+let _showCrmPhoneWarning=false;
+// ── DUPLICATE CHECK ──────────────────────────────────────────────
+
+async function checkDuplicates(){
+  if(!bulkRows.length) return;
+  _dupCheckDone=false;
+  _dupSkipBills=new Set();
+
+  const statusEl=document.getElementById('dupCheckStatus');
+  const resultsEl=document.getElementById('dupResults');
+  const uploadBtn=document.getElementById('bulkUploadBtn');
+  const checkBtn=document.getElementById('bulkCheckBtn');
+
+  statusEl.style.display='block';
+  statusEl.textContent='Checking for duplicates against existing students...';
+  resultsEl.style.display='none';
+  checkBtn.disabled=true;
+
+  // Get all bill numbers from current upload
+  const uploadBills=bulkRows.map(r=>r.bill_number?.toLowerCase().trim()).filter(Boolean);
+
+  // Check against Supabase — fetch existing students with matching bill numbers
+  const {data:existing,error}=await sb.from('students')
+    .select('bill_number,student_name,doa,fee_status')
+    .in('bill_number',uploadBills);
+
+  if(error){
+    statusEl.textContent='Could not check duplicates. You can still upload — duplicates will be rejected by the database.';
+    uploadBtn.disabled=false;
+    checkBtn.disabled=false;
+    return;
+  }
+
+  const existingBills=new Map((existing||[]).map(s=>[s.bill_number?.toLowerCase().trim(),s]));
+
+  // Classify rows
+  const duplicates=[];
+  const newRows=[];
+  for(const row of bulkRows){
+    const bill=(row.bill_number||'').toLowerCase().trim();
+    if(existingBills.has(bill)){
+      const ex=existingBills.get(bill);
+      duplicates.push({row,existing:ex});
+    } else {
+      newRows.push(row);
+    }
+  }
+
+  _dupCheckDone=true;
+
+  if(duplicates.length===0){
+    // All clear — no duplicates
+    statusEl.innerHTML=`<span style="color:var(--g700);font-weight:600">✓ No duplicates found — all ${bulkRows.length} students are new. Safe to upload.</span>`;
+    uploadBtn.disabled=false;
+    checkBtn.disabled=false;
+    checkBtn.textContent='Re-check';
+    return;
+  }
+
+  // Build duplicate warning UI
+  const dupHtml=`
+    <div class="dup-warn-box">
+      <div class="dup-warn-title">
+        <span style="font-size:16px">⚠️</span>
+        ${duplicates.length} duplicate bill number${duplicates.length>1?'s':''} found — already in database
+      </div>
+      <div style="max-height:140px;overflow-y:auto;margin-bottom:8px">
+        ${duplicates.map(d=>`
+          <div class="dup-item">
+            <span style="font-size:12px">⚠</span>
+            <span class="dup-bill">${esc(d.row.bill_number)}</span>
+            <span class="dup-name">${esc(d.row.student_name)}</span>
+            <span style="font-size:10px;color:#b45309;margin-left:auto">already exists (${esc(d.existing.fee_status||'?')})</span>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:11px;color:#92400e;font-weight:600;margin-bottom:6px">
+        ${newRows.length} new students can be uploaded safely.
+      </div>
+      <div class="dup-action-row">
+        <button class="btn btn-primary btn-sm" onclick="uploadSkippingDuplicates()">
+          Upload ${newRows.length} New Only (Skip Duplicates)
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="uploadAllIgnoringCheck()">
+          Upload All Anyway (${bulkRows.length} rows)
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="closeBulkModal()">Cancel</button>
+      </div>
+    </div>
+    ${newRows.length>0?`<div style="background:var(--g50);border:1.5px solid var(--border);border-radius:var(--r);padding:8px 12px">
+      <div style="font-size:11px;font-weight:700;color:var(--g800);margin-bottom:6px">✓ ${newRows.length} new students (will be uploaded)</div>
+      <div style="max-height:100px;overflow-y:auto">
+        ${newRows.slice(0,8).map(r=>`
+          <div class="new-item">
+            <span class="new-bill">${esc(r.bill_number)}</span>
+            <span style="font-size:11px;color:var(--muted)">${esc(r.student_name)}</span>
+          </div>`).join('')}
+        ${newRows.length>8?`<div style="font-size:11px;color:var(--muted);padding:3px 0">...and ${newRows.length-8} more</div>`:''}
+      </div>
+    </div>`:''}`;
+
+  statusEl.style.display='none';
+  resultsEl.style.display='block';
+  resultsEl.innerHTML=dupHtml;
+  uploadBtn.style.display='none'; // Hide old button — use action buttons in dupHtml
+  checkBtn.disabled=false;
+  checkBtn.textContent='Re-check';
+
+  // Store new rows for skip-duplicates upload
+  _bulkNewRows=newRows;
+  _bulkDupRows=duplicates.map(d=>d.row);
+}
+window.checkDuplicates=checkDuplicates;
+
+async function uploadSkippingDuplicates(){
+  const rows=_bulkNewRows||[];
+  if(!rows.length){notify('No new students to upload.','err');return;}
+  // Replace bulkRows with only new rows and upload
+  bulkRows=rows;
+  document.getElementById('dupResults').style.display='none';
+  document.getElementById('dupCheckStatus').style.display='none';
+  document.getElementById('bulkUploadBtn').style.display='inline-flex';
+  await startBulkUpload();
+}
+window.uploadSkippingDuplicates=uploadSkippingDuplicates;
+
+async function uploadAllIgnoringCheck(){
+  // User chose to upload all — duplicates will be rejected by DB with clear error
+  document.getElementById('dupResults').style.display='none';
+  document.getElementById('dupCheckStatus').style.display='none';
+  document.getElementById('bulkUploadBtn').style.display='inline-flex';
+  await startBulkUpload();
+}
+window.uploadAllIgnoringCheck=uploadAllIgnoringCheck;
+
 async function startBulkUpload(){
   if(!bulkRows.length||_bulkUploading) return;
   _bulkUploading=true;
   const btn=document.getElementById('bulkUploadBtn');
-  btn.disabled=true;
+  if(btn) btn.disabled=true;
   const prog=document.getElementById('bulkProgress');
   const bar=document.getElementById('bulkBar');
   const txt=document.getElementById('bulkProgressText');
   prog.style.display='block';
+  bar.style.background='var(--g600)';
   txt.textContent='Preparing upload...';
 
-  // Fix #8: batch insert in groups of 20 rows to reduce partial-data risk
-  // Each batch is atomic — if a batch fails, rows in that batch are rolled back
   const BATCH=20;
-  let done=0,failed=0,failedRows=[];
+  let done=0,failed=0;
+  const failedRows=[]; // {name, bill, reason}
 
   for(let i=0;i<bulkRows.length;i+=BATCH){
     const batch=bulkRows.slice(i,i+BATCH);
     const {error}=await sb.from('students').insert(batch);
     if(error){
-      // Batch failed — fall back to row-by-row for this batch to find bad rows
+      // Batch failed — fall back row-by-row to identify exact failures
       for(const row of batch){
         const {error:rowErr}=await sb.from('students').insert([row]);
-        if(rowErr){failed++;failedRows.push(row.student_name||row.bill_number||'unknown');}
-        else done++;
+        if(rowErr){
+          failed++;
+          const reason=rowErr.code==='23505'?'Duplicate bill number':
+                       rowErr.message?.slice(0,60)||'Unknown error';
+          failedRows.push({
+            name:esc(String(row.student_name||'').slice(0,30)),
+            bill:esc(String(row.bill_number||'').slice(0,20)),
+            reason:esc(reason)
+          });
+        } else done++;
         bar.style.width=Math.round(((done+failed)/bulkRows.length)*100)+'%';
         txt.textContent=`Uploading... ${done+failed} / ${bulkRows.length}`;
       }
@@ -2643,30 +3018,56 @@ async function startBulkUpload(){
 
   bar.style.width='100%';
   if(failed===0){
-    txt.textContent=`All ${done} students uploaded successfully!`;
+    txt.innerHTML=`<span style="color:var(--g700);font-weight:700">✓ All ${done} students uploaded successfully!</span>`;
+    bar.style.background='var(--g600)';
   } else if(done===0){
-    txt.textContent=`Upload failed — 0 added, ${failed} errors. Check your data.`;
+    txt.innerHTML=`<span style="color:var(--red);font-weight:700">Upload failed — 0 added, ${failed} errors.</span><br>
+      <span style="font-size:11px;color:var(--muted)">All ${failed} rows had errors. Check bill numbers for duplicates.</span>`;
     bar.style.background='var(--red)';
   } else {
-    // Partial upload — clearly warn admin
-    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial upload: ${done} added, ${failed} failed.</span><br><span style="font-size:11px;color:var(--muted)">Failed: ${failedRows.slice(0,5).map(r=>esc(String(r).slice(0,30))).join(', ')}${failedRows.length>5?'...':''}</span>`;
+    // Partial upload — show detailed breakdown
+    const failList=failedRows.slice(0,8).map(r=>
+      `<div style="display:flex;gap:8px;padding:2px 0;font-size:11px">
+        <span style="font-family:monospace;background:#fef9c3;padding:1px 5px;border-radius:3px">${r.bill}</span>
+        <span>${r.name}</span>
+        <span style="color:var(--red);margin-left:auto">${r.reason}</span>
+      </div>`).join('');
+    txt.innerHTML=`<span style="color:var(--amber);font-weight:700">Partial: ${done} added, ${failed} failed.</span><br>
+      <div style="background:#fff8f8;border:1px solid #fca5a5;border-radius:6px;padding:8px;margin-top:6px;max-height:120px;overflow-y:auto">
+        <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px">FAILED ROWS:</div>
+        ${failList}
+        ${failedRows.length>8?`<div style="font-size:11px;color:var(--muted);margin-top:4px">...and ${failedRows.length-8} more failed rows</div>`:''}
+      </div>`;
+    bar.style.background='var(--amber)';
   }
   _bulkUploading=false;
   await loadData();
-  setTimeout(()=>closeBulkModal(),failed>0?4000:2000);
+  if(failed===0) setTimeout(()=>closeBulkModal(),2000);
 }
 function openBulkModal(){
   bulkRows=[];
   _bulkUploading=false;
+  _dupCheckDone=false;
+  _bulkNewRows=[];
+  _bulkDupRows=[];
   document.getElementById('bulkPreview').style.display='none';
   document.getElementById('bulkProgress').style.display='none';
   document.getElementById('bulkUploadBtn').disabled=true;
+  document.getElementById('bulkUploadBtn').style.display='inline-flex';
+  document.getElementById('bulkCheckBtn').style.display='none';
+  document.getElementById('bulkCheckBtn').disabled=true;
+  document.getElementById('dupResults').style.display='none';
+  document.getElementById('dupCheckStatus').style.display='none';
   document.getElementById('bulkFile').value='';
+  _isCrmUpload=false;
+  _showCrmPhoneWarning=false;
   openM('bulkModal');
 }
 function closeBulkModal(){
-  // Reset upload lock so user can start fresh next time
   _bulkUploading=false;
+  _dupCheckDone=false;
+  _bulkNewRows=[];
+  _bulkDupRows=[];
   closeM('bulkModal');
 }
 
@@ -3020,6 +3421,9 @@ window.handleFileSelect=handleFileSelect;
 window.openBulkModal=openBulkModal;
 window.closeBulkModal=closeBulkModal;
 window.startBulkUpload=startBulkUpload;
+window.checkDuplicates=checkDuplicates;
+window.uploadSkippingDuplicates=uploadSkippingDuplicates;
+window.uploadAllIgnoringCheck=uploadAllIgnoringCheck;
 window.openPasteModal=openPasteModal;
 window.closePasteModal=closePasteModal;
 window.startPasteUpload=startPasteUpload;
