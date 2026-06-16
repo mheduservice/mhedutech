@@ -1018,10 +1018,10 @@ function validMobile(v){
   const stripped=v.replace(/[\s\-().+]/g,'');
   // Standard Indian mobile: 10 digits starting 6-9 (with optional 0 or 91 prefix)
   if(/^(?:0|91)?[6-9]\d{9}$/.test(stripped)) return true;
-  // Landline: area code (2-5 digits) + number = 10 digits total
+  // Landline: area code (2-5 digits) + number = 10 digits total, starting 2-5
   if(/^(?:0|91)?[2-5]\d{9}$/.test(stripped)) return true;
-  // Bare 10-digit number starting 1 (rare but don't block)
-  if(/^\d{10}$/.test(stripped)) return true;
+  // Removed: bare /^\d{10}$/ fallback — it accepted invalid numbers like
+  // 1000000000 or 0000000000 since no valid Indian number starts with 0 or 1.
   return false;
 }
 async function hashPwd(p){
@@ -1257,12 +1257,12 @@ function doLogout(){
 
 // ── SIDEBAR MOBILE ───────────────────────────────────────────────
 function toggleSidebar(){
-  document.getElementById('sidebarEl').classList.toggle('open');
-  document.getElementById('sbOverlay').classList.toggle('open');
+  document.getElementById('sidebarEl')?.classList.toggle('open');
+  document.getElementById('sbOverlay')?.classList.toggle('open');
 }
 function closeSidebar(){
-  document.getElementById('sidebarEl').classList.remove('open');
-  document.getElementById('sbOverlay').classList.remove('open');
+  document.getElementById('sidebarEl')?.classList.remove('open');
+  document.getElementById('sbOverlay')?.classList.remove('open');
 }
 window.toggleSidebar=toggleSidebar;
 window.closeSidebar=closeSidebar;
@@ -1340,7 +1340,11 @@ async function loadData(){
   const agentMap={};
   const agentsRaw=r2.data||[];
   agentsRaw.forEach(a=>agentMap[a.id]=a);
-  allStudents=(r1.data||[]).map(s=>({...s,agents:agentMap[s.agent_id]||null}));
+  allStudents=(r1.data||[]).map(s=>({
+    ...s,
+    agents:agentMap[s.agent_id]||null,
+    is_cancelled:(s.is_cancelled===true||s.is_cancelled==='true'), // normalise to real boolean once, here
+  }));
   allAgents=agentsRaw.filter(a=>a.role==='agent');
   allLedger=r3.data||[];
 }
@@ -1354,6 +1358,10 @@ function myLedger(){
 }
 
 // ── REALTIME ─────────────────────────────────────────────────────
+// NOTE: True data isolation comes from RLS policies on each table, not from
+// channel config alone. This subscribes to change events only — confirm RLS
+// on students/notes/agents/cash_ledger/login_attempts restricts row access
+// per role before relying on this for sensitive data protection.
 function subscribeRT(){
   sb.channel('rt-main')
     .on('postgres_changes',{event:'*',schema:'public',table:'students'},async()=>{await loadData();refreshSec();})
@@ -1541,15 +1549,15 @@ function renderDash(){
 }
 
 // ── AGENT COLOUR HELPER ──────────────────────────────────────────
+// Colour is derived from the agent's current position in allAgents, not from
+// an ever-growing map — so deleted/re-added agents never leave stale entries
+// behind and the assignment is always consistent with the live agent list.
 const AGENT_COLOURS=['ac0','ac1','ac2','ac3','ac4','ac5'];
-let _agentColourMap={};
 function agentColour(agentId){
   if(!agentId) return 'ac0';
-  if(!_agentColourMap[agentId]){
-    const keys=Object.keys(_agentColourMap);
-    _agentColourMap[agentId]=AGENT_COLOURS[keys.length%AGENT_COLOURS.length];
-  }
-  return _agentColourMap[agentId];
+  const idx=allAgents.findIndex(a=>a.id===agentId);
+  if(idx===-1) return 'ac0'; // agent no longer exists (deleted) — neutral colour
+  return AGENT_COLOURS[idx%AGENT_COLOURS.length];
 }
 // ── STUDENTS ─────────────────────────────────────────────────────
 let stuSortDir='desc'; // 'asc' or 'desc' — DOA sort direction
@@ -1626,7 +1634,7 @@ function filterStu(){
   tb.innerHTML=list.map((s,i)=>{
     const ac=agentColour(s.agent_id);
     const semOn=s.sem_fee_status==='paid'; // sem cleared = toggle ON (single source of truth)
-    const isCancelled=s.is_cancelled===true||s.is_cancelled==='true';
+    const isCancelled=s.is_cancelled; // already normalised to boolean in loadData()
     if(isCancelled) return ''; // hide cancelled from main list
     const notes=(s.notes||[]).filter(n=>n.note_type!=='query').map(n=>`
       <div class="note-box">
@@ -1900,7 +1908,12 @@ async function clearSecLog(){
   if(!currentUser?.id){notify('Session error. Please sign in again.','err');return;}
   if(!confirm('Clear ALL login attempt records? This cannot be undone.')) return;
   if(!confirm('Are you sure? This will permanently delete all security logs.')) return;
-  // Pass admin ID — server validates this UUID is actually an admin account
+  // SECURITY NOTE: p_admin_id is a client-supplied value and is NOT a trustworthy
+  // security boundary on its own — a tampered sessionStorage could carry a
+  // different ID. The clear_login_attempts SQL function MUST independently
+  // verify, inside Postgres, that p_admin_id actually belongs to a row in the
+  // agents table with role='admin' before deleting anything. Verify that
+  // function's body in Supabase; this frontend check is UX only.
   const {data:res,error}=await sb.rpc('clear_login_attempts',{p_admin_id:currentUser.id});
   if(error||!res?.success){notify('Could not clear log. Admin verification failed.','err');return;}
   notify('Security log cleared.','ok');
@@ -2003,7 +2016,7 @@ async function toggleSemFee(stuId,isPaid){
 
   const update=isPaid
     ?{sem_fee_status:'paid',fee_status:'paid',updated_at:new Date().toISOString()}
-    :{sem_fee_status:null,fee_status:restoredStatus,updated_at:new Date().toISOString()};
+    :{sem_fee_status:'',fee_status:restoredStatus,updated_at:new Date().toISOString()};
   const {error}=await sb.from('students').update(update).eq('id',stuId);
   if(error){notify('Could not update sem status.','err');return;}
   // Update label
@@ -2105,7 +2118,10 @@ async function addNote(stuId,inputId,noteType){
 
 async function delNote(id){
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  await sb.from('notes').delete().eq('id',id);
+  if(!confirm('Delete this note permanently? This cannot be undone.')) return;
+  const {error}=await sb.from('notes').delete().eq('id',id);
+  if(error){notify('Could not delete note.','err');return;}
+  notify('Note deleted.','ok');
   await loadData(); filterStu();
 }
 
@@ -2538,7 +2554,12 @@ function convertDate(d){
 
 // ── PHONE CONVERTER ─────────────────────────────────────────────
 // Handles Excel scientific notation (9.18094E+11), 12-digit with country code,
-// normal 10-digit, and plain text numbers
+// normal 10-digit, and plain text numbers.
+// IMPORTANT: scientific notation in the source file already discarded trailing
+// digits before this code ever sees it (Excel's doing, not ours) — this cannot
+// be reversed. We flag suspected-truncated numbers so the admin can spot them
+// instead of silently trusting a wrong number.
+let _phoneTruncationDetected=false; // set true during a parse pass if any number looked truncated
 function convertPhone(v){
   if(!v) return '';
   v=String(v).trim();
@@ -2546,18 +2567,19 @@ function convertPhone(v){
   // Excel scientific notation: 9.18094E+11
   if(/\d+\.?\d*[eE][+\-]\d+/.test(v)){
     try{
-      // Use toPrecision to preserve digits as much as possible
       const f=parseFloat(v);
       let s=Math.round(f).toString();
-      // Remove country code 91 if 12 digits
       if(s.length===12&&s.startsWith('91')) s=s.slice(2);
+      // Heuristic: scientific notation with <=6 significant digits before E
+      // almost always means Excel already dropped real digits — flag it
+      const sig=v.replace(/[eE].*$/,'').replace(/[.\-+]/g,'');
+      if(sig.length<=6) _phoneTruncationDetected=true;
       if(s.length===10) return s;
-      return s; // return whatever we have
+      return s;
     }catch(e){return '';}
   }
   // Strip all non-digits
   let digits=v.replace(/\D/g,'');
-  // Remove country code 91 prefix if 12 digits
   if(digits.length===12&&digits.startsWith('91')) digits=digits.slice(2);
   if(digits.length===10) return digits;
   return digits||'';
@@ -2651,6 +2673,7 @@ function parseCRMRow(row,allAgents){
 }
 
 function parseCSV(text){
+  _phoneTruncationDetected=false; // reset before each parse pass
   // Strip BOM
   text=text.replace(/^\uFEFF/,'').replace(/^\xEF\xBB\xBF/,'');
   // Normalise line endings
@@ -2735,48 +2758,41 @@ function parseCSV(text){
       const vals=splitCSVLine(lines[i]);
       const row={};
       headers.forEach((h,j)=>row[h]=vals[j]||'');
-    if(!row.student_name||!row.bill_number||!row.date_of_admission){
-      errors.push(`Row ${i+1}: Missing required fields`);continue;
+
+      if(!row.student_name||!row.bill_number||!row.date_of_admission){
+        errors.push(`Row ${i}: Missing required fields — skipped`);
+        continue;
+      }
+      const agEmail2=(row.agent_email||'').toLowerCase().trim();
+      const ag2=agEmail2?allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===agEmail2):null;
+      rows.push({
+        _bill:    clean(row.bill_number,50),
+        _name:    clean(row.student_name,100),
+        _agent_raw: agEmail2,
+        _is_cancelled: false,
+        _cancel_reason: '',
+        // DB fields:
+        student_name:    clean(row.student_name,100),
+        doa:             convertDate(row.date_of_admission),
+        bill_number:     clean(row.bill_number,50).toUpperCase(),
+        course:          clean(row.course||'',50),
+        advance_paid:    Math.max(0,parseFloat(row.advance_paid)||0),
+        fee_status:      ['paid','pending','partial'].includes(row.fee_status)?row.fee_status:'pending',
+        student_mobile:  convertPhone(row.student_mobile||''),
+        father_mobile:   convertPhone(row.father_mobile||''),
+        sem_fee_status:  ['paid','token'].includes(row.sem_fee_status)?row.sem_fee_status:'',
+        referral_amount: Math.max(0,parseFloat(row.referral_amount)||0),
+        agent_id:        ag2?ag2.id:null,
+      });
     }
-    // Fix #15: only match role==='agent', never assign to admin accounts
-    const ag=allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===(row.agent_email||'').toLowerCase());
-    // L1: WHITELIST — only these exact columns can be set via bulk upload
-    // Any extra CSV columns (e.g. is_admin, verified) are silently ignored
-    // Standard format — whitelist columns only
-    if(!row.student_name||!row.bill_number||!row.date_of_admission){
-      errors.push(`Row ${i}: Missing required fields — skipped`);
-      continue;
-    }
-    const agEmail2=(row.agent_email||'').toLowerCase().trim();
-    const ag2=agEmail2?allAgents.find(a=>a.role==='agent'&&a.email.toLowerCase()===agEmail2):null;
-    rows.push({
-      _bill:    clean(row.bill_number,50),
-      _name:    clean(row.student_name,100),
-      _agent_raw: agEmail2,
-      _is_cancelled: false,
-      _cancel_reason: '',
-      // DB fields:
-      student_name:    clean(row.student_name,100),
-      doa:             convertDate(row.date_of_admission),
-      bill_number:     clean(row.bill_number,50).toUpperCase(),
-      course:          clean(row.course||'',50),
-      advance_paid:    Math.max(0,parseFloat(row.advance_paid)||0),
-      fee_status:      ['paid','pending','partial'].includes(row.fee_status)?row.fee_status:'pending',
-      student_mobile:  convertPhone(row.student_mobile||''),
-      father_mobile:   convertPhone(row.father_mobile||''),
-      sem_fee_status:  ['paid','token'].includes(row.sem_fee_status)?row.sem_fee_status:'',
-      referral_amount: Math.max(0,parseFloat(row.referral_amount)||0),
-      agent_id:        ag2?ag2.id:null,
-    });
-  }
-  bulkRows=rows;
   } else {
     // Unknown format
     notify('Could not detect CSV format. Please use the Download Template CSV button for the correct format.','err');
     return;
   }
 
-  // ── COMMON: update preview for both formats ──
+  // ── COMMON: assign parsed rows for both formats, then build preview ──
+  bulkRows=rows;
   const preview=document.getElementById('bulkPreview');
   const label=document.getElementById('bulkPreviewLabel');
   const table=document.getElementById('bulkPreviewTable');
@@ -2785,7 +2801,7 @@ function parseCSV(text){
   label.textContent=`${rows.length} valid rows found${errors.length?' ('+errors.length+' skipped)':''}${_isCrmUpload?' — CRM format detected':''}`;
 
   // CRM phone warning
-  const phoneWarn=_isCrmUpload?`<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;color:#92400e"><b>⚠ Phone Note:</b> Excel saves phone numbers in scientific notation which may lose last digits. Format phone columns as <b>Text</b> in Excel before export to get full numbers. All other data uploads correctly.</div>`:'';
+  const phoneWarn=_phoneTruncationDetected?`<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;color:#991b1b"><b>⚠ Phone numbers may be incomplete:</b> some phone numbers in this file were stored by Excel in scientific notation (e.g. 9.18E+11) which permanently discards trailing digits before export — this cannot be recovered after the fact. Re-open the source Excel file, format the phone columns as <b>Text</b>, re-save, and re-export the CSV to get correct numbers. All other data in this upload is unaffected.</div>`:'';
   const cancelledCount=rows.filter(r=>r._is_cancelled).length;
   const crmSummary=_isCrmUpload?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
     <span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600">✓ ${rows.filter(r=>!r._is_cancelled).length} active</span>
@@ -3180,7 +3196,7 @@ async function restoreStudent(stuId){
 function renderSemPending(){
   const isA=currentRole==='admin';
   const list=myStudents().filter(s=>
-    !(s.is_cancelled===true||s.is_cancelled==='true')&&s.sem_fee_status!=='paid'
+    !s.is_cancelled&&s.sem_fee_status!=='paid'
   ).sort((a,b)=>(b.doa||'').localeCompare(a.doa||''));
   const badge=document.getElementById('nav-sempending-badge');
   if(badge) badge.textContent=list.length;
@@ -3233,6 +3249,8 @@ function renderSemPending(){
 window.renderSemPending=renderSemPending;
 
 function renderCancelled(){
+  const isA=currentRole==='admin';
+  const cancelled=myStudents().filter(s=>s.is_cancelled);
   document.getElementById('sec-cancelled').innerHTML=`
     <div class="card" style="margin-bottom:12px;background:#fff5f5;border-color:#fca5a5">
       <div style="display:flex;align-items:center;gap:10px">
