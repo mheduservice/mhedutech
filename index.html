@@ -161,7 +161,7 @@ a{color:var(--g700)}
 .card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow)}
 .card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
-.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.chart-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px}
 .cw{position:relative;width:100%}
 
 /* ── TABLES ───────────────────────────────────── */
@@ -1546,8 +1546,9 @@ function showSec(id){
 
 // ── DASHBOARD ────────────────────────────────────────────────────
 function renderDash(){
-  // CRITICAL: exclude cancelled students from ALL metrics — cancelled ≠ enrolled
-  const sts=myStudents().filter(s=>!s.is_cancelled);
+  // CRITICAL: exclude cancelled students from ALL fee/financial metrics — cancelled ≠ enrolled
+  const allMine=myStudents(); // includes cancelled — needed for the cancellation ratio below
+  const sts=allMine.filter(s=>!s.is_cancelled);
   const paid=sts.filter(s=>s.fee_status==='paid').length;
   const pend=sts.filter(s=>s.fee_status==='pending').length;
   const part=sts.filter(s=>s.fee_status==='partial').length;
@@ -1558,6 +1559,12 @@ function renderDash(){
   const refP=sts.filter(s=>s.referral_paid).reduce((a,s)=>a+(s.referral_amount||0),0);
   const isA=currentRole==='admin';
   const ledgerTotal=myLedger().reduce((a,e)=>a+(e.amount||0),0);
+  // Cancellation ratio — uses the UNFILTERED list, since cancelled students
+  // are exactly what we're measuring here, not excluding
+  const cancelledCount=allMine.filter(s=>s.is_cancelled).length;
+  const activeCount=sts.length;
+  const totalAdmissions=allMine.length;
+  const cancelPct=totalAdmissions>0?Math.round((cancelledCount/totalAdmissions)*1000)/10:0;
 
   document.getElementById('sec-dashboard').innerHTML=`
     <div class="metrics">
@@ -1606,6 +1613,18 @@ function renderDash(){
         <div class="card-hdr"><div class="card-title">Monthly Enrollments</div></div>
         <div class="cw" style="height:200px"><canvas id="c2"></canvas></div>
       </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Cancellation Ratio</div></div>
+        <div class="legend">
+          <span><span class="ldot" style="background:var(--g600)"></span>Active</span>
+          <span><span class="ldot" style="background:#dc2626"></span>Cancelled</span>
+        </div>
+        <div class="cw" style="height:200px"><canvas id="c3"></canvas></div>
+        <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted)">
+          ${cancelledCount} of ${totalAdmissions} admissions cancelled
+          <span style="font-weight:700;color:${cancelPct>10?'#dc2626':'var(--muted)'}">(${cancelPct}%)</span>
+        </div>
+      </div>
     </div>
     ${isA?`<div class="card">
       <div class="card-hdr"><div class="card-title">Agent Performance</div></div>
@@ -1623,13 +1642,22 @@ function renderDash(){
   const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
   mkChart('c1','doughnut',ml,[{data:[paid,part,pend],backgroundColor:['#16a34a','#2563eb','#d97706'],borderWidth:0}],{plugins:{legend:{display:false}},cutout:'65%'});
   mkChart('c2','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#16a34a',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
+  // Cancellation ratio donut — if there are zero admissions at all, show a
+  // flat neutral ring instead of an empty/broken-looking chart
+  const c3Data=totalAdmissions>0?[activeCount,cancelledCount]:[1,0];
+  const c3Colors=totalAdmissions>0?['#16a34a','#dc2626']:['#e5e7eb','#dc2626'];
+  mkChart('c3','doughnut',['Active','Cancelled'],[{data:c3Data,backgroundColor:c3Colors,borderWidth:0}],{plugins:{legend:{display:false}},cutout:'65%'});
 
   if(isA){
     const ap=document.getElementById('agPerf');
     if(!allAgents.length){ap.innerHTML='<p style="color:var(--muted);font-size:13px">No agents yet.</p>';return;}
     ap.innerHTML=allAgents.map(ag=>{
-      // Exclude cancelled students from agent performance stats
+      // Exclude cancelled students from financial/fee performance stats
       const as=allStudents.filter(s=>s.agent_id===ag.id&&!s.is_cancelled);
+      // Cancellation count uses the UNFILTERED list for this agent
+      const agAll=allStudents.filter(s=>s.agent_id===ag.id);
+      const agCancelled=agAll.filter(s=>s.is_cancelled).length;
+      const agCancelPct=agAll.length>0?Math.round((agCancelled/agAll.length)*1000)/10:0;
       const aa=as.reduce((a,s)=>a+(s.advance_paid||0),0);
       const ar=as.reduce((a,s)=>a+(s.referral_amount||0),0);
       return `<div class="ag-card">
@@ -1641,6 +1669,7 @@ function renderDash(){
           <div class="ag-stat"><div class="ag-sl">Advance</div><div class="ag-sv" style="font-size:13px">Rs.${aa.toLocaleString('en-IN')}</div></div>
           <div class="ag-stat"><div class="ag-sl">Referral</div><div class="ag-sv" style="font-size:13px">Rs.${ar.toLocaleString('en-IN')}</div></div>
           <div class="ag-stat"><div class="ag-sl">Paid</div><div class="ag-sv">${as.filter(s=>s.fee_status==='paid').length}</div></div>
+          <div class="ag-stat"><div class="ag-sl">Cancelled</div><div class="ag-sv" style="color:${agCancelled>0?'#dc2626':'inherit'}">${agCancelled}<span style="font-size:11px;color:var(--muted);font-weight:400"> (${agCancelPct}%)</span></div></div>
         </div></div>`;
     }).join('');
   }
