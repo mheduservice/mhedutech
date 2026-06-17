@@ -3094,8 +3094,21 @@ async function startBulkUpload(){
   let done=0,failed=0;
   const failedRows=[]; // {name, bill, reason}
 
-  for(let i=0;i<bulkRows.length;i+=BATCH){
-    const batch=bulkRows.slice(i,i+BATCH);
+  // CRITICAL FIX: bulkRows contains underscore-prefixed fields (_bill, _name,
+  // _agent_raw, _is_cancelled, _cancel_reason) used only for the preview
+  // table and duplicate-check display — these are NOT real database columns
+  // and must never be sent to Supabase. Strip them here, right before insert.
+  function stripPreviewFields(row){
+    const clean={};
+    for(const key in row){
+      if(!key.startsWith('_')) clean[key]=row[key];
+    }
+    return clean;
+  }
+  const insertRows=bulkRows.map(stripPreviewFields);
+
+  for(let i=0;i<insertRows.length;i+=BATCH){
+    const batch=insertRows.slice(i,i+BATCH);
     const {error}=await sb.from('students').insert(batch);
     if(error){
       // Batch failed — fall back row-by-row to identify exact failures
