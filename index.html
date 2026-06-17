@@ -1253,9 +1253,44 @@ async function doLogin(){
   // 600ms delay slows in-page attacks; direct Supabase calls still hit DB rate limiter
   await new Promise(r=>setTimeout(r,600));
   try{
-    const inputHash=await hashPwd(pass);
-    const {data,error}=await sb.rpc('verify_agent_login',{p_email:email,p_hash:inputHash});
+    // ── STAGE 2: Supabase Auth is now the primary login path ──────
+    // We try real Supabase Auth first. If that succeeds, we look up
+    // the matching agents-table row (role/name/id) via get_my_profile,
+    // which needs no password — Auth already proved identity.
+    // If Auth fails for any reason (e.g. account not yet migrated),
+    // we fall back to the original verify_agent_login system so no
+    // one gets locked out during this transition period.
+    const {data:authData,error:authErr}=await sb.auth.signInWithPassword({email,password:pass});
+    let data=null,error=null,isProfileMismatch=false;
+
+    if(authData?.user && !authErr){
+      const {data:profile,error:profErr}=await sb.rpc('get_my_profile',{p_email:email});
+      if(profile?.success){
+        data={success:true,id:profile.id,name:profile.name,email:profile.email,role:profile.role,phone:profile.phone};
+      } else {
+        // Password was correct (Auth approved it) but no matching active
+        // row exists in the agents table for this email — this is a data
+        // setup problem, not a wrong-password attempt. Treat distinctly
+        // so we don't count it toward the brute-force lockout counters.
+        error={message:'profile_not_found'};
+        isProfileMismatch=true;
+      }
+    } else {
+      // Fallback: old password-hash system (kept temporarily as a safety net)
+      const inputHash=await hashPwd(pass);
+      const fb=await sb.rpc('verify_agent_login',{p_email:email,p_hash:inputHash});
+      data=fb.data; error=fb.error;
+    }
+
     const secData=await secDataPromise;
+    if(isProfileMismatch){
+      // Don't penalise the lockout counters for a correct password with no
+      // matching profile — show a clear, distinct message instead.
+      await logAttempt(email,false,secData);
+      errEl.textContent='Your account is signed in but not yet fully set up. Please contact the admin.';
+      errEl.style.display='block';
+      return;
+    }
     if(error||!data||!data.success){
       addFail(); memAddFail(); // update both counters
       await logAttempt(email,false,secData);
@@ -1276,7 +1311,10 @@ async function doLogin(){
     currentUser={name:String(data.name||'').slice(0,100),email:String(data.email||'').slice(0,100),id:String(data.id||'')};
     // Keep the verified password hash in memory only (never persisted)
     // so subsequent protected RPC calls can prove identity server-side.
-    _myHash=inputHash;
+    // NOTE: this old-system hash is still required for now since the 5
+    // admin-only RPCs (admin_save_agent etc.) still check it — these get
+    // migrated to Supabase Auth in a later stage, not this one.
+    _myHash=await hashPwd(pass);
     saveSession();
     startApp();
   }finally{
@@ -1285,13 +1323,17 @@ async function doLogin(){
   }
 }
 
-function doLogout(){
+async function doLogout(){
   currentUser=null;currentRole=null;currentAgent=null;_myHash=null;
   sessionStorage.removeItem('_sess');
   clearTimeout(sTimer);clearTimeout(sWarn);
   if(lockInterval) clearInterval(lockInterval);
   Object.values(charts).forEach(c=>{if(c&&typeof c.destroy==='function'){try{c.destroy();}catch(e){}}});
   charts={};
+  // SECURITY: also end the underlying Supabase Auth session — without this,
+  // a valid Auth token could remain active in browser storage even after
+  // the app's own session is cleared, since the two are tracked separately.
+  try{await sb.auth.signOut();}catch(e){/* best-effort — app-level logout still proceeds */}
   document.getElementById('appPage').style.display='none';
   document.getElementById('authPage').style.display='flex';
   document.getElementById('loginEmail').value='';
