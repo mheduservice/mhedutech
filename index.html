@@ -1602,12 +1602,7 @@ function renderDash(){
     </div>
     <div class="chart-row">
       <div class="card">
-        <div class="card-hdr"><div class="card-title">Fee Status</div></div>
-        <div class="legend">
-          <span><span class="ldot" style="background:var(--g600)"></span>Paid</span>
-          <span><span class="ldot" style="background:var(--blue)"></span>Partial</span>
-          <span><span class="ldot" style="background:var(--amber)"></span>Pending</span>
-        </div>
+        <div class="card-hdr"><div class="card-title">Monthly Admissions</div></div>
         <div class="cw" style="height:200px"><canvas id="c1"></canvas></div>
       </div>
       <div class="card">
@@ -1648,7 +1643,7 @@ function renderDash(){
 
   const ml=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const ms=['01','02','03','04','05','06','07','08','09','10','11','12'];
-  mkChart('c1','doughnut',ml,[{data:[paid,part,pend],backgroundColor:['#16a34a','#2563eb','#d97706'],borderWidth:0}],{plugins:{legend:{display:false}},cutout:'65%'});
+  mkChart('c1','bar',ml,[{data:ms.map(m=>sts.filter(s=>(s.doa||'').slice(5,7)===m).length),backgroundColor:'#16a34a',borderRadius:5}],{plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{autoSkip:false,maxRotation:45}},y:{beginAtZero:true}}});
   mkChart('c2','doughnut',['Paid','Pending'],[{data:[successful,semPendingCount],backgroundColor:['#16a34a','#d97706'],borderWidth:0}],{plugins:{legend:{display:false}},cutout:'65%'});
   // Cancellation ratio donut — if there are zero admissions at all, show a
   // flat neutral ring instead of an empty/broken-looking chart
@@ -3254,6 +3249,7 @@ async function startBulkUpload(){
   if(failed===0) setTimeout(()=>closeBulkModal(),2000);
 }
 function openBulkModal(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
   bulkRows=[];
   _bulkUploading=false;
   _dupCheckDone=false;
@@ -3494,6 +3490,7 @@ window.restoreStudent=restoreStudent;
 let pasteRows=[];
 
 function openPasteModal(){
+  if(currentRole!=='admin'){notify('Access denied.','err');return;}
   pasteRows=[];
   document.getElementById('pasteArea').value='';
   document.getElementById('pastePreview').style.display='none';
