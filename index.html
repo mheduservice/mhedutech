@@ -610,6 +610,10 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
 
     <div class="content">
       <div id="swarn" class="sw">Session expiring soon — please save your work.</div>
+      <div id="reauthBanner" style="display:none;background:#fffbeb;border:1.5px solid #fde68a;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;font-size:13px;color:#92400e;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <span>Agent names and bulk-upload agent matching are unavailable until you confirm your password again (this happens after a page refresh).</span>
+        <button class="btn btn-primary btn-sm" onclick="ensureCallerHashInteractive().then(ok=>{if(ok){notify('Verified — agent data refreshed.','ok');refreshSec();}})">Confirm Password</button>
+      </div>
       <div id="notif" class="notif"></div>
       <div id="sec-dashboard" class="section"></div>
       <div id="sec-students"  class="section"></div>
@@ -1371,12 +1375,21 @@ function buildSidebar(){
 }
 
 // ── DATA LOAD ────────────────────────────────────────────────────
+// IMPORTANT: this function runs automatically and silently — on every
+// app start, after every save, on every realtime update. It must NEVER
+// block on an interactive prompt() — a prompt firing with no user
+// interaction can be suppressed by the browser, which would otherwise
+// leave allStudents/allAgents/allLedger silently frozen at stale values.
+// If _myHash isn't available yet, we still load students and ledger,
+// and we still try get_agents — if the RPC rejects it for lack of
+// proof, allAgents simply comes back empty for this pass rather than
+// the whole app refusing to load. ensureCallerHash() is used elsewhere
+// (explicit admin actions) where blocking on a prompt is appropriate.
 async function loadData(){
-  const callerHash=await ensureMyHash(false);
-  if(!callerHash){notify('Could not verify your session. Please sign in again.','err');doLogout();return;}
+  const callerHash=_myHash||null; // never prompt here — see comment above
   const [r1,r2,r3]=await Promise.all([
     sb.from('students').select('*,notes(*)').order('created_at',{ascending:false}),
-    sb.rpc('get_agents',{p_caller_id:currentUser.id,p_caller_hash:callerHash}),
+    callerHash?sb.rpc('get_agents',{p_caller_id:currentUser.id,p_caller_hash:callerHash}):Promise.resolve({data:null,error:'no_hash'}),
     sb.from('cash_ledger').select('*').order('entry_date',{ascending:false}),
   ]);
   const agentMap={};
@@ -1389,7 +1402,20 @@ async function loadData(){
   }));
   allAgents=agentsRaw.filter(a=>a.role==='agent');
   allLedger=r3.data||[];
+  // Show/hide the persistent re-auth banner based on whether we have proof
+  const banner=document.getElementById('reauthBanner');
+  if(banner) banner.style.display=(!callerHash&&currentUser)?'flex':'none';
 }
+
+// Explicit, user-initiated re-auth — safe to prompt here since this is
+// only ever called from a real button click, never automatically.
+async function ensureCallerHashInteractive(){
+  if(_myHash) return _myHash;
+  const got=await ensureMyHash(false);
+  if(got) await loadData(); // refresh agents now that we have proof
+  return got;
+}
+window.ensureCallerHashInteractive=ensureCallerHashInteractive;
 function myStudents(){
   if(currentRole==='admin') return allStudents;
   return allStudents.filter(s=>s.agent_id===currentAgent?.id);
