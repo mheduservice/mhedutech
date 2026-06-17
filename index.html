@@ -1309,11 +1309,11 @@ async function doLogin(){
     currentRole=role;
     currentAgent=role==='agent'?data:null;
     currentUser={name:String(data.name||'').slice(0,100),email:String(data.email||'').slice(0,100),id:String(data.id||'')};
-    // Keep the verified password hash in memory only (never persisted)
-    // so subsequent protected RPC calls can prove identity server-side.
-    // NOTE: this old-system hash is still required for now since the 5
-    // admin-only RPCs (admin_save_agent etc.) still check it — these get
-    // migrated to Supabase Auth in a later stage, not this one.
+    // Keep the verified password hash in memory only (never persisted).
+    // As of Stage 3, the 4 admin-only RPCs (admin_save_agent, etc.) no
+    // longer check this — they verify identity via the real Supabase
+    // Auth session instead. _myHash is still kept for get_agents(),
+    // which has not yet been migrated to the Auth-based pattern.
     _myHash=await hashPwd(pass);
     saveSession();
     startApp();
@@ -1988,12 +1988,15 @@ async function renderSecurity(){
       <div class="warn-box">Failed logins trigger a real-time alert. IP address, GPS location, and device info are captured on every attempt.</div>
       <div style="margin-top:16px" id="logList"><p style="color:var(--muted);font-size:13px">Loading...</p></div>
     </div>`;
-  const adminHash=await ensureMyHash(true);
+  // Stage 3: identity verified server-side via real Supabase Auth session
   const ll0=document.getElementById('logList');
-  if(!adminHash){ll0.innerHTML='<p style="color:var(--red);font-size:13px">Could not verify admin identity.</p>';return;}
-  const {data}=await sb.rpc('get_login_attempts',{p_admin_id:currentUser.id,p_admin_hash:adminHash});
+  const {data,error:logErr}=await sb.rpc('get_login_attempts');
+  if(logErr||!data||!Array.isArray(data)){
+    ll0.innerHTML='<p style="color:var(--red);font-size:13px">Could not load security log. Please sign in again.</p>';
+    return;
+  }
   const ll=document.getElementById('logList');
-  if(!data||!data.length){ll.innerHTML='<p style="color:var(--muted);font-size:13px">No login attempts recorded yet.</p>';return;}
+  if(!data.length){ll.innerHTML='<p style="color:var(--muted);font-size:13px">No login attempts recorded yet.</p>';return;}
   const failed=data.filter(r=>!r.success).length;
   ll.innerHTML=`
     <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
@@ -2048,20 +2051,13 @@ function showAttemptDetail(r){
 }
 
 async function clearSecLog(){
-  // H3: enforce admin role check on client (SQL also enforces this server-side via p_admin_id)
   if(currentRole!=='admin'){notify('Access denied.','err');return;}
-  if(!currentUser?.id){notify('Session error. Please sign in again.','err');return;}
   if(!confirm('Clear ALL login attempt records? This cannot be undone.')) return;
   if(!confirm('Are you sure? This will permanently delete all security logs.')) return;
-  // SECURITY NOTE: p_admin_id is a client-supplied value and is NOT a trustworthy
-  // security boundary on its own — a tampered sessionStorage could carry a
-  // SECURITY: the SQL function clear_login_attempts now independently
-  // verifies p_admin_id + p_admin_hash against a real admin account's
-  // stored password_hash before deleting anything — see rpc_security_fix.sql.
-  const adminHash=await ensureMyHash(true);
-  if(!adminHash){notify('Could not verify admin identity. Action cancelled.','err');return;}
-  const {data:res,error}=await sb.rpc('clear_login_attempts',{p_admin_id:currentUser.id,p_admin_hash:adminHash});
-  if(error||!res?.success){notify('Could not clear log. Admin verification failed.','err');return;}
+  // Stage 3: identity verified server-side via real Supabase Auth session —
+  // no password proof needed from the client anymore for this action.
+  const {data:res,error}=await sb.rpc('clear_login_attempts');
+  if(error||!res?.success){notify(res?.error==='not_authorised'?'Access denied — please sign in again.':'Could not clear log. Please try again.','err');return;}
   notify('Security log cleared.','ok');
   renderSecurity();
 }
@@ -2306,17 +2302,17 @@ async function saveAgent(){
   if(!id&&!pw){errEl.textContent='Password is required for new agents.';errEl.style.display='block';return;}
   if(pw&&pw.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.style.display='block';return;}
   if(pw&&pw!==pw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
-  const adminHash=await ensureMyHash(true);
-  if(!adminHash){errEl.textContent='Could not verify admin identity.';errEl.style.display='block';return;}
+  // Stage 3: identity is now verified server-side via the real Supabase
+  // Auth session (auth.email()), not a typed password hash — no need
+  // to call ensureMyHash here anymore for this action.
   const payload={
-    p_admin_id:currentUser.id,p_admin_hash:adminHash,
     p_id:id||null,p_name:name,p_email:email,p_phone:phone,
     p_role:'agent',p_is_active:true,
     p_password_hash:pw?await hashPwd(pw):null
   };
   const {data:res,error}=await sb.rpc('admin_save_agent',payload);
   if(error||!res?.success){
-    errEl.textContent='Save failed: '+(res?.error==='email_exists'?'Email already exists.':'Try again.');
+    errEl.textContent='Save failed: '+(res?.error==='email_exists'?'Email already exists.':res?.error==='not_authorised'?'Access denied — please sign in again.':'Try again.');
     errEl.style.display='block';return;
   }
   notify(id?'Agent updated!':'Agent added!','ok');
@@ -2344,10 +2340,9 @@ async function delAgent(id){
   } else {
     if(!confirm(`Remove agent "${agName}"? This cannot be undone.`)) return;
   }
-  const adminHash=await ensureMyHash(true);
-  if(!adminHash){notify('Could not verify admin identity. Agent not removed.','err');return;}
-  const {data:res,error}=await sb.rpc('admin_delete_agent',{p_admin_id:currentUser.id,p_admin_hash:adminHash,p_id:id});
-  if(error||!res?.success){notify('Could not remove agent. Please try again.','err');return;}
+  // Stage 3: identity verified server-side via real Supabase Auth session
+  const {data:res,error}=await sb.rpc('admin_delete_agent',{p_id:id});
+  if(error||!res?.success){notify(res?.error==='not_authorised'?'Access denied — please sign in again.':'Could not remove agent. Please try again.','err');return;}
   notify(orphans.length>0?`Agent removed. ${orphans.length} student(s) unassigned.`:'Agent removed.','ok');
   await loadData(); renderAgents();
 }
