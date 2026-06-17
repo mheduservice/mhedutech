@@ -2982,9 +2982,21 @@ async function checkDuplicates(){
 
   _dupCheckDone=true;
 
+  // Warn if rows have an agent_email in the CSV but it didn't match any
+  // agent_id — this commonly happens if the agent list hadn't loaded yet
+  // (e.g. right after a page refresh, before confirming the password
+  // banner). Uploading with agent_id=null may be rejected by the database
+  // if agent_id is required, and even when it isn't, the student would be
+  // unassigned despite the CSV clearly naming an agent.
+  const unmatchedAgent=bulkRows.filter(r=>r._agent_raw&&!r.agent_id);
+  const agentWarnHtml=unmatchedAgent.length?`<div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:11px;color:#991b1b">
+    <b>⚠ ${unmatchedAgent.length} row(s) have an agent_email that didn't match any agent</b> (e.g. "${esc(unmatchedAgent[0]._agent_raw)}"). 
+    If this looks wrong and the agent definitely exists, try clicking <b>Cancel</b>, then on the main page click <b>Confirm Password</b> on the yellow banner if shown, then reopen Bulk Upload and try again — agent matching needs the agent list to be loaded first.
+  </div>`:'';
+
   if(duplicates.length===0){
     // All clear — no duplicates
-    statusEl.innerHTML=`<span style="color:var(--g700);font-weight:600">✓ No duplicates found — all ${bulkRows.length} students are new. Safe to upload.</span>`;
+    statusEl.innerHTML=agentWarnHtml+`<span style="color:var(--g700);font-weight:600">✓ No duplicates found — all ${bulkRows.length} students are new. Safe to upload.</span>`;
     uploadBtn.disabled=false;
     checkBtn.disabled=false;
     checkBtn.textContent='Re-check';
@@ -3114,8 +3126,20 @@ async function startBulkUpload(){
     txt.innerHTML=`<span style="color:var(--g700);font-weight:700">✓ All ${done} students uploaded successfully!</span>`;
     bar.style.background='var(--g600)';
   } else if(done===0){
+    // Show the REAL captured error reasons instead of a generic guess —
+    // failedRows already has the true reason from Supabase for every row.
+    const failList=failedRows.slice(0,8).map(r=>
+      `<div style="display:flex;gap:8px;padding:2px 0;font-size:11px">
+        <span style="font-family:monospace;background:#fef9c3;padding:1px 5px;border-radius:3px">${r.bill}</span>
+        <span>${r.name}</span>
+        <span style="color:var(--red);margin-left:auto">${r.reason}</span>
+      </div>`).join('');
     txt.innerHTML=`<span style="color:var(--red);font-weight:700">Upload failed — 0 added, ${failed} errors.</span><br>
-      <span style="font-size:11px;color:var(--muted)">All ${failed} rows had errors. Check bill numbers for duplicates.</span>`;
+      <div style="background:#fff8f8;border:1px solid #fca5a5;border-radius:6px;padding:8px;margin-top:6px;max-height:160px;overflow-y:auto">
+        <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:4px">ACTUAL ERROR (from database):</div>
+        ${failList}
+        ${failedRows.length>8?`<div style="font-size:11px;color:var(--muted);margin-top:4px">...and ${failedRows.length-8} more failed rows with the same or similar error</div>`:''}
+      </div>`;
     bar.style.background='var(--red)';
   } else {
     // Partial upload — show detailed breakdown
