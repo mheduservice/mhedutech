@@ -610,10 +610,6 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
 
     <div class="content">
       <div id="swarn" class="sw">Session expiring soon — please save your work.</div>
-      <div id="reauthBanner" style="display:none;background:#fffbeb;border:1.5px solid #fde68a;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;font-size:13px;color:#92400e;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <span>Agent names and bulk-upload agent matching are unavailable until you confirm your password again (this happens after a page refresh).</span>
-        <button class="btn btn-primary btn-sm" onclick="ensureCallerHashInteractive().then(ok=>{if(ok){notify('Verified — agent data refreshed.','ok');refreshSec();}})">Confirm Password</button>
-      </div>
       <div id="notif" class="notif"></div>
       <div id="sec-dashboard" class="section"></div>
       <div id="sec-students"  class="section"></div>
@@ -678,19 +674,19 @@ tr.sem-cleared:hover td{background:#ede8ff !important}
 <div class="mbg" id="agModal">
   <div class="modal">
     <div class="modal-title" id="agModalTitle">Add Agent</div>
-    <div class="modal-sub">Create a login account for the agent</div>
+    <div class="modal-sub">Create this agent's profile record</div>
     <input type="hidden" id="agId">
+    <div class="info-box" style="margin-bottom:10px;background:#eff6ff;border-color:#bfdbfe;color:#1e40af">
+      <b>Before saving:</b> first create this person's real login account in
+      <b>Supabase &rarr; Authentication &rarr; Users &rarr; Add user</b> with their email and a strong password.
+      This form only creates their profile (name, role, contact info) — it does not set their actual login password.
+    </div>
     <div class="fr">
       <div class="fg"><label>Full Name *</label><input type="text" id="agName" maxlength="60" placeholder="Agent name"></div>
       <div class="fg"><label>Phone Number</label><input type="text" id="agPhone" maxlength="15" placeholder="10-digit number"></div>
     </div>
-    <div class="fg"><label>Email * (used for login)</label><input type="email" id="agEmail" maxlength="100" placeholder="agent@email.com"></div>
-    <div class="fr">
-      <div class="fg"><label id="agPwLabel">Password * (min 8 chars)</label><input type="password" id="agPw" maxlength="64" placeholder="Strong password"></div>
-      <div class="fg"><label>Confirm Password *</label><input type="password" id="agPw2" maxlength="64" placeholder="Repeat password"></div>
-    </div>
+    <div class="fg"><label>Email * (must exactly match their Supabase Auth login email)</label><input type="email" id="agEmail" maxlength="100" placeholder="agent@email.com"></div>
     <div id="agErr" class="auth-err" style="margin-top:8px"></div>
-    <div class="info-box">Agent logs in using this email and password. Share credentials privately.</div>
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="closeM('agModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveAgent()">Save Agent</button>
@@ -990,7 +986,6 @@ document.addEventListener('DOMContentLoaded',initQuotes);
 const SB_URL = 'https://wwxobmubeyqifyisxnhe.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3eG9ibXViZXlxaWZ5aXN4bmhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMjQ1NDksImV4cCI6MjA5NTgwMDU0OX0.XEpNJkUzFy_NypVYLrjaejm3tXKb7kpd7xC9PnH74hM';
 const sb = supabase.createClient(SB_URL, SB_KEY);
-const SALT = 'mhEdu$alt!2026_';
 const BLOCK_AFTER = 3;
 const LOCK_MS = 15 * 60 * 1000;
 
@@ -1028,40 +1023,10 @@ function validMobile(v){
   // 1000000000 or 0000000000 since no valid Indian number starts with 0 or 1.
   return false;
 }
-async function hashPwd(p){
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(SALT+p));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+// Stage 5: hashPwd, SALT, ensureMyHash, and _myHash have been removed —
+// they were the old password-hash system, fully retired now that every
+// protected action checks a real Supabase Auth session instead.
 
-// ── PROTECTED RPC IDENTITY HELPER ──────────────────────────────────
-// Several RPCs now require (id, hash) to prove the caller is a real,
-// logged-in account, since the database has no Supabase Auth session
-// to check (this app uses its own agents table + password_hash).
-// If the in-memory hash is missing (e.g. page was refreshed), this
-// re-prompts for the password once and re-verifies it via the existing
-// public verify_agent_login RPC before continuing.
-// Pass requireAdmin=true for the 4 admin-only RPCs; leave false for
-// get_agents, which any logged-in agent or admin may legitimately call.
-async function ensureMyHash(requireAdmin){
-  if(_myHash) {
-    if(requireAdmin && currentRole!=='admin') return null;
-    return _myHash;
-  }
-  const pwd=prompt('Please re-enter your password to continue (required after a page refresh):');
-  if(!pwd) return null;
-  const tryHash=await hashPwd(pwd);
-  const {data,error}=await sb.rpc('verify_agent_login',{p_email:currentUser.email,p_hash:tryHash});
-  if(error||!data?.success){
-    notify('Incorrect password. Action cancelled.','err');
-    return null;
-  }
-  if(requireAdmin && data.role!=='admin'){
-    notify('Access denied.','err');
-    return null;
-  }
-  _myHash=tryHash;
-  return _myHash;
-}
 
 // ── BRUTE FORCE ──────────────────────────────────────────────────
 // ── BRUTE FORCE — dual layer (client + server) ──────────────────
@@ -1144,13 +1109,6 @@ function loadSession(){
 
 // ── STATE ────────────────────────────────────────────────────────
 let currentUser=null,currentRole=null,currentAgent=null;
-// SECURITY: _myHash lives ONLY in memory, never in sessionStorage.
-// Required to call protected RPCs after the anon-execute permission
-// fix (any role needs it for get_agents; admin role needs it for the
-// 4 admin-only RPCs too). A page refresh clears it — the first
-// protected action after a refresh will ask to confirm the password
-// again. This is intentional, not a bug.
-let _myHash=null;
 let allStudents=[],allAgents=[];
 let charts={},loginBusy=false;
 // Fix #5: In-memory attempt counter — survives sessionStorage.clear() within same JS context
@@ -1253,13 +1211,11 @@ async function doLogin(){
   // 600ms delay slows in-page attacks; direct Supabase calls still hit DB rate limiter
   await new Promise(r=>setTimeout(r,600));
   try{
-    // ── STAGE 2: Supabase Auth is now the primary login path ──────
-    // We try real Supabase Auth first. If that succeeds, we look up
-    // the matching agents-table row (role/name/id) via get_my_profile,
-    // which needs no password — Auth already proved identity.
-    // If Auth fails for any reason (e.g. account not yet migrated),
-    // we fall back to the original verify_agent_login system so no
-    // one gets locked out during this transition period.
+    // ── STAGE 5: Supabase Auth is now the ONLY login path ──────────
+    // The old verify_agent_login fallback has been retired — Stage 2
+    // has been confirmed stable, and get_agents() no longer needs a
+    // password hash either (migrated earlier). The agents.password_hash
+    // column and its related RPCs are no longer used anywhere.
     const {data:authData,error:authErr}=await sb.auth.signInWithPassword({email,password:pass});
     let data=null,error=null,isProfileMismatch=false;
 
@@ -1276,10 +1232,7 @@ async function doLogin(){
         isProfileMismatch=true;
       }
     } else {
-      // Fallback: old password-hash system (kept temporarily as a safety net)
-      const inputHash=await hashPwd(pass);
-      const fb=await sb.rpc('verify_agent_login',{p_email:email,p_hash:inputHash});
-      data=fb.data; error=fb.error;
+      error=authErr||{message:'invalid_credentials'};
     }
 
     const secData=await secDataPromise;
@@ -1294,10 +1247,6 @@ async function doLogin(){
     if(error||!data||!data.success){
       addFail(); memAddFail(); // update both counters
       await logAttempt(email,false,secData);
-      if(data?.error==='rate_limited'){
-        setLock(Date.now()+LOCK_MS);
-        _memLockedUntil=Date.now()+LOCK_MS;
-      }
       startLockUI();
       errEl.textContent=(isLocked()||memLocked())?'Access blocked for 15 minutes. Too many failed attempts.':'Invalid email or password.';
       errEl.style.display='block';
@@ -1309,12 +1258,6 @@ async function doLogin(){
     currentRole=role;
     currentAgent=role==='agent'?data:null;
     currentUser={name:String(data.name||'').slice(0,100),email:String(data.email||'').slice(0,100),id:String(data.id||'')};
-    // Keep the verified password hash in memory only (never persisted).
-    // As of Stage 3, the 4 admin-only RPCs (admin_save_agent, etc.) no
-    // longer check this — they verify identity via the real Supabase
-    // Auth session instead. _myHash is still kept for get_agents(),
-    // which has not yet been migrated to the Auth-based pattern.
-    _myHash=await hashPwd(pass);
     saveSession();
     startApp();
   }finally{
@@ -1324,7 +1267,7 @@ async function doLogin(){
 }
 
 async function doLogout(){
-  currentUser=null;currentRole=null;currentAgent=null;_myHash=null;
+  currentUser=null;currentRole=null;currentAgent=null;
   sessionStorage.removeItem('_sess');
   clearTimeout(sTimer);clearTimeout(sWarn);
   if(lockInterval) clearInterval(lockInterval);
@@ -1438,22 +1381,8 @@ async function loadData(){
   }));
   allAgents=agentsRaw.filter(a=>a.role==='agent');
   allLedger=r3.data||[];
-  // The old reauthBanner is no longer needed for this purpose — keep
-  // it hidden; element is left in the DOM harmlessly in case anything
-  // else references it, but nothing sets it visible anymore.
-  const banner=document.getElementById('reauthBanner');
-  if(banner) banner.style.display='none';
 }
 
-// Explicit, user-initiated re-auth — safe to prompt here since this is
-// only ever called from a real button click, never automatically.
-async function ensureCallerHashInteractive(){
-  if(_myHash) return _myHash;
-  const got=await ensureMyHash(false);
-  if(got) await loadData(); // refresh agents now that we have proof
-  return got;
-}
-window.ensureCallerHashInteractive=ensureCallerHashInteractive;
 function myStudents(){
   if(currentRole==='admin') return allStudents;
   return allStudents.filter(s=>s.agent_id===currentAgent?.id);
@@ -2089,20 +2018,18 @@ async function savePwd(){
   if(nw.length<8){errEl.textContent='New password must be at least 8 characters.';errEl.style.display='block';return;}
   if(nw!==nw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
   if(nw===cur){errEl.textContent='New password must be different.';errEl.style.display='block';return;}
-  // H2 fix: always use session user ID — never trust any DOM/external value
-  const safeId=String(currentUser.id||'');
-  if(!safeId){errEl.textContent='Session error. Please sign in again.';errEl.style.display='block';return;}
   _pwdChangeCooldown=Date.now()+5000; // 5s cooldown regardless of outcome
-  const curHash=await hashPwd(cur);
-  const newHash=await hashPwd(nw);
-  const {data:res,error}=await sb.rpc('update_agent_password',{
-    p_id:safeId,          // always from verified session, never from DOM
-    p_current_hash:curHash,
-    p_new_hash:newHash
-  });
-  if(error||!res?.success){
-    errEl.textContent=res?.error==='wrong_password'?'Current password is incorrect.':'Update failed. Please try again.';
-    errEl.style.display='block';return;
+  // Stage 5: this now changes the REAL Supabase Auth password, not the
+  // old agents.password_hash column. We re-verify the current password
+  // via a real sign-in first (Supabase Auth has no separate "verify
+  // current password" call), then update to the new one.
+  const {error:verifyErr}=await sb.auth.signInWithPassword({email:currentUser.email,password:cur});
+  if(verifyErr){
+    errEl.textContent='Current password is incorrect.';errEl.style.display='block';return;
+  }
+  const {error:updateErr}=await sb.auth.updateUser({password:nw});
+  if(updateErr){
+    errEl.textContent='Update failed. Please try again.';errEl.style.display='block';return;
   }
   notify('Password updated successfully!','ok');
   closeM('pwModal');
@@ -2269,16 +2196,13 @@ function openAgModal(id){
   document.getElementById('agModalTitle').textContent=id?'Edit Agent':'Add Agent';
   document.getElementById('agId').value=id||'';
   document.getElementById('agErr').style.display='none';
-  document.getElementById('agPwLabel').textContent=id?'New Password (blank = keep current)':'Password * (min 8 chars)';
   if(id){
     const ag=allAgents.find(a=>a.id===id); if(!ag) return;
     document.getElementById('agName').value=ag.name||'';
     document.getElementById('agEmail').value=ag.email||'';
     document.getElementById('agPhone').value=ag.phone||'';
-    document.getElementById('agPw').value='';
-    document.getElementById('agPw2').value='';
   } else {
-    ['agName','agEmail','agPhone','agPw','agPw2'].forEach(i=>document.getElementById(i).value='');
+    ['agName','agEmail','agPhone'].forEach(i=>document.getElementById(i).value='');
   }
   openM('agModal');
 }
@@ -2289,29 +2213,24 @@ async function saveAgent(){
   const name=clean(document.getElementById('agName').value,60);
   const email=clean(document.getElementById('agEmail').value,100).toLowerCase();
   const phone=clean(document.getElementById('agPhone').value,15);
-  const pw=document.getElementById('agPw').value;
-  const pw2=document.getElementById('agPw2').value;
   const errEl=document.getElementById('agErr'); errEl.style.display='none';
   if(!name||!email){errEl.textContent='Name and email are required.';errEl.style.display='block';return;}
   if(!validEmail(email)){errEl.textContent='Enter a valid email address.';errEl.style.display='block';return;}
   if(phone&&!validMobile(phone)){errEl.textContent='Phone must be a valid 10-digit Indian number.';errEl.style.display='block';return;}
-  if(!id&&!pw){errEl.textContent='Password is required for new agents.';errEl.style.display='block';return;}
-  if(pw&&pw.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.style.display='block';return;}
-  if(pw&&pw!==pw2){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
-  // Stage 3: identity is now verified server-side via the real Supabase
-  // Auth session (auth.email()), not a typed password hash — no need
-  // to call ensureMyHash here anymore for this action.
+  // Stage 5: real login passwords now live ONLY in Supabase Auth — this
+  // form just creates/updates the profile row. p_password_hash is sent
+  // as null; the old column is no longer used by login at all.
   const payload={
     p_id:id||null,p_name:name,p_email:email,p_phone:phone,
     p_role:'agent',p_is_active:true,
-    p_password_hash:pw?await hashPwd(pw):null
+    p_password_hash:null
   };
   const {data:res,error}=await sb.rpc('admin_save_agent',payload);
   if(error||!res?.success){
     errEl.textContent='Save failed: '+(res?.error==='email_exists'?'Email already exists.':res?.error==='not_authorised'?'Access denied — please sign in again.':'Try again.');
     errEl.style.display='block';return;
   }
-  notify(id?'Agent updated!':'Agent added!','ok');
+  notify(id?'Agent updated!':'Agent added! Remember to also create their login in Supabase Auth if you haven\'t already.','ok');
   closeM('agModal'); await loadData(); renderAgents();
 }
 
