@@ -1402,22 +1402,37 @@ function myLedger(){
 // prevents the agent/status/search dropdowns from resetting to defaults
 // when Supabase's realtime subscription detects a database change and
 // triggers a full page re-render behind the scenes.
+// Save and restore filter state around any automatic data reload.
+// Uses a debounce to prevent multiple rapid realtime events from
+// firing overlapping reloads (Supabase can fire several events per
+// single database change, each one would otherwise reset the filter).
+let _rtReloadTimer=null;
 function reloadPreservingFilters(){
-  const q=document.getElementById('q');
-  const sf=document.getElementById('sf');
-  const af=document.getElementById('af');
-  const savedQ=q?.value||'';
-  const savedSf=sf?.value||'';
-  const savedAf=af?.value||'';
-  return loadData().then(()=>{
+  // Save filter values immediately when this is triggered — capture
+  // the real current values before any async work begins.
+  const savedQ=document.getElementById('q')?.value||'';
+  const savedSf=document.getElementById('sf')?.value||'';
+  const savedAf=document.getElementById('af')?.value||'';
+  // Debounce: cancel any pending reload triggered in the last 300ms
+  // and schedule a fresh one. This collapses multiple rapid realtime
+  // events into a single clean reload.
+  clearTimeout(_rtReloadTimer);
+  _rtReloadTimer=setTimeout(async()=>{
+    await loadData();
     refreshSec();
-    // Restore filter values after the re-render has rebuilt the dropdowns
-    if(q&&savedQ) q.value=savedQ;
-    if(sf&&savedSf) sf.value=savedSf;
-    if(af&&savedAf) af.value=savedAf;
-    // Re-apply the filter so the visible rows match the restored selection
-    filterStu();
-  });
+    // Use setTimeout(0) to guarantee this runs AFTER all synchronous
+    // DOM work from refreshSec/renderStudents/filterStu has settled —
+    // including the filterStu() call inside renderStudents() itself.
+    setTimeout(()=>{
+      const qEl=document.getElementById('q');
+      const sfEl=document.getElementById('sf');
+      const afEl=document.getElementById('af');
+      if(qEl&&savedQ) qEl.value=savedQ;
+      if(sfEl&&savedSf) sfEl.value=savedSf;
+      if(afEl&&savedAf) afEl.value=savedAf;
+      filterStu();
+    },0);
+  },300);
 }
 
 function subscribeRT(){
