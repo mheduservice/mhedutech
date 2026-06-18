@@ -1411,8 +1411,10 @@ let _rtReloadTimer=null;
 function reloadPreservingFilters(){
   clearTimeout(_rtReloadTimer);
   _rtReloadTimer=setTimeout(async()=>{
+    console.log('[RT] reload triggered, _filterAf=',_filterAf,'_filterSf=',_filterSf);
     await loadData();
     refreshSec();
+    console.log('[RT] reload done, _filterAf=',_filterAf);
   },300);
 }
 
