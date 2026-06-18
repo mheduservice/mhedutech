@@ -1397,11 +1397,34 @@ function myLedger(){
 // channel config alone. This subscribes to change events only — confirm RLS
 // on students/notes/agents/cash_ledger/login_attempts restricts row access
 // per role before relying on this for sensitive data protection.
+
+// Save and restore filter state around any automatic data reload — this
+// prevents the agent/status/search dropdowns from resetting to defaults
+// when Supabase's realtime subscription detects a database change and
+// triggers a full page re-render behind the scenes.
+function reloadPreservingFilters(){
+  const q=document.getElementById('q');
+  const sf=document.getElementById('sf');
+  const af=document.getElementById('af');
+  const savedQ=q?.value||'';
+  const savedSf=sf?.value||'';
+  const savedAf=af?.value||'';
+  return loadData().then(()=>{
+    refreshSec();
+    // Restore filter values after the re-render has rebuilt the dropdowns
+    if(q&&savedQ) q.value=savedQ;
+    if(sf&&savedSf) sf.value=savedSf;
+    if(af&&savedAf) af.value=savedAf;
+    // Re-apply the filter so the visible rows match the restored selection
+    filterStu();
+  });
+}
+
 function subscribeRT(){
   sb.channel('rt-main')
-    .on('postgres_changes',{event:'*',schema:'public',table:'students'},async()=>{await loadData();refreshSec();})
-    .on('postgres_changes',{event:'*',schema:'public',table:'notes'},async()=>{await loadData();refreshSec();})
-    .on('postgres_changes',{event:'*',schema:'public',table:'agents'},async()=>{await loadData();refreshSec();})
+    .on('postgres_changes',{event:'*',schema:'public',table:'students'},()=>reloadPreservingFilters())
+    .on('postgres_changes',{event:'*',schema:'public',table:'notes'},()=>reloadPreservingFilters())
+    .on('postgres_changes',{event:'*',schema:'public',table:'agents'},()=>reloadPreservingFilters())
     .on('postgres_changes',{event:'*',schema:'public',table:'cash_ledger'},async()=>{
       const r=await sb.from('cash_ledger').select('*').order('entry_date',{ascending:false});
       allLedger=r.data||[];
