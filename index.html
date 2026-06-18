@@ -1268,6 +1268,7 @@ async function doLogin(){
 
 async function doLogout(){
   currentUser=null;currentRole=null;currentAgent=null;
+  _filterQ='';_filterSf='';_filterAf=''; // clear persisted filter state
   sessionStorage.removeItem('_sess');
   clearTimeout(sTimer);clearTimeout(sWarn);
   if(lockInterval) clearInterval(lockInterval);
@@ -1402,36 +1403,16 @@ function myLedger(){
 // prevents the agent/status/search dropdowns from resetting to defaults
 // when Supabase's realtime subscription detects a database change and
 // triggers a full page re-render behind the scenes.
-// Save and restore filter state around any automatic data reload.
-// Uses a debounce to prevent multiple rapid realtime events from
-// firing overlapping reloads (Supabase can fire several events per
-// single database change, each one would otherwise reset the filter).
+// Filter state is now persisted in _filterQ/_filterSf/_filterAf variables
+// that survive DOM rebuilds — so reloadPreservingFilters just needs to
+// reload data and re-render; filterStu() will automatically restore the
+// correct filter state when called by renderStudents() internally.
 let _rtReloadTimer=null;
 function reloadPreservingFilters(){
-  // Save filter values immediately when this is triggered — capture
-  // the real current values before any async work begins.
-  const savedQ=document.getElementById('q')?.value||'';
-  const savedSf=document.getElementById('sf')?.value||'';
-  const savedAf=document.getElementById('af')?.value||'';
-  // Debounce: cancel any pending reload triggered in the last 300ms
-  // and schedule a fresh one. This collapses multiple rapid realtime
-  // events into a single clean reload.
   clearTimeout(_rtReloadTimer);
   _rtReloadTimer=setTimeout(async()=>{
     await loadData();
     refreshSec();
-    // Use setTimeout(0) to guarantee this runs AFTER all synchronous
-    // DOM work from refreshSec/renderStudents/filterStu has settled —
-    // including the filterStu() call inside renderStudents() itself.
-    setTimeout(()=>{
-      const qEl=document.getElementById('q');
-      const sfEl=document.getElementById('sf');
-      const afEl=document.getElementById('af');
-      if(qEl&&savedQ) qEl.value=savedQ;
-      if(sfEl&&savedSf) sfEl.value=savedSf;
-      if(afEl&&savedAf) afEl.value=savedAf;
-      filterStu();
-    },0);
   },300);
 }
 
@@ -1666,19 +1647,22 @@ function agentColour(agentId){
 }
 // ── STUDENTS ─────────────────────────────────────────────────────
 let stuSortDir='desc'; // 'asc' or 'desc' — DOA sort direction
+// Persistent filter state — these survive DOM rebuilds from realtime
+// reloads, unlike reading from dropdown elements which get replaced.
+let _filterQ='', _filterSf='', _filterAf='';
 function renderStudents(){
   const isA=currentRole==='admin';
   document.getElementById('sec-students').innerHTML=`
     <div class="card" style="margin-bottom:12px">
       <div class="sr">
-        <input type="text" id="q" placeholder="Search name, mobile or bill no..." oninput="filterStu()" maxlength="80">
-        <select id="sf" onchange="filterStu()">
+        <input type="text" id="q" placeholder="Search name, mobile or bill no..." oninput="setFilter('q',this.value)" maxlength="80">
+        <select id="sf" onchange="setFilter('sf',this.value)">
           <option value="">All Status</option>
           <option value="paid">Paid</option>
           <option value="partial">Partial</option>
           <option value="pending">Pending</option>
         </select>
-        ${isA?`<select id="af" onchange="filterStu()"><option value="">All Agents</option>${allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>`:''}
+        ${isA?`<select id="af" onchange="setFilter('af',this.value)"><option value="">All Agents</option>${allAgents.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('')}</select>`:''}
         ${isA?'<button class="btn btn-primary btn-sm" onclick="openStuModal()">Add Student</button>':''}
         ${isA?'<button class="btn btn-outline btn-sm" onclick="openBulkModal()">Bulk Upload (CSV)</button>':''}
         ${isA?'<button class="btn btn-ghost btn-sm" onclick="openPasteModal()" style="border-color:var(--blue-light);color:var(--blue)">Paste from Excel</button>':''}
@@ -1713,10 +1697,38 @@ function toggleDoaSort(){
 }
 window.toggleDoaSort=toggleDoaSort;
 
+// Called by dropdown onchange/oninput — updates the saved filter state
+// THEN runs filterStu(). This is the ONLY way saved state gets updated,
+// ensuring DOM rebuilds from realtime reloads never corrupt filter state.
+function setFilter(type,val){
+  if(type==='q') _filterQ=clean(val||'',80).toLowerCase();
+  if(type==='sf') _filterSf=val||'';
+  if(type==='af') _filterAf=val||'';
+  filterStu();
+}
+window.setFilter=setFilter;
+
 function filterStu(){
-  const q=clean(document.getElementById('q')?.value||'',80).toLowerCase();
-  const sf=document.getElementById('sf')?.value||'';
-  const af=document.getElementById('af')?.value||'';
+  // Read from DOM if available, otherwise fall back to persisted state.
+  // This means the filter survives DOM rebuilds — even if the dropdown
+  // gets completely replaced by renderStudents(), the persisted variable
+  // remembers what was selected and re-applies it correctly.
+  const qEl=document.getElementById('q');
+  const sfEl=document.getElementById('sf');
+  const afEl=document.getElementById('af');
+  // filterStu() NEVER reads from DOM for its filter logic — it always
+  // uses the saved _filter* variables as the single source of truth.
+  // These variables are only updated by explicit user-driven calls via
+  // setFilter(), never by automatic calls from renderStudents()/reloads.
+  // This means DOM rebuilds cannot corrupt the saved state.
+  const q=_filterQ;
+  const sf=_filterSf;
+  const af=_filterAf;
+  // Sync the dropdown display to match saved state (purely cosmetic —
+  // makes the UI show the correct selection after a DOM rebuild)
+  if(qEl&&qEl.value!==_filterQ) qEl.value=_filterQ;
+  if(sfEl&&sfEl.value!==_filterSf) sfEl.value=_filterSf;
+  if(afEl&&afEl.value!==_filterAf) afEl.value=_filterAf;
   const isA=currentRole==='admin';
   let list=myStudents().filter(s=>
     (!q||s.student_name.toLowerCase().includes(q)||
