@@ -1417,25 +1417,19 @@ function buildSidebar(){
 }
 
 // ── DATA LOAD ────────────────────────────────────────────────────
-// IMPORTANT: this function runs automatically and silently — on every
-// app start, after every save, on every realtime update. It must NEVER
-// block on an interactive prompt() — a prompt firing with no user
-// interaction can be suppressed by the browser, which would otherwise
-// leave allStudents/allAgents/allLedger silently frozen at stale values.
-// If _myHash isn't available yet, we still load students and ledger,
-// and we still try get_agents — if the RPC rejects it for lack of
-// proof, allAgents simply comes back empty for this pass rather than
-// the whole app refusing to load. ensureCallerHash() is used elsewhere
-// (explicit admin actions) where blocking on a prompt is appropriate.
+// get_agents() now checks the real Supabase Auth session server-side
+// (see get_agents_auth_migration.sql) — it no longer needs a typed
+// password hash, so this can run safely on every page load with no
+// risk of silently failing due to a stale/out-of-sync hash, which is
+// exactly what caused the "Confirm Password" bug.
 async function loadData(){
-  const callerHash=_myHash||null; // never prompt here — see comment above
   const [r1,r2,r3]=await Promise.all([
     sb.from('students').select('*,notes(*)').order('created_at',{ascending:false}),
-    callerHash?sb.rpc('get_agents',{p_caller_id:currentUser.id,p_caller_hash:callerHash}):Promise.resolve({data:null,error:'no_hash'}),
+    sb.rpc('get_agents'),
     sb.from('cash_ledger').select('*').order('entry_date',{ascending:false}),
   ]);
   const agentMap={};
-  const agentsRaw=r2.data||[];
+  const agentsRaw=Array.isArray(r2.data)?r2.data:[];
   agentsRaw.forEach(a=>agentMap[a.id]=a);
   allStudents=(r1.data||[]).map(s=>({
     ...s,
@@ -1444,9 +1438,11 @@ async function loadData(){
   }));
   allAgents=agentsRaw.filter(a=>a.role==='agent');
   allLedger=r3.data||[];
-  // Show/hide the persistent re-auth banner based on whether we have proof
+  // The old reauthBanner is no longer needed for this purpose — keep
+  // it hidden; element is left in the DOM harmlessly in case anything
+  // else references it, but nothing sets it visible anymore.
   const banner=document.getElementById('reauthBanner');
-  if(banner) banner.style.display=(!callerHash&&currentUser)?'flex':'none';
+  if(banner) banner.style.display='none';
 }
 
 // Explicit, user-initiated re-auth — safe to prompt here since this is
